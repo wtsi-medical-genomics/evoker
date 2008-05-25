@@ -15,25 +15,20 @@ import java.util.StringTokenizer;
 public class Genoplot extends JFrame implements ActionListener {
 
     private BinaryFloatData bid;
-    //private BinaryFloatData bpd;
     private BedfileData bed;
     private MarkerData md;
     private SampleData sd;
     private DataDirectory db;
 
     private JTextField snpField;
-    //private JComboBox collectionDropdown;
-    //private JSlider probabilitySlider;
     private JButton goBut;
     private JButton randomSNPButton;
-    //private PlotPanel ppp;
     private JFrame probCallFrame;
 
     private boolean dbMode;
     private Stack<String> viewedSNPs;
     private Vector<String> snpList;
     private int index;
-    //private DataClient dc;
 
     public static void main(String[] args){
 
@@ -43,11 +38,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
     Genoplot(){
         super("GenozitPlots");
-        /*try{
-            dc = new DataClient(this);
-        }catch(IOException ioe){
-            System.out.println(ioe.getMessage());
-        }*/
+
 
         viewedSNPs = new Stack<String>();
 
@@ -95,23 +86,6 @@ public class Genoplot extends JFrame implements ActionListener {
         ln.addActionListener(this);
         listPanel.add(ln);
         controlsPanel.add(listPanel);
-
-        /*collectionDropdown = new JComboBox(new Vector());
-        collectionDropdown.addActionListener(this);
-        collectionDropdown.setActionCommand("collection change");
-        collectionDropdown.setEnabled(false);
-        JPanel colPanel = new JPanel();
-        colPanel.add(new JLabel("Collection:"));
-        colPanel.add(collectionDropdown);
-        controlsPanel.add(colPanel);
-
-        /*probabilitySlider = new JSlider(JSlider.HORIZONTAL,50,100,90);
-        probabilitySlider.setMinorTickSpacing(1);
-        probabilitySlider.setMajorTickSpacing(10);
-        probabilitySlider.setPaintTicks(true);
-        probabilitySlider.setPaintLabels(true);
-        probabilitySlider.addChangeListener(this);
-        controlsPanel.add(probabilitySlider);*/
 
         goBut = new JButton("Plot intensity");
         goBut.addActionListener(this);
@@ -161,10 +135,6 @@ public class Genoplot extends JFrame implements ActionListener {
                     String snp = viewedSNPs.pop();
                     plotIntensitas(snp);
                 }
-            /*}else if (command.equals("collection change")){
-                if (collectionDropdown.isEnabled() && viewedSNPs.size() != 0){
-                    plotIntensitas(viewedSNPs.get(viewedSNPs.size()-1));
-                }*/
             }else if (command.equals("Open file")){
                 JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
@@ -183,11 +153,6 @@ public class Genoplot extends JFrame implements ActionListener {
                     goBut.setEnabled(true);
                     randomSNPButton.setEnabled(true);
                     dbMode = true;
-                    /*Vector<String> v = db.getCollections();
-                    for (String c : v){
-                        collectionDropdown.addItem(c);
-                    }
-                    collectionDropdown.setEnabled(true);*/
                 }
             }else if (command.equals("Load marker list")){
                 JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
@@ -252,8 +217,6 @@ public class Genoplot extends JFrame implements ActionListener {
                 sd = new SampleData(stem+".fam");
                 bid = new BinaryFloatData(stem + ".bnt",sd,md,2);
                 bed = new BedfileData(stem+".bed",sd,md);
-                //bpd = new BinaryFloatData(stem+".bpr",sd,md,3);
-                //bpd = null;
                 return true;
             }catch (IOException ioe){
                 JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",
@@ -268,11 +231,9 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void fetchRecord(String name){
-        //PlotData pd = new PlotData(bpd.getRecord(name),bid.getRecord(name),bed.getRecord(name));
         PlotData pd = new PlotData(null,bid.getRecord(name,0),bed.getRecord(name,0),sd);
         PlotPanel ppp = new PlotPanel(name,"a","b",pd);
 
-        //ppp.refresh(((float)probabilitySlider.getValue())/100);
         probCallFrame.setContentPane(ppp);
         probCallFrame.pack();
         probCallFrame.setVisible(true);
@@ -296,7 +257,6 @@ public class Genoplot extends JFrame implements ActionListener {
                     db.getRecord(name, c));
 
             pp.refresh();
-            // pp.refresh(((float)probabilitySlider.getValue())/100);
             if (pp.getMaxDim() > maxdim){
                 maxdim = pp.getMaxDim();
             }
@@ -312,11 +272,4 @@ public class Genoplot extends JFrame implements ActionListener {
         probCallFrame.pack();
         probCallFrame.setVisible(true);
     }
-
-    /*public void stateChanged(ChangeEvent changeEvent) {
-        if (changeEvent.getSource().equals(probabilitySlider)){
-            ppp.refresh(((float)probabilitySlider.getValue())/100);
-            probCallFrame.pack();
-        }
-    } */
 }
