@@ -1,13 +1,9 @@
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
+import javax.swing.border.LineBorder;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.*;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.File;
+import java.io.*;
 import java.util.Vector;
 import java.util.Stack;
 import java.util.StringTokenizer;
@@ -23,12 +19,14 @@ public class Genoplot extends JFrame implements ActionListener {
     private JTextField snpField;
     private JButton goBut;
     private JButton randomSNPButton;
-    private JFrame probCallFrame;
+    private JPanel plotArea;
 
     private boolean dbMode;
+    private PrintStream output;
     private Stack<String> viewedSNPs;
     private Vector<String> snpList;
     private int index;
+    JFileChooser jfc;
 
     public static void main(String[] args){
 
@@ -37,8 +35,9 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     Genoplot(){
-        super("GenozitPlots");
+        super("Evoke...");
 
+        jfc = new JFileChooser("user.dir");
 
         viewedSNPs = new Stack<String>();
 
@@ -70,11 +69,12 @@ public class Genoplot extends JFrame implements ActionListener {
 
         snpField = new JTextField(10);
         JPanel snpPanel = new JPanel();
-        snpPanel.add(new JLabel("SNP name:"));
+        snpPanel.add(new JLabel("SNP:"));
         snpPanel.add(snpField);
         controlsPanel.add(snpPanel);
 
         JButton back = new JButton("Back");
+        back.setAlignmentX(Component.CENTER_ALIGNMENT);
         back.addActionListener(this);
         controlsPanel.add(back);
 
@@ -87,7 +87,20 @@ public class Genoplot extends JFrame implements ActionListener {
         listPanel.add(ln);
         controlsPanel.add(listPanel);
 
+        JPanel scorePanel = new JPanel();
+        JButton fb = new JButton("-");
+        fb.addActionListener(this);
+        scorePanel.add(fb);
+        JButton nb = new JButton("?");
+        nb.addActionListener(this);
+        scorePanel.add(nb);
+        JButton ab = new JButton("+");
+        ab.addActionListener(this);
+        scorePanel.add(ab);
+        controlsPanel.add(scorePanel);
+
         goBut = new JButton("Plot intensity");
+        goBut.setAlignmentX(Component.CENTER_ALIGNMENT);
         goBut.addActionListener(this);
         goBut.setEnabled(false);
         controlsPanel.add(goBut);
@@ -95,15 +108,20 @@ public class Genoplot extends JFrame implements ActionListener {
         randomSNPButton = new JButton("I'm feeling lucky");
         randomSNPButton.addActionListener(this);
         randomSNPButton.setEnabled(false);
+        randomSNPButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         controlsPanel.add(randomSNPButton);
 
-        this.setContentPane(controlsPanel);
+        plotArea = new JPanel();
+        plotArea.setBorder(new LineBorder(Color.BLACK));
+        plotArea.setPreferredSize(new Dimension(920,320));
+
+        JPanel content = new JPanel();
+        content.add(controlsPanel);
+        content.add(plotArea);
+
+        this.setContentPane(content);
         this.pack();
         this.setVisible(true);
-
-        probCallFrame = new JFrame("Evoke...");
-        probCallFrame.setPreferredSize(new Dimension(1000,400));
-        probCallFrame.setLocation(this.getX()+this.getWidth(),this.getY());
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
@@ -121,6 +139,33 @@ public class Genoplot extends JFrame implements ActionListener {
                     index--;
                     plotIntensitas(snpList.get(index));
                 }
+            }else if (command.equals("-")){
+                output.println(snpList.get(index)+"\t-1");
+                if (index < snpList.size() - 1){
+                    index++;
+                    plotIntensitas(snpList.get(index));
+                }else{
+                    plotIntensitas("END");
+                    output.close();
+                }
+            }else if (command.equals("?")){
+                output.println(snpList.get(index)+"\t0");
+                if (index < snpList.size() - 1){
+                    index++;
+                    plotIntensitas(snpList.get(index));
+                }else{
+                    plotIntensitas("END");
+                    output.close();
+                }
+            }else if (command.equals("+")){
+                output.println(snpList.get(index)+"\t1");
+                if (index < snpList.size() - 1){
+                    index++;
+                    plotIntensitas(snpList.get(index));
+                }else{
+                    plotIntensitas("END");
+                    output.close();
+                }
             }else if (command.equals("I'm feeling lucky")){
                 String snp;
                 if (dbMode){
@@ -136,7 +181,8 @@ public class Genoplot extends JFrame implements ActionListener {
                     plotIntensitas(snp);
                 }
             }else if (command.equals("Open file")){
-                JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+                //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+                jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     if (loadData(jfc.getSelectedFile().getAbsolutePath())){
                         goBut.setEnabled(true);
@@ -146,7 +192,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
                 }
             }else if (command.equals("Open directory")){
-                JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+                //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
@@ -155,10 +201,13 @@ public class Genoplot extends JFrame implements ActionListener {
                     dbMode = true;
                 }
             }else if (command.equals("Load marker list")){
-                JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+                //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+                jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     loadList(jfc.getSelectedFile().getAbsolutePath());
                 }
+                FileOutputStream fos = new FileOutputStream(jfc.getSelectedFile().getAbsolutePath()+".scores");
+                output = new PrintStream(fos);
             }else if (command.equals("Dump PNGs of all SNPs in list")){
                 dumpAll();
             }else if (command.equals("Quit")){
@@ -234,19 +283,18 @@ public class Genoplot extends JFrame implements ActionListener {
         PlotData pd = new PlotData(null,bid.getRecord(name,0),bed.getRecord(name,0),sd);
         PlotPanel ppp = new PlotPanel(name,"a","b",pd);
 
-        probCallFrame.setContentPane(ppp);
+        /*probCallFrame.setContentPane(ppp);
         probCallFrame.pack();
-        probCallFrame.setVisible(true);
+        probCallFrame.setVisible(true);*/
     }
     
     private void fetchRecord(String name, String collection){
-
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p,BoxLayout.Y_AXIS));
-        p.add(new JLabel(name));
+        plotArea.removeAll();
+        plotArea.setLayout(new BoxLayout(plotArea,BoxLayout.Y_AXIS));
+        plotArea.add(new JLabel(name));
 
         JPanel plotHolder = new JPanel();
-        p.add(plotHolder);
+        plotArea.add(plotHolder);
 
 
         Vector<String> v = db.getCollections();
@@ -267,9 +315,6 @@ public class Genoplot extends JFrame implements ActionListener {
             pp.setMaxDim(maxdim);
             plotHolder.add(pp);
         }
-
-        probCallFrame.setContentPane(p);
-        probCallFrame.pack();
-        probCallFrame.setVisible(true);
+        plotArea.revalidate();
     }
 }

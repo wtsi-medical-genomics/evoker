@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 public class DataDirectory {
 
     Hashtable<String,Hashtable<Integer,BinaryFloatData>> intensityDataByCollectionChrom;
-//    Hashtable<String,Hashtable<String,BinaryFloatData>> probabilityDataByCollectionChrom;
     Hashtable<String,Hashtable<Integer,BedfileData>> genotypeDataByCollectionChrom;
 
     Hashtable<String,SampleData> samplesByCollection;
@@ -19,7 +18,6 @@ public class DataDirectory {
     DataDirectory(String filename) throws IOException{
 
         intensityDataByCollectionChrom = new Hashtable<String,Hashtable<Integer,BinaryFloatData>>();
-        //probabilityDataByCollectionChrom = new Hashtable<String, Hashtable<String, BinaryFloatData>>();
         genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<Integer, BedfileData>>();
         File directory = new File(filename);
         if (!directory.exists()){

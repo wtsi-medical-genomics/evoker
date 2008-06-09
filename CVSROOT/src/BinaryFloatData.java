@@ -24,7 +24,6 @@ public class BinaryFloatData extends BinaryData{
 
     Vector<float[]> getRecord(int snpIndex) throws IOException{
         //have index, now load float file
-        //todo: network seems to block on opening FIS sometimes?
         FileInputStream fis = new FileInputStream(file);
         BufferedInputStream bis = new BufferedInputStream(fis,8192);
         //todo: should probably put a magic number at front of float files?

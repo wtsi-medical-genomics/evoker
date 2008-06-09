@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Vector;
 
 public abstract class BinaryData {
@@ -12,6 +14,13 @@ public abstract class BinaryData {
 
     BinaryData(String filename, SampleData sd, MarkerData md){
         this.file = new File(filename);
+        try{
+            //this sometimes blocks, so by doing it here we add to start-up time
+            //but remove delays in the downstream UI (when seeking SNPs)
+            new FileInputStream(file);
+        }catch (FileNotFoundException fnfe){
+
+        }
         this.numInds = sd.getNumInds();
         this.numSNPs = md.getNumSNPs();
         this.md = md;
