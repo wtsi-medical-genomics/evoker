@@ -5,6 +5,8 @@ import java.util.Vector;
 
 public class PlotData {
 
+    /*Foo*/
+    
     private Vector<Byte> calledGenotypes;
     private Vector<float[]> genotypeProbabilities;
     private Vector<float[]> intensities;
