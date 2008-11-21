@@ -122,6 +122,11 @@ public class Genoplot extends JFrame implements ActionListener {
         this.setContentPane(content);
         this.pack();
         this.setVisible(true);
+        try{
+            DataClient dc = new DataClient(this);
+        }catch (Exception e){
+
+        }
     }
 
     public void actionPerformed(ActionEvent actionEvent) {

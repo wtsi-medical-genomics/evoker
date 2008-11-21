@@ -2,6 +2,7 @@ import java.util.Vector;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -24,19 +25,21 @@ public class BinaryFloatData extends BinaryData{
 
     Vector<float[]> getRecord(int snpIndex) throws IOException{
         //have index, now load float file
-        FileInputStream fis = new FileInputStream(file);
-        BufferedInputStream bis = new BufferedInputStream(fis,8192);
+        //FileInputStream fis = new FileInputStream(file);
+        RandomAccessFile raf = new RandomAccessFile(file,"r");
+        //BufferedInputStream bis = new BufferedInputStream(fis,8192);
         //todo: should probably put a magic number at front of float files?
 
         //skip to SNP of interest
         //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
         //java sux.
-        long remaining = snpIndex * bytesPerRecord;
-        while ((remaining = remaining - bis.skip(remaining)) > 0){
-        }
+        //long remaining = snpIndex * bytesPerRecord;
+        //while ((remaining = remaining - bis.skip(remaining)) > 0){
+        //}
+        raf.seek(snpIndex*bytesPerRecord);
 
         byte[] rawData = new byte[bytesPerRecord];
-        bis.read(rawData,0,bytesPerRecord);
+        raf.read(rawData);
         ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawData);
         rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 

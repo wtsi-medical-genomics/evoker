@@ -1,4 +1,5 @@
 import com.sshtools.j2ssh.SshClient;
+import com.sshtools.j2ssh.session.SessionChannelClient;
 import com.sshtools.j2ssh.forwarding.ForwardingIOChannel;
 import com.sshtools.j2ssh.authentication.PasswordAuthenticationClient;
 import com.sshtools.j2ssh.authentication.AuthenticationProtocolState;
@@ -13,7 +14,7 @@ import java.util.logging.Level;
 public class DataClient{
 
     static PasswordAuthenticationClient pwd = new PasswordAuthenticationClient();
-    static final int PORT = 2718;
+    //static final int PORT = 2718;
     private String host;
     private String dir;
     private PrintWriter out;
@@ -45,14 +46,24 @@ public class DataClient{
             int result = ssh.authenticate(pwd);
             // Evaluate the result
             if (result == AuthenticationProtocolState.COMPLETE) {
-                ForwardingIOChannel channel = new ForwardingIOChannel
-                        (ForwardingIOChannel.LOCAL_FORWARDING_CHANNEL,"genozitplots","127.0.0.1",PORT,host,PORT);
+                System.out.println("Success!");
+                SessionChannelClient session = ssh.openSessionChannel();
+                session.startShell();
 
-                if (ssh.openChannel(channel)){
-                    out = new PrintWriter(channel.getOutputStream(), true);
-                    in = new BufferedInputStream(channel.getInputStream(),512000);
-                }else{
-                    throw new IOException("Could not open channel to host.");
+                /** Writing to the session OutputStream */
+                OutputStream out = session.getOutputStream();
+                String cmd = "ls\n";
+                out.write(cmd.getBytes());
+
+                /**
+                 * Reading from the session InputStream
+                 */
+                InputStream in = session.getInputStream();
+                byte buffer[] = new byte[255];
+                int read;
+                while((read = in.read(buffer)) > 0) {
+                    String outstr = new String(buffer, 0, read);
+                    System.out.println(outstr);
                 }
             }else{
                 throw new IOException("Authentication failed.");
