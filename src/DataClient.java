@@ -13,6 +13,8 @@ import java.util.logging.Level;
 
 public class DataClient{
 
+    /*foo*/
+
     static PasswordAuthenticationClient pwd = new PasswordAuthenticationClient();
     //static final int PORT = 2718;
     private String host;
