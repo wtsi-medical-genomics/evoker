@@ -2,6 +2,7 @@ import java.util.Vector;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -12,12 +13,13 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
     RemoteBinaryFloatData(DataClient dc, SampleData sd, MarkerData md, String collection, int vals) {
         super(dc, sd, md, collection);
         this.valuesPerEntry = vals;
+        bytesPerRecord = valuesPerEntry * 4 * numInds;
     }
 
     public Vector<float[]> getRecord(String name) {
         try{
             BufferedInputStream bntIS = new BufferedInputStream(
-                    new FileInputStream("/Users/jcbarret/"+collection+"."+name+".bnt"),8192);
+                    new FileInputStream(dc.getLocalDir()+ File.separator+collection+"."+name+".bnt"),8192);
 
             //read raw snp data
             byte[] rawSnpData = new byte[bytesPerRecord];

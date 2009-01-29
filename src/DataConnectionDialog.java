@@ -1,16 +1,17 @@
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.*;
 
 public class DataConnectionDialog extends JDialog implements ActionListener {
     private JPasswordField pf;
     private char[] password;
     private String username;
-    private String directory;
+    private String remoteDir;
+    private String localDir;
     private String host;
     private JTextField userField;
-    private JTextField dirField;
+    private JTextField remdirField;
+    private JTextField locdirField;
     private JTextField hostField;
 
     public DataConnectionDialog(JFrame parent){
@@ -25,11 +26,17 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         hostPanel.add(hostField);
         contents.add(hostPanel);
 
-        JPanel dirPanel = new JPanel();
-        dirPanel.add(new JLabel("Directory: "));
-        dirField = new JTextField(20);
-        dirPanel.add(dirField);
-        contents.add(dirPanel);
+        JPanel remdirPanel = new JPanel();
+        remdirPanel.add(new JLabel("Remote directory: "));
+        remdirField = new JTextField(30);
+        remdirPanel.add(remdirField);
+        contents.add(remdirPanel);
+
+        JPanel localdirPanel = new JPanel();
+        localdirPanel.add(new JLabel("Local directory: "));
+        locdirField = new JTextField(30);
+        localdirPanel.add(locdirField);
+        contents.add(localdirPanel);
 
         JPanel userPanel = new JPanel();
         userPanel.add(new JLabel("Username: "));
@@ -59,7 +66,8 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         if (e.getActionCommand().equals("OK")){
             password = pf.getPassword();
             username = userField.getText();
-            directory = dirField.getText();
+            remoteDir = remdirField.getText();
+            localDir = locdirField.getText();
             host = hostField.getText();
             this.dispose();
         }else if (e.getActionCommand().equals("Cancel")){
@@ -75,8 +83,8 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         return username;
     }
 
-    public String getDirectory() {
-        return directory;
+    public String getRemoteDirectory() {
+        return remoteDir;
     }
 
     public String getHost() {
@@ -89,4 +97,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         }
     }
 
+    public String getLocalDirectory() {
+        return localDir;
+    }
 }

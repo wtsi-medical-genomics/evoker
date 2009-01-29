@@ -261,8 +261,9 @@ public class Genoplot extends JFrame implements ActionListener {
             snpList.add(st.nextToken());
         }
         listReader.close();
-        index = 0;
-        plotIntensitas(snpList.get(0));
+        db.listNotify(snpList);
+        index = -1;
+        //plotIntensitas(snpList.get(0));
         //listfwd.setEnabled(true);
         //listbck.setEnabled(true);
     }

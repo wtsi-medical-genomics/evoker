@@ -10,9 +10,9 @@ public class BinaryFloatDataFile extends BinaryDataFile{
 
     private int valuesPerEntry;
 
-    BinaryFloatDataFile(String filename, SampleData sd, MarkerData md, int valuesPerEntry, String collection) {
+    BinaryFloatDataFile(String filename, SampleData sd, MarkerData md, String collection, int vals) {
         super(filename, sd, md,collection);
-        this.valuesPerEntry = valuesPerEntry;
+        this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
         checkFileLength();

@@ -2,11 +2,13 @@ import java.util.Vector;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.File;
 
 public class RemoteBedfileData extends RemoteBinaryData {
 
     RemoteBedfileData(DataClient dc, SampleData sd, MarkerData md, String collection) {
         super(dc, sd, md, collection);
+        bytesPerRecord = (int)Math.ceil(((double)numInds)/4);        
     }
 
 
@@ -20,7 +22,7 @@ public class RemoteBedfileData extends RemoteBinaryData {
 
             //have index, now load bed file
             BufferedInputStream bedIS = new BufferedInputStream(
-                    new FileInputStream("/Users/jcbarret/"+collection+"."+name+".bed"),8192);
+                    new FileInputStream(dc.getLocalDir()+ File.separator+collection+"."+name+".bed"),8192);
 
             //read headers
             byte[] magicNumber = new byte[2];
