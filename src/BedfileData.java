@@ -6,16 +6,16 @@ public class BedfileData extends BinaryData{
 
     static String[] alleleMap = {"N","A","C","G","T"};
 
-    BedfileData(String filename, SampleData sd, MarkerData md) {
-        super(filename, sd, md);
+    BedfileData(String filename, SampleData sd, MarkerData md, String collection) {
+        super(filename, sd, md,collection);
 
         bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
         checkFileLength();
     }
 
-    public Vector<Byte> getRecord(String name, int index){
+    public Vector<Byte> getRecord(String name){
         //we subclass this so we can force the type of data in the Vector
-        return super.getRecord(name, index);
+        return super.getRecord(name);
     }
 
     public Vector<Byte> getRecord(int snpIndex) throws IOException{

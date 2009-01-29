@@ -10,17 +10,17 @@ public class BinaryFloatData extends BinaryData{
 
     private int valuesPerEntry;
 
-    BinaryFloatData(String filename, SampleData sd, MarkerData md, int valuesPerEntry) {
-        super(filename, sd, md);
+    BinaryFloatData(String filename, SampleData sd, MarkerData md, int valuesPerEntry, String collection) {
+        super(filename, sd, md,collection);
         this.valuesPerEntry = valuesPerEntry;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
         checkFileLength();
     }
 
-    public Vector<float[]> getRecord(String name, int index){
+    public Vector<float[]> getRecord(String name){
         //we subclass this so we can force the type of data in the Vector
-        return super.getRecord(name, index);
+        return super.getRecord(name);
     }
 
     Vector<float[]> getRecord(int snpIndex) throws IOException{

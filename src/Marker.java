@@ -9,11 +9,11 @@ import java.util.Vector;
  */
 public class Marker {
     int[] indices;
-    int chrom;
+    byte chrom;
     char alleleA;
     char alleleB;
 
-    public Marker (int numCollections, char alleleA, char alleleB, int chrom){
+    public Marker (int numCollections, char alleleA, char alleleB, byte chrom){
         this.indices = new int[numCollections];
         for (int i = 0; i < numCollections; i++){
             indices[i] = -1;
@@ -23,7 +23,7 @@ public class Marker {
         this.chrom = chrom;
     }
 
-    public void addSample(int sampleIndex, int markerIndex){
+    public void addSampleCollection(int sampleIndex, int markerIndex){
         indices[sampleIndex] = markerIndex;
     }
 
@@ -31,7 +31,7 @@ public class Marker {
         return indices[i];
     }
 
-    public int getChrom(){
+    public byte getChrom(){
         return chrom;
     }
 

@@ -50,6 +50,9 @@ public class Genoplot extends JFrame implements ActionListener {
         JMenuItem openDirectory = new JMenuItem("Open directory");
         openDirectory.addActionListener(this);
         fileMenu.add(openDirectory);
+        JMenuItem openRemote = new JMenuItem("Connect to remote server");
+        openRemote.addActionListener(this);
+        fileMenu.add(openRemote);
         JMenuItem loadList = new JMenuItem("Load marker list");
         loadList.addActionListener(this);
         fileMenu.add(loadList);
@@ -122,11 +125,7 @@ public class Genoplot extends JFrame implements ActionListener {
         this.setContentPane(content);
         this.pack();
         this.setVisible(true);
-        try{
-            DataClient dc = new DataClient(this);
-        }catch (Exception e){
 
-        }
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
@@ -205,6 +204,13 @@ public class Genoplot extends JFrame implements ActionListener {
                     randomSNPButton.setEnabled(true);
                     dbMode = true;
                 }
+
+            }else if (command.equals("Connect to remote server")){
+                DataClient dc = new DataClient(this);
+                dbMode=true;
+                randomSNPButton.setEnabled(true);
+                goBut.setEnabled(true);
+                db = new DataDirectory(dc);
             }else if (command.equals("Load marker list")){
                 //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -266,16 +272,16 @@ public class Genoplot extends JFrame implements ActionListener {
         if (filename.endsWith(".bnt") || filename.endsWith(".bed") ||filename.endsWith(".bpr")
                 || filename.endsWith(".bim") || filename.endsWith(".fam")){
             String stem = filename.substring(0,filename.length()-4);
-            try{
-                md = new MarkerData(stem+".bim");
-                sd = new SampleData(stem+".fam");
-                bid = new BinaryFloatData(stem + ".bnt",sd,md,2);
-                bed = new BedfileData(stem+".bed",sd,md);
+            //try{
+                //md = new MarkerData(stem+".bim");
+                //sd = new SampleData(stem+".fam");
+                //bid = new BinaryFloatData(stem + ".bnt",sd,md,2);
+                //bed = new BedfileData(stem+".bed",sd,md);
                 return true;
-            }catch (IOException ioe){
-                JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
+            //}catch (IOException ioe){
+             //   JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",
+              //          JOptionPane.ERROR_MESSAGE);
+            //}
         }else{
             JOptionPane.showMessageDialog(this, filename + "\ndoes not have correct extension.",
                     "File error",JOptionPane.ERROR_MESSAGE);
@@ -285,7 +291,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void fetchRecord(String name){
-        PlotData pd = new PlotData(null,bid.getRecord(name,0),bed.getRecord(name,0),sd);
+        PlotData pd = new PlotData(null,bid.getRecord(name),bed.getRecord(name),sd);
         PlotPanel ppp = new PlotPanel(name,"a","b",pd);
 
         /*probCallFrame.setContentPane(ppp);

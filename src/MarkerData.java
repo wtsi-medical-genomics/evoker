@@ -12,28 +12,54 @@ public class MarkerData {
     //Hashtable<String,Integer> snpIndexTable;
     //Hashtable<String,String> snpAlleleATable;
     //Hashtable<String,String> snpAlleleBTable;
+
+    //while this seems ridiculous, it is a considerable memory savings which is now not exposed anywhere
+    //outside this class. Instead of having a hash keyed on strings of chroms, taking up something like
+    //20 bytes per key, even though there are only a few possibilities. we do this dance to simultaneously
+    //avoid the memory overhead for millions of entries while allowing "chrom" to be anything, rather than
+    //just numbers 1..22 etc.
+
+    Hashtable<String,Byte> chromosomeLookup;
+    Hashtable<Byte,String> chromosomeBackLookup;
+
     Hashtable<String,Marker> markerTable;
+    Hashtable<String,Integer> collectionIndices;
     int numCollections;
+    int runningCount;
 
     public MarkerData(int numCollections){
         this.numCollections = numCollections;
         markerTable = new Hashtable<String,Marker>();
+        collectionIndices = new Hashtable<String,Integer>();
+        chromosomeLookup = new Hashtable<String,Byte>();
+        chromosomeBackLookup = new Hashtable<Byte,String>();
+        runningCount = 0;
     }
 
-    public MarkerData (String bimFilename)throws IOException{
+    /*public MarkerData (String bimFilename)throws IOException{
         this.numCollections = 1;
         markerTable = new Hashtable<String,Marker>();
+        collectionIndices = new Hashtable<String,Integer>();
+        runningCount = 0;
         addFile(bimFilename);
+    } */
+
+    public int getSampleCollectionIndex(String collection){
+        return collectionIndices.get(collection);
     }
 
-    public void addFile(String bimFilename) throws IOException{
-        addFile(bimFilename,0,0);
+    public String getRandomSNP(){
+        Vector v  = new Vector(markerTable.keySet());
+        return (String)v.get((int)(Math.random()*markerTable.keySet().size()));
     }
 
-    public void addFile(String bimFilename, int sampleIndex, int chrom) throws IOException {
+
+    public void addFile(String bimFile, String collection, String chromosome) throws IOException {
+        byte chrom = chromosomeLookup.get(chromosome);
+        collectionIndices.put(collection,runningCount);
         String currentLine;
         StringTokenizer st;
-        BufferedReader bimReader =  new BufferedReader(new FileReader(bimFilename));
+        BufferedReader bimReader =  new BufferedReader(new FileReader(bimFile));
 
         //read through bim file to record marker order so we can quickly index
         //into binary files
@@ -49,8 +75,9 @@ public class MarkerData {
             if (markerTable.get(snpid) ==  null){
                 markerTable.put(snpid, new Marker(numCollections,a,b,chrom));
             }
-            markerTable.get(snpid).addSample(sampleIndex,index++);
+            markerTable.get(snpid).addSampleCollection(runningCount,index++);
         }
+        runningCount++;
     }
 
     public Vector<String> getSNPs(){
@@ -65,19 +92,24 @@ public class MarkerData {
         return markerTable.get(name).getAlleleB();
     }
 
-    public int getChrom(String name){
-        return markerTable.get(name).getChrom();
+    public String getChrom(String name){
+        return chromosomeBackLookup.get(markerTable.get(name).getChrom());
     }
 
     public int getNumSNPs() {
         return getSNPs().size();
     }
 
-    public Integer getIndex(String name, int index){
-        if (markerTable.get(name) != null){
-            return markerTable.get(name).getIndex(index);
+    public Integer getIndex(String markerName, int sampleIndex){
+        if (markerTable.get(markerName) != null){
+            return markerTable.get(markerName).getIndex(sampleIndex);
         }else{
             return -1;
         }
+    }
+
+    public void addChromToLookup(String chrom, byte counter) {
+        chromosomeLookup.put(chrom,counter);
+        chromosomeBackLookup.put(counter,chrom);
     }
 }

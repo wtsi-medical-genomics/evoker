@@ -7,80 +7,88 @@ import java.util.regex.Pattern;
 
 public class DataDirectory {
 
-    Hashtable<String,Hashtable<Integer,BinaryFloatData>> intensityDataByCollectionChrom;
-    Hashtable<String,Hashtable<Integer,BedfileData>> genotypeDataByCollectionChrom;
-
+    Hashtable<String,Hashtable<String,BinaryFloatData>> intensityDataByCollectionChrom;
+    Hashtable<String,Hashtable<String,BedfileData>> genotypeDataByCollectionChrom;
     Hashtable<String,SampleData> samplesByCollection;
-    Hashtable<String,Integer> sampleOrder;
+    MarkerData md;
 
-    Hashtable<String,Integer> chromosomeBySNP;
+    DataDirectory(DataClient dc) throws IOException{
+        intensityDataByCollectionChrom = new Hashtable<String,Hashtable<String,BinaryFloatData>>();
+        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, BedfileData>>();
+        samplesByCollection = new Hashtable<String,SampleData>();
+        samplesByCollection.put("NBS",new SampleData("/Users/jcbarret/NBS.fam"));
+
+        md = new MarkerData(1);
+        md.addChromToLookup("18",(byte)0);
+        md.addFile("/Users/jcbarret/18.bim","NBS","18");
+        Hashtable<String,BinaryFloatData> tmpIntensity = new Hashtable<String,BinaryFloatData>();
+        Hashtable<String,BedfileData> tmpGenotypes = new Hashtable<String,BedfileData>();
+        tmpGenotypes.put("18",new RemoteBedfileData(dc,samplesByCollection.get("NBS"),md,"NBS"));
+        tmpIntensity.put("18",new RemoteBinaryFloatData("flu",samplesByCollection.get("NBS"),md,2,"NBS"));
+        intensityDataByCollectionChrom.put("NBS",tmpIntensity);
+        genotypeDataByCollectionChrom.put("NBS",tmpGenotypes);
+        
+    }
 
     DataDirectory(String filename) throws IOException{
 
-        intensityDataByCollectionChrom = new Hashtable<String,Hashtable<Integer,BinaryFloatData>>();
-        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<Integer, BedfileData>>();
+        intensityDataByCollectionChrom = new Hashtable<String,Hashtable<String,BinaryFloatData>>();
+        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, BedfileData>>();
         File directory = new File(filename);
         if (!directory.exists()){
             throw new IOException(directory.getName() + " does not exist!");
         }
 
         samplesByCollection = new Hashtable<String,SampleData>();
-        sampleOrder = new Hashtable<String,Integer>();
-        int index=0;
+        int numberofCollections=0;
         File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
         for (File famFile : fams){
             //stash all sample data in Hashtable keyed on collection name.
             String name = famFile.getName().substring(0,famFile.getName().length()-4);
             samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath()));
-            sampleOrder.put(name,index++);
+            numberofCollections++;
             System.out.println("Found collection: " + name);
         }
 
-        MarkerData md = new MarkerData(index);
-        chromosomeBySNP = new Hashtable<String, Integer>();
+        md = new MarkerData(numberofCollections);
 
+        //what chromosomes do we have here?
         File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
-
-        Vector<String> fileStems = new Vector<String>();
+        Hashtable<String,Boolean> knownChroms  = new Hashtable<String,Boolean>();
+        byte counter = 0;
         for (File bimFile : bims){
             String[] chunks = bimFile.getName().split("\\.");
-            md.addFile(bimFile.getAbsolutePath(),sampleOrder.get(chunks[0]),Integer.valueOf(chunks[1]));
-            fileStems.add(new String(chunks[0]+"."+chunks[1]));
-            System.out.println("Found bim: " + bimFile.getName());
+            if (knownChroms.get(chunks[1]) == null){
+                knownChroms.put(chunks[1],true);
+                md.addChromToLookup(chunks[1],counter);
+                counter++;
+                System.out.println("Found chromosome: " + chunks[1]);
+            }
         }
-
-        Hashtable<Integer,Boolean> knownChroms  = new Hashtable<Integer,Boolean>();
-        //we need to remember where each SNP is:
-        for (String SNP : md.getSNPs()){
-            chromosomeBySNP.put(SNP,md.getChrom(SNP));
-            knownChroms.put(md.getChrom(SNP),true);
-        }
-
 
         for(String collection : samplesByCollection.keySet()){
-            Hashtable<Integer,BinaryFloatData> tmpIntensity = new Hashtable<Integer,BinaryFloatData>();
-            Hashtable<Integer,BedfileData> tmpGenotypes = new Hashtable<Integer,BedfileData>();
-            //Hashtable<String,BinaryFloatData> tmpProbability = new Hashtable<String,BinaryFloatData>();
+            Hashtable<String,BinaryFloatData> tmpIntensity = new Hashtable<String,BinaryFloatData>();
+            Hashtable<String,BedfileData> tmpGenotypes = new Hashtable<String,BedfileData>();
             String root =  directory.getAbsolutePath() + File.separator + collection;
-            for (Integer chrom : knownChroms.keySet()){
+            for (String chrom : knownChroms.keySet()){
                 String name = root + "." + chrom;
-                System.out.println("Found: " + name);
+                //TODO: handle checking for missing files better
+                //we require a bimfile for this collection and chromosome:
+                md.addFile(name+".bim",collection,chrom);
+
+                //data files for this collection and chromosome:
                 tmpIntensity.put(chrom,new BinaryFloatData(name+".bnt",samplesByCollection.get(collection),
-                        md,2));
-                //tmpProbability.put(chrom,new BinaryFloatData(name+".bpr",samplesByCollection.get(collection),
-                  //      markersByChromosome.get(chrom),3));
+                        md,2,collection));
                 tmpGenotypes.put(chrom,new BedfileData(name+".bed",samplesByCollection.get(collection),
-                        md));
+                        md,collection));
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
-            //probabilityDataByCollectionChrom.put(collection,tmpProbability);
             genotypeDataByCollectionChrom.put(collection,tmpGenotypes);
         }
     }
 
     public String getRandomSNP(){
-        Vector v  = new Vector(chromosomeBySNP.keySet());
-        return (String)v.get((int)(Math.random()*chromosomeBySNP.keySet().size()));
+        return md.getRandomSNP();
     }
 
     private boolean checkFile(String stem){
@@ -93,10 +101,10 @@ public class DataDirectory {
             System.out.println("Missing file: " + stem+".bnt");
             all = false;
         }
-        /*if (!(new File(stem+".bpr").exists())){
-            System.out.println("Missing file: " + stem+".bpr");
+        if (!(new File(stem+".bim").exists())){
+            System.out.println("Missing file: " + stem+".bim");
             all = false;
-        }*/
+        }
         return all;
     }
 
@@ -117,11 +125,11 @@ public class DataDirectory {
         if (collection.equals("ALL")){
             return getRecord(snp);
         }
-        Integer chrom = chromosomeBySNP.get(snp);
+        String chrom = md.getChrom(snp);
         if (chrom != null){
             return new PlotData(
-                    genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp,sampleOrder.get(collection)),
-                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp,sampleOrder.get(collection)));
+                    genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
+                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp));
         }else{
             return new PlotData(null,null);
         }
@@ -134,15 +142,15 @@ public class DataDirectory {
     }
 
     public PlotData getRecord(String snp){
-        Integer chrom = chromosomeBySNP.get(snp);
+        String chrom = md.getChrom(snp);
         Vector v = new Vector(samplesByCollection.keySet());
         PlotData pd = new PlotData(
-                genotypeDataByCollectionChrom.get(v.get(0)).get(chrom).getRecord(snp,0),
-                intensityDataByCollectionChrom.get(v.get(0)).get(chrom).getRecord(snp,0));
+                genotypeDataByCollectionChrom.get(v.get(0)).get(chrom).getRecord(snp),
+                intensityDataByCollectionChrom.get(v.get(0)).get(chrom).getRecord(snp));
         for (Object col : v){
             pd.add(
-                    genotypeDataByCollectionChrom.get(col).get(chrom).getRecord(snp,sampleOrder.get(col)),
-                    intensityDataByCollectionChrom.get(col).get(chrom).getRecord(snp,sampleOrder.get(col)));
+                    genotypeDataByCollectionChrom.get(col).get(chrom).getRecord(snp),
+                    intensityDataByCollectionChrom.get(col).get(chrom).getRecord(snp));
         }
 
         return pd;
