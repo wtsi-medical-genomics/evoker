@@ -3,14 +3,12 @@ import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 
-public class RemoteBedfileData extends BedfileData{
-
-    DataClient dc;
+public class RemoteBedfileData extends RemoteBinaryData {
 
     RemoteBedfileData(DataClient dc, SampleData sd, MarkerData md, String collection) {
-        super("flu", sd, md, collection);
-        this.dc = dc;
+        super(dc, sd, md, collection);
     }
+
 
     public Vector<Byte> getRecord(String name){
         int snpIndex;

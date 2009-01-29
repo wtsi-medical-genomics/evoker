@@ -6,11 +6,11 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class BinaryFloatData extends BinaryData{
+public class BinaryFloatDataFile extends BinaryDataFile{
 
     private int valuesPerEntry;
 
-    BinaryFloatData(String filename, SampleData sd, MarkerData md, int valuesPerEntry, String collection) {
+    BinaryFloatDataFile(String filename, SampleData sd, MarkerData md, int valuesPerEntry, String collection) {
         super(filename, sd, md,collection);
         this.valuesPerEntry = valuesPerEntry;
         bytesPerRecord = valuesPerEntry * 4 * numInds;

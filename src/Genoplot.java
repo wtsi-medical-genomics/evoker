@@ -10,8 +10,8 @@ import java.util.StringTokenizer;
 
 public class Genoplot extends JFrame implements ActionListener {
 
-    private BinaryFloatData bid;
-    private BedfileData bed;
+    private BinaryFloatDataFile bid;
+    private BedfileDataFile bed;
     private MarkerData md;
     private SampleData sd;
     private DataDirectory db;
@@ -275,8 +275,8 @@ public class Genoplot extends JFrame implements ActionListener {
             //try{
                 //md = new MarkerData(stem+".bim");
                 //sd = new SampleData(stem+".fam");
-                //bid = new BinaryFloatData(stem + ".bnt",sd,md,2);
-                //bed = new BedfileData(stem+".bed",sd,md);
+                //bid = new BinaryFloatDataFile(stem + ".bnt",sd,md,2);
+                //bed = new BedfileDataFile(stem+".bed",sd,md);
                 return true;
             //}catch (IOException ioe){
              //   JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",

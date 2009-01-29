@@ -1,12 +1,12 @@
 import java.io.*;
 import java.util.Vector;
 
-public class BedfileData extends BinaryData{
+public class BedfileDataFile extends BinaryDataFile{
 
 
     static String[] alleleMap = {"N","A","C","G","T"};
 
-    BedfileData(String filename, SampleData sd, MarkerData md, String collection) {
+    BedfileDataFile(String filename, SampleData sd, MarkerData md, String collection) {
         super(filename, sd, md,collection);
 
         bytesPerRecord = (int)Math.ceil(((double)numInds)/4);

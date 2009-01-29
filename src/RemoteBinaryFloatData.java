@@ -1,18 +1,17 @@
 import java.util.Vector;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class RemoteBinaryFloatData extends BinaryFloatData{
+public class RemoteBinaryFloatData extends RemoteBinaryData {
 
     private int valuesPerEntry;
 
-    RemoteBinaryFloatData(String filename, SampleData sd, MarkerData md, int valuesPerEntry, String collection) {
-        super(filename, sd, md, valuesPerEntry, collection);
-        this.valuesPerEntry = valuesPerEntry;
+    RemoteBinaryFloatData(DataClient dc, SampleData sd, MarkerData md, String collection, int vals) {
+        super(dc, sd, md, collection);
+        this.valuesPerEntry = vals;
     }
 
     public Vector<float[]> getRecord(String name) {

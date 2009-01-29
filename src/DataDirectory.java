@@ -3,28 +3,27 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.regex.Pattern;
 
 public class DataDirectory {
 
-    Hashtable<String,Hashtable<String,BinaryFloatData>> intensityDataByCollectionChrom;
-    Hashtable<String,Hashtable<String,BedfileData>> genotypeDataByCollectionChrom;
+    Hashtable<String,Hashtable<String,? extends BinaryData>> intensityDataByCollectionChrom;
+    Hashtable<String,Hashtable<String, ? extends BinaryData>> genotypeDataByCollectionChrom;
     Hashtable<String,SampleData> samplesByCollection;
     MarkerData md;
 
     DataDirectory(DataClient dc) throws IOException{
-        intensityDataByCollectionChrom = new Hashtable<String,Hashtable<String,BinaryFloatData>>();
-        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, BedfileData>>();
+        intensityDataByCollectionChrom = new Hashtable<String,Hashtable<String, ? extends BinaryData>>();
+        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, ? extends BinaryData>>();
         samplesByCollection = new Hashtable<String,SampleData>();
         samplesByCollection.put("NBS",new SampleData("/Users/jcbarret/NBS.fam"));
 
         md = new MarkerData(1);
         md.addChromToLookup("18",(byte)0);
         md.addFile("/Users/jcbarret/18.bim","NBS","18");
-        Hashtable<String,BinaryFloatData> tmpIntensity = new Hashtable<String,BinaryFloatData>();
-        Hashtable<String,BedfileData> tmpGenotypes = new Hashtable<String,BedfileData>();
+        Hashtable<String, RemoteBinaryFloatData> tmpIntensity = new Hashtable<String, RemoteBinaryFloatData>();
+        Hashtable<String, RemoteBedfileData> tmpGenotypes = new Hashtable<String, RemoteBedfileData>();
         tmpGenotypes.put("18",new RemoteBedfileData(dc,samplesByCollection.get("NBS"),md,"NBS"));
-        tmpIntensity.put("18",new RemoteBinaryFloatData("flu",samplesByCollection.get("NBS"),md,2,"NBS"));
+        tmpIntensity.put("18",new RemoteBinaryFloatData(dc,samplesByCollection.get("NBS"),md,"NBS",2));
         intensityDataByCollectionChrom.put("NBS",tmpIntensity);
         genotypeDataByCollectionChrom.put("NBS",tmpGenotypes);
         
@@ -32,8 +31,8 @@ public class DataDirectory {
 
     DataDirectory(String filename) throws IOException{
 
-        intensityDataByCollectionChrom = new Hashtable<String,Hashtable<String,BinaryFloatData>>();
-        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, BedfileData>>();
+        intensityDataByCollectionChrom = new Hashtable<String, Hashtable<String, ? extends BinaryData>>();
+        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, ? extends BinaryData>>();
         File directory = new File(filename);
         if (!directory.exists()){
             throw new IOException(directory.getName() + " does not exist!");
@@ -67,8 +66,8 @@ public class DataDirectory {
         }
 
         for(String collection : samplesByCollection.keySet()){
-            Hashtable<String,BinaryFloatData> tmpIntensity = new Hashtable<String,BinaryFloatData>();
-            Hashtable<String,BedfileData> tmpGenotypes = new Hashtable<String,BedfileData>();
+            Hashtable<String, BinaryFloatDataFile> tmpIntensity = new Hashtable<String, BinaryFloatDataFile>();
+            Hashtable<String, BedfileDataFile> tmpGenotypes = new Hashtable<String, BedfileDataFile>();
             String root =  directory.getAbsolutePath() + File.separator + collection;
             for (String chrom : knownChroms.keySet()){
                 String name = root + "." + chrom;
@@ -77,9 +76,9 @@ public class DataDirectory {
                 md.addFile(name+".bim",collection,chrom);
 
                 //data files for this collection and chromosome:
-                tmpIntensity.put(chrom,new BinaryFloatData(name+".bnt",samplesByCollection.get(collection),
+                tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",samplesByCollection.get(collection),
                         md,2,collection));
-                tmpGenotypes.put(chrom,new BedfileData(name+".bed",samplesByCollection.get(collection),
+                tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",samplesByCollection.get(collection),
                         md,collection));
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
@@ -122,9 +121,9 @@ public class DataDirectory {
     }
 
     public PlotData getRecord(String snp, String collection){
-        if (collection.equals("ALL")){
+        /**if (collection.equals("ALL")){
             return getRecord(snp);
-        }
+        }**/
         String chrom = md.getChrom(snp);
         if (chrom != null){
             return new PlotData(
@@ -137,11 +136,10 @@ public class DataDirectory {
 
     public Vector<String> getCollections(){
         Vector<String> r = new Vector<String>(samplesByCollection.keySet());
-        //r.add("ALL");
         return r;
     }
 
-    public PlotData getRecord(String snp){
+    /**public PlotData getRecord(String snp){
         String chrom = md.getChrom(snp);
         Vector v = new Vector(samplesByCollection.keySet());
         PlotData pd = new PlotData(
@@ -154,5 +152,5 @@ public class DataDirectory {
         }
 
         return pd;
-    }
+    }**/
 }
