@@ -13,6 +13,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     private JTextField remdirField;
     private JTextField locdirField;
     private JTextField hostField;
+    private JCheckBox emptyIt;
 
     public DataConnectionDialog(JFrame parent){
         super(parent,"Data Connection",true);
@@ -50,6 +51,9 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         passPanel.add(pf);
         contents.add(passPanel);
 
+        emptyIt = new JCheckBox("Clear local cache?");
+        //contents.add(emptyIt);
+
         JPanel butPan = new JPanel();
         JButton okbut = new JButton("OK");
         okbut.addActionListener(this);
@@ -73,6 +77,10 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         }else if (e.getActionCommand().equals("Cancel")){
             this.dispose();
         }
+    }
+
+    public boolean getEmpty(){
+        return emptyIt.isSelected();
     }
 
     public char[] getPassword(){

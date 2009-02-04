@@ -159,6 +159,14 @@ public class DataDirectory {
 
     public void listNotify(final Vector<String> list){
         if (dc != null){
+            //we need to fetch the first one in this thread so we can plot it as soon as it arrives
+            String firstSNP = list.remove(0);
+            String chrom = md.getChrom(firstSNP);
+            for (String collection : samplesByCollection.keySet()){
+                genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
+                intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
+            }
+
             class BackgroundFetcher implements Runnable {
                 public void run(){
                     for (String snp : list){
@@ -174,18 +182,8 @@ public class DataDirectory {
         }
     }
 
-    /**public PlotData getRecord(String snp){
-        String chrom = md.getChrom(snp);
-        Vector v = new Vector(samplesByCollection.keySet());
-        PlotData pd = new PlotData(
-                genotypeDataByCollectionChrom.get(v.get(0)).get(chrom).getRecord(snp),
-                intensityDataByCollectionChrom.get(v.get(0)).get(chrom).getRecord(snp));
-        for (Object col : v){
-            pd.add(
-                    genotypeDataByCollectionChrom.get(col).get(chrom).getRecord(snp),
-                    intensityDataByCollectionChrom.get(col).get(chrom).getRecord(snp));
-        }
+    public boolean isRemote(){
+        return (dc != null);
+    }
 
-        return pd;
-    }**/
 }

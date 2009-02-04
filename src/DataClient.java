@@ -33,17 +33,24 @@ public class DataClient{
     public DataClient(JFrame parent) throws IOException{
         Logger.getLogger("com.sshtools").setLevel(Level.WARNING);
 
+
         // Create a password authentication instance
         DataConnectionDialog dcd = new DataConnectionDialog(parent);
         dcd.pack();
         dcd.setVisible(true);
         if (dcd.getUsername() != null){
+            localDir = dcd.getLocalDirectory();
+
+            //clean up locally if asked.
+            if (dcd.getEmpty()){
+                File ld = new File(localDir);
+            }
+
             pwd.setUsername(dcd.getUsername());
             pwd.setPassword(new String(dcd.getPassword()));
             ssh = new SshClient();
             ssh.connect(dcd.getHost(),new IgnoreHostKeyVerification());
             remoteDir = dcd.getRemoteDirectory();
-            localDir = dcd.getLocalDirectory();
             dcd.clearPassword();
 
             // Try the authentication

@@ -7,7 +7,6 @@ public class PlotData {
 
     
     private Vector<Byte> calledGenotypes;
-    private Vector<float[]> genotypeProbabilities;
     private Vector<float[]> intensities;
     private double maf, genopc, hwpval, maxDim;
     private SampleData samples;
@@ -21,41 +20,18 @@ public class PlotData {
         this.maxDim = 0;
     }
 
-    /*PlotData(Vector<float[]> genotypeProbabilities, Vector<float[]> intensities){
-        this.genotypeProbabilities = genotypeProbabilities;
-        this.intensities = intensities;
-    }*/
 
     public void add(Vector<Byte> calledgenotypes, Vector<float[]> intensities){
         this.calledGenotypes.addAll(calledgenotypes);
-        //this.genotypeProbabilities.addAll(genotypeProbabilities);
         this.intensities.addAll(intensities);
     }
 
     XYSeriesCollection callGenotypes(float cutoff){
-        if (intensities == null || (genotypeProbabilities == null && calledGenotypes == null)){
+        if (intensities == null ||  calledGenotypes == null){
             return null;
         }
 
-        Vector<Byte> genotypes = new Vector<Byte>();
-
-        if (calledGenotypes != null){
-            genotypes = calledGenotypes;
-        }else{
-            for (float[] prob : genotypeProbabilities) {
-                if (prob[0] >= cutoff){
-                    genotypes.add((byte) 0);
-                }else if (prob[1] >= cutoff){
-                    genotypes.add((byte) 2);
-                }else if (prob[2] >= cutoff){
-                    genotypes.add((byte) 3);
-                }else{
-                    genotypes.add((byte) 1);
-                }
-            }
-        }
-
-        computeSummary(genotypes);
+        computeSummary(calledGenotypes);
 
 
         XYSeries intensityDataSeriesHomo1 = new XYSeries(0,false);
@@ -69,8 +45,8 @@ public class PlotData {
         }
 
         for (int i = 0; i < intensities.size(); i++){
-            if (genotypes.get(i) != null){
-                switch(genotypes.get(i)) {
+            if (calledGenotypes.get(i) != null){
+                switch(calledGenotypes.get(i)) {
                     case 0:
                         intensityDataSeriesHomo1.add(intensities.get(i)[0],intensities.get(i)[1]);
                         indsInClasses.get(0).add(samples.getInd(i));

@@ -10,18 +10,12 @@ import java.util.StringTokenizer;
 
 public class Genoplot extends JFrame implements ActionListener {
 
-    private BinaryFloatDataFile bid;
-    private BedfileDataFile bed;
-    private MarkerData md;
-    private SampleData sd;
     private DataDirectory db;
 
     private JTextField snpField;
     private JButton goBut;
-    private JButton randomSNPButton;
     private JPanel plotArea;
 
-    private boolean dbMode;
     private PrintStream output;
     private Stack<String> viewedSNPs;
     private Vector<String> snpList;
@@ -44,9 +38,6 @@ public class Genoplot extends JFrame implements ActionListener {
         JMenuBar mb = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");
-        JMenuItem openFile = new JMenuItem("Open file");
-        openFile.addActionListener(this);
-        fileMenu.add(openFile);
         JMenuItem openDirectory = new JMenuItem("Open directory");
         openDirectory.addActionListener(this);
         fileMenu.add(openDirectory);
@@ -77,7 +68,7 @@ public class Genoplot extends JFrame implements ActionListener {
         goBut.addActionListener(this);
         goBut.setEnabled(false);
         snpPanel.add(goBut);
-        randomSNPButton = new JButton("Random");
+        JButton randomSNPButton = new JButton("Random");
         randomSNPButton.addActionListener(this);
         snpPanel.add(randomSNPButton);
         controlsPanel.add(snpPanel);
@@ -111,22 +102,23 @@ public class Genoplot extends JFrame implements ActionListener {
         ab.addActionListener(this);
         scorePanel.add(ab);
         controlsPanel.add(scorePanel);
+        //JScrollPane scrollzor = new JScrollPane(controlsPanel);
+        //scrollzor.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 
-
-
+        controlsPanel.setMaximumSize(new Dimension(2000,(int)controlsPanel.getPreferredSize().getHeight()));
+        controlsPanel.setMinimumSize(new Dimension(10,(int)controlsPanel.getPreferredSize().getHeight()));
 
         plotArea = new JPanel();
         plotArea.setBorder(new LineBorder(Color.BLACK));
         plotArea.setBackground(Color.WHITE);
         plotArea.setPreferredSize(new Dimension(1000,350));
 
-        JPanel content = new JPanel();
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        //content.setPreferredSize(new Dimension(1024,768));
-        content.add(plotArea);
-        content.add(controlsPanel);
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.add(plotArea);
+        contentPanel.add(controlsPanel);
 
-        this.setContentPane(content);
+        this.setContentPane(contentPanel);
         this.pack();
         this.setVisible(true);
 
@@ -153,7 +145,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     index++;
                     plotIntensitas(snpList.get(index));
                 }else{
-                    plotIntensitas("END");
+                    plotIntensitas(null);
                     output.close();
                 }
             }else if (command.equals("Maybe")){
@@ -162,7 +154,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     index++;
                     plotIntensitas(snpList.get(index));
                 }else{
-                    plotIntensitas("END");
+                    plotIntensitas(null);
                     output.close();
                 }
             }else if (command.equals("Yes")){
@@ -171,32 +163,16 @@ public class Genoplot extends JFrame implements ActionListener {
                     index++;
                     plotIntensitas(snpList.get(index));
                 }else{
-                    plotIntensitas("END");
+                    plotIntensitas(null);
                     output.close();
                 }
             }else if (command.equals("Random")){
-                String snp;
-                if (dbMode){
-                    snp = db.getRandomSNP();
-                }else{
-                    snp = md.getSNPs().get((int)(Math.random()*md.getSNPs().size()));
-                }
-                plotIntensitas(snp);
+                plotIntensitas(db.getRandomSNP());                
             }else if (command.equals("Back")){
                 viewedSNPs.pop(); //the guy who was just plotted
                 if (!viewedSNPs.isEmpty()){
                     String snp = viewedSNPs.pop();
                     plotIntensitas(snp);
-                }
-            }else if (command.equals("Open file")){
-                //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
-                jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
-                    if (loadData(jfc.getSelectedFile().getAbsolutePath())){
-                        goBut.setEnabled(true);
-                        //collectionDropdown.setEnabled(false);
-                        dbMode = false;
-                    }
                 }
             }else if (command.equals("Open directory")){
                 //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
@@ -204,13 +180,11 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
                     goBut.setEnabled(true);
-                    dbMode = true;
                 }
 
             }else if (command.equals("Connect to remote server")){
                 DataClient dc = new DataClient(this);
                 if (dc.getConnectionStatus()){
-                    dbMode=true;
                     goBut.setEnabled(true);
                     db = new DataDirectory(dc);
                 }
@@ -245,13 +219,26 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void plotIntensitas(String name){
-        //dc.writeToServer(name);
-        if (dbMode){
-            fetchRecord(name,null);
-        }else{
+        plotArea.removeAll();
+        plotArea.setLayout(new BoxLayout(plotArea,BoxLayout.Y_AXIS));
+
+        if (name != null){
+            plotArea.add(new JLabel(name));
             fetchRecord(name);
+            viewedSNPs.push(name);
+        }else{
+            //I tried very hard to get the label right in the middle and failed because java layouts blow
+            plotArea.add(Box.createVerticalGlue());
+            JPanel p = new JPanel();
+            p.add(new JLabel("End of list."));
+            p.setBackground(Color.WHITE);
+            plotArea.add(p);
+            plotArea.add(Box.createVerticalGlue());
         }
-        viewedSNPs.push(name);
+
+        //seems to need both of these to avoid floating old crud left behind
+        plotArea.revalidate();
+        plotArea.repaint();
     }
 
     private void loadList(String filename)throws IOException{
@@ -264,73 +251,51 @@ public class Genoplot extends JFrame implements ActionListener {
             snpList.add(st.nextToken());
         }
         listReader.close();
-        db.listNotify(snpList);
-        index = -1;
-        //plotIntensitas(snpList.get(0));
+
+        try{
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            db.listNotify((Vector)snpList.clone());
+            plotIntensitas(snpList.get(0));
+        }finally{
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+
+        index = 0;
         //listfwd.setEnabled(true);
         //listbck.setEnabled(true);
     }
 
-    private boolean loadData(String filename){
-        //see if the filename selected ends with one of our favorite endings
-        if (filename.endsWith(".bnt") || filename.endsWith(".bed") ||filename.endsWith(".bpr")
-                || filename.endsWith(".bim") || filename.endsWith(".fam")){
-            String stem = filename.substring(0,filename.length()-4);
-            //try{
-                //md = new MarkerData(stem+".bim");
-                //sd = new SampleData(stem+".fam");
-                //bid = new BinaryFloatDataFile(stem + ".bnt",sd,md,2);
-                //bed = new BedfileDataFile(stem+".bed",sd,md);
-                return true;
-            //}catch (IOException ioe){
-             //   JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",
-              //          JOptionPane.ERROR_MESSAGE);
-            //}
-        }else{
-            JOptionPane.showMessageDialog(this, filename + "\ndoes not have correct extension.",
-                    "File error",JOptionPane.ERROR_MESSAGE);
-        }
-
-        return false;
-    }
-
     private void fetchRecord(String name){
-        PlotData pd = new PlotData(bed.getRecord(name),bid.getRecord(name),sd);
-        PlotPanel ppp = new PlotPanel(name,"a","b",pd);
 
-        /*probCallFrame.setContentPane(ppp);
-        probCallFrame.pack();
-        probCallFrame.setVisible(true);*/
-    }
-    
-    private void fetchRecord(String name, String collection){
-        plotArea.removeAll();
-        plotArea.setLayout(new BoxLayout(plotArea,BoxLayout.Y_AXIS));
-        plotArea.add(new JLabel(name));
-
-        JPanel plotHolder = new JPanel();
-        plotHolder.setBackground(Color.WHITE);
-        plotArea.add(plotHolder);
-
-
-        Vector<String> v = db.getCollections();
-        Vector<PlotPanel> plots = new Vector<PlotPanel>();
-        double maxdim=0;
-        for (String c : v){
-            PlotPanel pp = new PlotPanel(c,"a","b",
-                    db.getRecord(name, c));
-
-            pp.refresh();
-            if (pp.getMaxDim() > maxdim){
-                maxdim = pp.getMaxDim();
+        try{
+            if (db.isRemote()){
+                this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             }
-            plots.add(pp);
-        }
+            JPanel plotHolder = new JPanel();
+            plotHolder.setBackground(Color.WHITE);
+            plotArea.add(plotHolder);
 
-        for (PlotPanel pp : plots){
-            pp.setMaxDim(maxdim);
-            plotHolder.add(pp);
+
+            Vector<String> v = db.getCollections();
+            Vector<PlotPanel> plots = new Vector<PlotPanel>();
+            double maxdim=0;
+            for (String c : v){
+                PlotPanel pp = new PlotPanel(c,"a","b",
+                        db.getRecord(name, c));
+
+                pp.refresh();
+                if (pp.getMaxDim() > maxdim){
+                    maxdim = pp.getMaxDim();
+                }
+                plots.add(pp);
+            }
+
+            for (PlotPanel pp : plots){
+                pp.setMaxDim(maxdim);
+                plotHolder.add(pp);
+            }
+        }finally{
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
-        plotArea.revalidate();
     }
 }
