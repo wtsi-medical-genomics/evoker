@@ -13,18 +13,11 @@ public class PlotData {
     private SampleData samples;
     Vector<Vector<String>> indsInClasses;
 
-    PlotData(Vector<float[]> genotypeProbabilities, Vector<float[]> intensities, Vector<Byte>calledGenotypes,
-             SampleData samples){
+
+    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples){
         this.calledGenotypes = calledGenotypes;
-        this.genotypeProbabilities = genotypeProbabilities;
         this.intensities = intensities;
         this.samples = samples;
-        this.maxDim = 0;
-    }
-
-    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities){
-        this.calledGenotypes = calledGenotypes;
-        this.intensities = intensities;
         this.maxDim = 0;
     }
 
@@ -80,19 +73,19 @@ public class PlotData {
                 switch(genotypes.get(i)) {
                     case 0:
                         intensityDataSeriesHomo1.add(intensities.get(i)[0],intensities.get(i)[1]);
-                        //indsInClasses.get(0).add(samples.getInd(i));
+                        indsInClasses.get(0).add(samples.getInd(i));
                         break;
                     case 1:
                         intensityDataSeriesMissing.add(intensities.get(i)[0],intensities.get(i)[1]);
-                        //indsInClasses.get(1).add(samples.getInd(i));
+                        indsInClasses.get(1).add(samples.getInd(i));
                         break;
                     case 2:
                         intensityDataSeriesHetero.add(intensities.get(i)[0],intensities.get(i)[1]);
-                        //indsInClasses.get(2).add(samples.getInd(i));
+                        indsInClasses.get(2).add(samples.getInd(i));
                         break;
                     case 3:
                         intensityDataSeriesHomo2.add(intensities.get(i)[0],intensities.get(i)[1]);
-                        //indsInClasses.get(3).add(samples.getInd(i));
+                        indsInClasses.get(3).add(samples.getInd(i));
                         break;
                     default:
                         //TODO: this is very bad

@@ -10,8 +10,10 @@ import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
@@ -57,6 +59,7 @@ public class PlotPanel extends JPanel {
 
     private JPanel generateInfo(){
         JPanel foo = new JPanel();
+        foo.setBackground(Color.white);
         foo.add(new JLabel("MAF: " + nf.format(data.getMaf())));
         foo.add(new JLabel("GPC: " + nf.format(data.getGenopc())));
         foo.add(new JLabel("HWE pval: " + formatPValue(data.getHwpval())));
@@ -69,48 +72,33 @@ public class PlotPanel extends JPanel {
         jfc = ChartFactory.createScatterPlot(title, xlab, ylab, xysc,
                 PlotOrientation.VERTICAL, false, false, false);
 
-        XYItemRenderer xyd = jfc.getXYPlot().getRenderer();
+        XYPlot thePlot = jfc.getXYPlot();
+        //BasicStroke dash = new BasicStroke(1,BasicStroke.CAP_BUTT,BasicStroke.JOIN_BEVEL,
+        //        1,new float[]{10,10},0);
+        //BasicStroke solid = new BasicStroke(1);
+        thePlot.setBackgroundPaint(Color.white);
+        //thePlot.setDomainZeroBaselineVisible(true);
+        //thePlot.setDomainZeroBaselineStroke(solid);
+        //thePlot.setRangeZeroBaselineVisible(true);
+        //thePlot.setRangeZeroBaselineStroke(solid);
+        thePlot.setOutlineVisible(false);
+        //thePlot.getDomainAxis().setAxisLineVisible(false);
+        //thePlot.getDomainAxis().setTickMarksVisible(false);
+        //thePlot.getRangeAxis().setAxisLineVisible(false);
+        //thePlot.getRangeAxis().setTickMarksVisible(false);
+
+        XYItemRenderer xyd = thePlot.getRenderer();
         Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
         xyd.setSeriesShape(0, dot);
         xyd.setSeriesShape(1, dot);
         xyd.setSeriesShape(2, dot);
         xyd.setSeriesShape(3, dot);
         xyd.setSeriesPaint(0, Color.BLUE);
-        xyd.setSeriesPaint(1, Color.LIGHT_GRAY);
+        xyd.setSeriesPaint(1, new Color(180,180,180));
         xyd.setSeriesPaint(2, Color.GREEN);
         xyd.setSeriesPaint(3, Color.RED);
 
-        //xyd.setToolTipGenerator(new ZitPlotToolTipGenerator());
-        //jfc.getXYPlot().getDomainAxis().setRange(-0.5,3);
-        //jfc.getXYPlot().getRangeAxis().setRange(-0.5,3);
-
-
-        //put lines at 0,0
-        XYSeries lines1 = new XYSeries(0);
-        lines1.add(3,0);
-        lines1.add(-3,0);
-        XYSeries lines2 = new XYSeries(1);
-        lines2.add(0,3);
-        lines2.add(0,-3);
-        XYSeriesCollection xysc2 = new XYSeriesCollection(lines1);
-        xysc2.addSeries(lines2);
-        jfc.getXYPlot().setDataset(1,xysc2);
-        XYLineAndShapeRenderer xylasr = new XYLineAndShapeRenderer(true,false);
-        xylasr.setSeriesPaint(0, Color.BLACK);
-        xylasr.setSeriesPaint(1, Color.BLACK);
-
-        final float dash[] = {10.0f};
-        BasicStroke bs = new BasicStroke(0.5f,
-                BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_ROUND,
-                10.0f,
-                dash,
-                0.0f
-                );
-        xylasr.setSeriesStroke(0, bs);
-        xylasr.setSeriesStroke(1, bs);
-
-        jfc.getXYPlot().setRenderer(1,xylasr);
+        xyd.setBaseToolTipGenerator(new ZitPlotToolTipGenerator());
 
         ChartPanel cp = new ChartPanel(jfc);
         cp.setDisplayToolTips(true);

@@ -145,9 +145,10 @@ public class DataDirectory {
         if (chrom != null){
             return new PlotData(
                     genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
-                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp));
+                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
+                    samplesByCollection.get(collection));
         }else{
-            return new PlotData(null,null);
+            return new PlotData(null,null,null);
         }
     }
 

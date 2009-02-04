@@ -68,15 +68,21 @@ public class Genoplot extends JFrame implements ActionListener {
         setJMenuBar(mb);
 
         JPanel controlsPanel = new JPanel();
-        controlsPanel.setLayout(new BoxLayout(controlsPanel,BoxLayout.Y_AXIS));
 
         snpField = new JTextField(10);
         JPanel snpPanel = new JPanel();
         snpPanel.add(new JLabel("SNP:"));
         snpPanel.add(snpField);
+        goBut = new JButton("Go");
+        goBut.addActionListener(this);
+        goBut.setEnabled(false);
+        snpPanel.add(goBut);
+        randomSNPButton = new JButton("Random");
+        randomSNPButton.addActionListener(this);
+        snpPanel.add(randomSNPButton);
         controlsPanel.add(snpPanel);
 
-        JButton back = new JButton("Back");
+       /* JButton back = new JButton("Back");
         back.setAlignmentX(Component.CENTER_ALIGNMENT);
         back.addActionListener(this);
         controlsPanel.add(back);
@@ -88,39 +94,37 @@ public class Genoplot extends JFrame implements ActionListener {
         JButton ln = new JButton("Next");
         ln.addActionListener(this);
         listPanel.add(ln);
-        controlsPanel.add(listPanel);
+        controlsPanel.add(listPanel);*/
+
+        controlsPanel.add(Box.createRigidArea(new Dimension(50,1)));
 
         JPanel scorePanel = new JPanel();
-        JButton fb = new JButton("-");
+        JLabel approvelabel = new JLabel("Approve?");
+        scorePanel.add(approvelabel);
+        JButton fb = new JButton("Yes");
         fb.addActionListener(this);
         scorePanel.add(fb);
-        JButton nb = new JButton("?");
+        JButton nb = new JButton("Maybe");
         nb.addActionListener(this);
         scorePanel.add(nb);
-        JButton ab = new JButton("+");
+        JButton ab = new JButton("No");
         ab.addActionListener(this);
         scorePanel.add(ab);
         controlsPanel.add(scorePanel);
 
-        goBut = new JButton("Plot intensity");
-        goBut.setAlignmentX(Component.CENTER_ALIGNMENT);
-        goBut.addActionListener(this);
-        goBut.setEnabled(false);
-        controlsPanel.add(goBut);
 
-        randomSNPButton = new JButton("I'm feeling lucky");
-        randomSNPButton.addActionListener(this);
-        randomSNPButton.setEnabled(false);
-        randomSNPButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        controlsPanel.add(randomSNPButton);
+
 
         plotArea = new JPanel();
         plotArea.setBorder(new LineBorder(Color.BLACK));
-        plotArea.setPreferredSize(new Dimension(920,320));
+        plotArea.setBackground(Color.WHITE);
+        plotArea.setPreferredSize(new Dimension(1000,350));
 
         JPanel content = new JPanel();
-        content.add(controlsPanel);
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        //content.setPreferredSize(new Dimension(1024,768));
         content.add(plotArea);
+        content.add(controlsPanel);
 
         this.setContentPane(content);
         this.pack();
@@ -131,7 +135,7 @@ public class Genoplot extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent actionEvent) {
         try{
             String command = actionEvent.getActionCommand();
-            if (command.equals("Plot intensity")){
+            if (command.equals("Go")){
                 plotIntensitas(snpField.getText());
             }else if (command.equals("Next")){
                 if (index < snpList.size() - 1){
@@ -143,7 +147,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     index--;
                     plotIntensitas(snpList.get(index));
                 }
-            }else if (command.equals("-")){
+            }else if (command.equals("No")){
                 output.println(snpList.get(index)+"\t-1");
                 if (index < snpList.size() - 1){
                     index++;
@@ -152,7 +156,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     plotIntensitas("END");
                     output.close();
                 }
-            }else if (command.equals("?")){
+            }else if (command.equals("Maybe")){
                 output.println(snpList.get(index)+"\t0");
                 if (index < snpList.size() - 1){
                     index++;
@@ -161,7 +165,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     plotIntensitas("END");
                     output.close();
                 }
-            }else if (command.equals("+")){
+            }else if (command.equals("Yes")){
                 output.println(snpList.get(index)+"\t1");
                 if (index < snpList.size() - 1){
                     index++;
@@ -170,7 +174,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     plotIntensitas("END");
                     output.close();
                 }
-            }else if (command.equals("I'm feeling lucky")){
+            }else if (command.equals("Random")){
                 String snp;
                 if (dbMode){
                     snp = db.getRandomSNP();
@@ -190,7 +194,6 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     if (loadData(jfc.getSelectedFile().getAbsolutePath())){
                         goBut.setEnabled(true);
-                        randomSNPButton.setEnabled(true);
                         //collectionDropdown.setEnabled(false);
                         dbMode = false;
                     }
@@ -201,14 +204,12 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
                     goBut.setEnabled(true);
-                    randomSNPButton.setEnabled(true);
                     dbMode = true;
                 }
 
             }else if (command.equals("Connect to remote server")){
                 DataClient dc = new DataClient(this);
                 dbMode=true;
-                randomSNPButton.setEnabled(true);
                 goBut.setEnabled(true);
                 db = new DataDirectory(dc);
             }else if (command.equals("Load marker list")){
@@ -292,7 +293,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void fetchRecord(String name){
-        PlotData pd = new PlotData(null,bid.getRecord(name),bed.getRecord(name),sd);
+        PlotData pd = new PlotData(bed.getRecord(name),bid.getRecord(name),sd);
         PlotPanel ppp = new PlotPanel(name,"a","b",pd);
 
         /*probCallFrame.setContentPane(ppp);
@@ -306,6 +307,7 @@ public class Genoplot extends JFrame implements ActionListener {
         plotArea.add(new JLabel(name));
 
         JPanel plotHolder = new JPanel();
+        plotHolder.setBackground(Color.WHITE);
         plotArea.add(plotHolder);
 
 
