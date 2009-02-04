@@ -61,6 +61,10 @@ public class DataClient{
         }
     }
 
+    public boolean getConnectionStatus(){
+        return (ssh != null);
+    }
+
     public void getSNPFiles(String snp, String chrom, String collection, int index, int numinds) throws IOException{
         String filestem = collection+"."+snp;
         if (!(new File(localDir+File.separator+filestem+".bed").exists() &&

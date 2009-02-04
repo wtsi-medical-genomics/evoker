@@ -209,9 +209,11 @@ public class Genoplot extends JFrame implements ActionListener {
 
             }else if (command.equals("Connect to remote server")){
                 DataClient dc = new DataClient(this);
-                dbMode=true;
-                goBut.setEnabled(true);
-                db = new DataDirectory(dc);
+                if (dc.getConnectionStatus()){
+                    dbMode=true;
+                    goBut.setEnabled(true);
+                    db = new DataDirectory(dc);
+                }
             }else if (command.equals("Load marker list")){
                 //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
