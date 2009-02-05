@@ -1,26 +1,35 @@
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 import java.awt.*;
 import java.io.*;
 import java.util.Vector;
-import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.ArrayDeque;
 
 public class Genoplot extends JFrame implements ActionListener {
 
     private DataDirectory db;
 
     private JTextField snpField;
-    private JButton goBut;
+    private JButton goButton;
     private JPanel plotArea;
 
     private PrintStream output;
-    private Stack<String> viewedSNPs;
-    private Vector<String> snpList;
-    private int index;
+    private ArrayDeque<String> snpList;
+    private String currentSNPinList;
+    //private int snpListIndex;
+    //private boolean snpListActive;
     JFileChooser jfc;
+
+    private JButton yesButton;
+    private JButton maybeButton;
+    private JButton noButton;
+
+    private JMenuItem loadList;
+    private JMenu historyMenu;
+    private ButtonGroup snpGroup;
+    private JMenuItem returnToListPosition;
 
     public static void main(String[] args){
 
@@ -33,8 +42,6 @@ public class Genoplot extends JFrame implements ActionListener {
 
         jfc = new JFileChooser("user.dir");
 
-        viewedSNPs = new Stack<String>();
-
         JMenuBar mb = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");
@@ -44,30 +51,40 @@ public class Genoplot extends JFrame implements ActionListener {
         JMenuItem openRemote = new JMenuItem("Connect to remote server");
         openRemote.addActionListener(this);
         fileMenu.add(openRemote);
-        JMenuItem loadList = new JMenuItem("Load marker list");
+        loadList = new JMenuItem("Load marker list");
         loadList.addActionListener(this);
+        loadList.setEnabled(false);
         fileMenu.add(loadList);
-        JMenuItem dumpImages = new JMenuItem("Dump PNGs of all SNPs in list");
+        /*JMenuItem dumpImages = new JMenuItem("Dump PNGs of all SNPs in list");
         dumpImages.addActionListener(this);
-        fileMenu.add(dumpImages);
+        fileMenu.add(dumpImages);*/
         JMenuItem quitItem = new JMenuItem("Quit");
         quitItem.addActionListener(this);
         fileMenu.add(quitItem);
         mb.add(fileMenu);
 
+        historyMenu = new JMenu("History");
+        returnToListPosition = new JMenuItem("Return to current list position");
+        snpGroup = new ButtonGroup();
+        returnToListPosition.setEnabled(false);
+        returnToListPosition.addActionListener(this);
+        historyMenu.add(returnToListPosition);
+        historyMenu.addSeparator();
+        mb.add(historyMenu);
 
         setJMenuBar(mb);
 
         JPanel controlsPanel = new JPanel();
 
         snpField = new JTextField(10);
+        snpField.setEnabled(false);
         JPanel snpPanel = new JPanel();
         snpPanel.add(new JLabel("SNP:"));
         snpPanel.add(snpField);
-        goBut = new JButton("Go");
-        goBut.addActionListener(this);
-        goBut.setEnabled(false);
-        snpPanel.add(goBut);
+        goButton = new JButton("Go");
+        goButton.addActionListener(this);
+        goButton.setEnabled(false);
+        snpPanel.add(goButton);
         JButton randomSNPButton = new JButton("Random");
         randomSNPButton.addActionListener(this);
         snpPanel.add(randomSNPButton);
@@ -90,33 +107,53 @@ public class Genoplot extends JFrame implements ActionListener {
         controlsPanel.add(Box.createRigidArea(new Dimension(50,1)));
 
         JPanel scorePanel = new JPanel();
-        JLabel approvelabel = new JLabel("Approve?");
-        scorePanel.add(approvelabel);
-        JButton fb = new JButton("Yes");
-        fb.addActionListener(this);
-        scorePanel.add(fb);
-        JButton nb = new JButton("Maybe");
-        nb.addActionListener(this);
-        scorePanel.add(nb);
-        JButton ab = new JButton("No");
-        ab.addActionListener(this);
-        scorePanel.add(ab);
+        scorePanel.add(new JLabel("Approve?"));
+
+        yesButton = new JButton("Yes");
+        scorePanel.registerKeyboardAction(this,"Yes",
+                KeyStroke.getKeyStroke(KeyEvent.VK_Y,0),
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        yesButton.addActionListener(this);
+        yesButton.setEnabled(false);
+        scorePanel.add(yesButton);
+
+        maybeButton = new JButton("Maybe");
+        scorePanel.registerKeyboardAction(this,"Maybe",
+                KeyStroke.getKeyStroke(KeyEvent.VK_M,0),
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        maybeButton.addActionListener(this);
+        maybeButton.setEnabled(false);
+        scorePanel.add(maybeButton);
+
+        noButton = new JButton("No");
+        scorePanel.registerKeyboardAction(this,"No",
+                KeyStroke.getKeyStroke(KeyEvent.VK_N,0),
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        noButton.addActionListener(this);
+        noButton.setEnabled(false);
+        scorePanel.add(noButton);
+
         controlsPanel.add(scorePanel);
-        //JScrollPane scrollzor = new JScrollPane(controlsPanel);
-        //scrollzor.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 
         controlsPanel.setMaximumSize(new Dimension(2000,(int)controlsPanel.getPreferredSize().getHeight()));
         controlsPanel.setMinimumSize(new Dimension(10,(int)controlsPanel.getPreferredSize().getHeight()));
 
         plotArea = new JPanel();
+        plotArea.setPreferredSize(new Dimension(700,350));
         plotArea.setBorder(new LineBorder(Color.BLACK));
         plotArea.setBackground(Color.WHITE);
-        plotArea.setPreferredSize(new Dimension(1000,350));
 
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.add(plotArea);
         contentPanel.add(controlsPanel);
+
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e){
+                System.exit(0);
+            }
+        });
+        
 
         this.setContentPane(contentPanel);
         this.pack();
@@ -129,64 +166,35 @@ public class Genoplot extends JFrame implements ActionListener {
             String command = actionEvent.getActionCommand();
             if (command.equals("Go")){
                 plotIntensitas(snpField.getText());
-            }else if (command.equals("Next")){
-                if (index < snpList.size() - 1){
-                    index++;
-                    plotIntensitas(snpList.get(index));
-                }
-            }else if (command.equals("Prev")){
-                if (index > 0){
-                    index--;
-                    plotIntensitas(snpList.get(index));
-                }
             }else if (command.equals("No")){
-                output.println(snpList.get(index)+"\t-1");
-                if (index < snpList.size() - 1){
-                    index++;
-                    plotIntensitas(snpList.get(index));
-                }else{
-                    plotIntensitas(null);
-                    output.close();
-                }
+                noButton.requestFocusInWindow();
+                recordVerdict(-1);
             }else if (command.equals("Maybe")){
-                output.println(snpList.get(index)+"\t0");
-                if (index < snpList.size() - 1){
-                    index++;
-                    plotIntensitas(snpList.get(index));
-                }else{
-                    plotIntensitas(null);
-                    output.close();
-                }
+                maybeButton.requestFocusInWindow();
+                recordVerdict(0);
             }else if (command.equals("Yes")){
-                output.println(snpList.get(index)+"\t1");
-                if (index < snpList.size() - 1){
-                    index++;
-                    plotIntensitas(snpList.get(index));
-                }else{
-                    plotIntensitas(null);
-                    output.close();
-                }
+                yesButton.requestFocusInWindow();
+                recordVerdict(1);
+            }else if (command.equals("Return to current list position")){
+                plotIntensitas(currentSNPinList);
             }else if (command.equals("Random")){
                 plotIntensitas(db.getRandomSNP());                
-            }else if (command.equals("Back")){
-                viewedSNPs.pop(); //the guy who was just plotted
-                if (!viewedSNPs.isEmpty()){
-                    String snp = viewedSNPs.pop();
-                    plotIntensitas(snp);
-                }
+            }else if (command.startsWith("PLOTSNP")){
+                String[] bits = command.split("\\s");
+                plotIntensitas(bits[1]);
             }else if (command.equals("Open directory")){
                 //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
-                    goBut.setEnabled(true);
+                    finishLoadingDataSource();
                 }
 
             }else if (command.equals("Connect to remote server")){
                 DataClient dc = new DataClient(this);
                 if (dc.getConnectionStatus()){
-                    goBut.setEnabled(true);
                     db = new DataDirectory(dc);
+                    finishLoadingDataSource();
                 }
             }else if (command.equals("Load marker list")){
                 //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
@@ -218,22 +226,103 @@ public class Genoplot extends JFrame implements ActionListener {
         }
     }
 
+    private void recordVerdict(int v){
+        if (currentSNPinList != null){
+            output.println(currentSNPinList + "\t" + v);
+            if (!snpList.isEmpty()){
+                currentSNPinList = snpList.pop();
+                plotIntensitas(currentSNPinList);
+            }else{
+                plotIntensitas("ENDLIST");
+                currentSNPinList = null;
+                output.close();
+                yesButton.setEnabled(false);
+                noButton.setEnabled(false);
+                maybeButton.setEnabled(false);
+                returnToListPosition.setEnabled(false);
+            }
+        }
+    }
+
+    private void viewedSNP(String name){
+
+        boolean alreadyHere = false;
+        for (Component i : historyMenu.getMenuComponents()){
+            if (i instanceof  JMenuItem){
+                if (((JMenuItem)i).getText().equals(name)){
+                    ((JRadioButtonMenuItem)i).setSelected(true);
+                    alreadyHere = true;
+                    break;
+                }
+            }
+        }
+
+        if (alreadyHere){
+            if (currentSNPinList != null){
+                if (snpGroup.getSelection().getActionCommand().equals("PLOTSNP "+currentSNPinList)){
+                    yesButton.setEnabled(true);
+                    noButton.setEnabled(true);
+                    maybeButton.setEnabled(true);
+                }else{
+                    //we're viewing a SNP from the history, so we can't allow
+                    //the user to take any action on a SNP list (if one exists) because
+                    //we're not viewing the "active" SNP from the list
+
+                    yesButton.setEnabled(false);
+                    noButton.setEnabled(false);
+                    maybeButton.setEnabled(false);
+
+                    //TODO: actually allow you to go back and change your mind?
+                }
+            }
+        }else{
+            //new guy
+            JRadioButtonMenuItem snpItem = new JRadioButtonMenuItem(name);
+            snpItem.setActionCommand("PLOTSNP "+name);
+            snpItem.addActionListener(this);
+            snpGroup.add(snpItem);
+            snpItem.setSelected(true);
+            historyMenu.add(snpItem,2);
+
+            //only track last ten
+            if (historyMenu.getMenuComponentCount() > 12){
+                historyMenu.remove(12);
+            }
+        }
+
+    }
+
+    private void finishLoadingDataSource(){
+        if (db != null){
+            if (db.getCollections().size() == 3){
+                this.setSize(new Dimension(1000,420));
+            }else if (db.getCollections().size() == 4){
+                this.setSize(new Dimension(700,750));
+            }
+            goButton.setEnabled(true);
+            snpField.setEnabled(true);
+            loadList.setEnabled(true);
+        }
+    }
+
     private void plotIntensitas(String name){
         plotArea.removeAll();
         plotArea.setLayout(new BoxLayout(plotArea,BoxLayout.Y_AXIS));
 
         if (name != null){
-            plotArea.add(new JLabel(name));
-            fetchRecord(name);
-            viewedSNPs.push(name);
-        }else{
-            //I tried very hard to get the label right in the middle and failed because java layouts blow
-            plotArea.add(Box.createVerticalGlue());
-            JPanel p = new JPanel();
-            p.add(new JLabel("End of list."));
-            p.setBackground(Color.WHITE);
-            plotArea.add(p);
-            plotArea.add(Box.createVerticalGlue());
+            if (!name.equals("ENDLIST")){
+                plotArea.add(new JLabel(name));
+                fetchRecord(name);
+                viewedSNP(name);
+            }else{
+                //I tried very hard to get the label right in the middle and failed because java layouts blow
+                plotArea.add(Box.createVerticalGlue());
+                JPanel p = new JPanel();
+                p.add(new JLabel("End of list."));
+                p.setBackground(Color.WHITE);
+                plotArea.add(p);
+                plotArea.add(Box.createVerticalGlue());
+            }
         }
 
         //seems to need both of these to avoid floating old crud left behind
@@ -242,7 +331,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void loadList(String filename)throws IOException{
-        snpList = new Vector<String>();
+        snpList = new ArrayDeque<String>();
         BufferedReader listReader = new BufferedReader(new FileReader(filename));
         String currentLine;
         StringTokenizer st;
@@ -254,15 +343,19 @@ public class Genoplot extends JFrame implements ActionListener {
 
         try{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            db.listNotify((Vector)snpList.clone());
-            plotIntensitas(snpList.get(0));
+            db.listNotify(snpList.clone());
+            currentSNPinList = snpList.pop();
+            plotIntensitas(currentSNPinList);
+            returnToListPosition.setEnabled(true);
+            yesButton.setEnabled(true);
+            noButton.setEnabled(true);
+            maybeButton.setEnabled(true);
+            yesButton.requestFocusInWindow();
         }finally{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
 
-        index = 0;
-        //listfwd.setEnabled(true);
-        //listbck.setEnabled(true);
+
     }
 
     private void fetchRecord(String name){

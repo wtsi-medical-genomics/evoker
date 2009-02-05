@@ -3,6 +3,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.ArrayDeque;
 
 public class DataDirectory {
 
@@ -62,6 +63,7 @@ public class DataDirectory {
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
             genotypeDataByCollectionChrom.put(collection,tmpGenotypes);
         }
+
     }
 
     private Hashtable<String,Boolean> parseMetaFiles(File directory) throws IOException{
@@ -84,6 +86,10 @@ public class DataDirectory {
             System.out.println("Found collection: " + name);
         }
 
+        if (numberofCollections == 0){
+            throw new IOException("Zero sample collection (.fam) files found in " + directory.getName());
+        }
+
         md = new MarkerData(numberofCollections);
 
         //what chromosomes do we have here?
@@ -98,6 +104,10 @@ public class DataDirectory {
                 counter++;
                 System.out.println("Found chromosome: " + chunks[1]);
             }
+        }
+
+        if (knownChroms.keySet().size() == 0){
+            throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
         }
 
         return knownChroms;
@@ -157,10 +167,10 @@ public class DataDirectory {
         return r;
     }
 
-    public void listNotify(final Vector<String> list){
+    public void listNotify(final ArrayDeque<String> list){
         if (dc != null){
             //we need to fetch the first one in this thread so we can plot it as soon as it arrives
-            String firstSNP = list.remove(0);
+            String firstSNP = list.pop();
             String chrom = md.getChrom(firstSNP);
             for (String collection : samplesByCollection.keySet()){
                 genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
