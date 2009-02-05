@@ -44,24 +44,35 @@ public class Genoplot extends JFrame implements ActionListener {
 
         JMenuBar mb = new JMenuBar();
 
+        int menumask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
         JMenu fileMenu = new JMenu("File");
         JMenuItem openDirectory = new JMenuItem("Open directory");
+        openDirectory.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, menumask));
         openDirectory.addActionListener(this);
         fileMenu.add(openDirectory);
         JMenuItem openRemote = new JMenuItem("Connect to remote server");
+        openRemote.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, menumask));
         openRemote.addActionListener(this);
         fileMenu.add(openRemote);
         loadList = new JMenuItem("Load marker list");
+        loadList.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, menumask));
         loadList.addActionListener(this);
         loadList.setEnabled(false);
         fileMenu.add(loadList);
         /*JMenuItem dumpImages = new JMenuItem("Dump PNGs of all SNPs in list");
         dumpImages.addActionListener(this);
         fileMenu.add(dumpImages);*/
-        JMenuItem quitItem = new JMenuItem("Quit");
-        quitItem.addActionListener(this);
-        fileMenu.add(quitItem);
+
+        if (!(System.getProperty("os.name").toLowerCase().contains("mac"))){
+            JMenuItem quitItem = new JMenuItem("Quit");
+            quitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, menumask));
+            quitItem.addActionListener(this);
+            fileMenu.add(quitItem);
+        }
+        
         mb.add(fileMenu);
+
 
         historyMenu = new JMenu("History");
         returnToListPosition = new JMenuItem("Return to current list position");
@@ -183,13 +194,12 @@ public class Genoplot extends JFrame implements ActionListener {
                 String[] bits = command.split("\\s");
                 plotIntensitas(bits[1]);
             }else if (command.equals("Open directory")){
-                //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+                JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
                     finishLoadingDataSource();
                 }
-
             }else if (command.equals("Connect to remote server")){
                 DataClient dc = new DataClient(this);
                 if (dc.getConnectionStatus()){
