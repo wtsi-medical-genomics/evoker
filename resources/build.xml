@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Initial Set-Up -->
+
+<project name="Evoker" default="main" basedir=".">
+
+  <path id="evoker.root">
+    <pathelement location="${basedir}"/>
+  </path>
+  
+  <path id="library.classpath">
+    <fileset dir="resources/">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+  
+  <!-- =========================================================== -->
+  <!-- Initialization                                              -->
+  <!-- =========================================================== -->
+  <!-- Setup project roots -->
+  <target name="init">
+    <property name="java.home" value=""/>
+    <property name="evoker.root" value="${basedir}"/>
+    <property name="evoker.build" value="${evoker.root}/build"/>
+    <property name="evoker.classes" value="${evoker.build}/classes"/>
+    <property name="evoker.src" value="${evoker.root}/src"/>
+    <property name="evoker.lib" value="${evoker.root}/resources"/>
+    <tstamp>
+      <format property="build.number" pattern="yyyyMMddHHmm"/>
+    </tstamp>
+  </target>
+  
+  
+  <!-- Prepare src directory for compilation step -->
+
+  <target name="prepare-compile" depends="init">
+    <mkdir dir="${evoker.classes}"/>
+  </target>
+
+  <!-- Compile the application -->
+
+  <target name="compile-evoker" depends="prepare-compile">
+    <javac srcdir="${evoker.src}" destdir="${evoker.classes}"
+	   includes="**" debug="on" source="1.6" target="1.6"
+	   executable="/usr/bin/javac" fork="yes">
+      <classpath refid="library.classpath"/>
+    </javac>
+  </target>
+
+  <!-- Jar the application up -->
+  <target name="evoker" depends="compile-evoker">
+   <jar jarfile="Evoker.jar">
+     <fileset dir="${evoker.classes}">
+       <include name="**"/>
+     </fileset>
+     <manifest>
+       <attribute name="Built-By" value="${user.name}"/>
+       <attribute name="Main-Class" value="Genoplot"/>
+     </manifest>
+     <zipfileset src="resources/commons-logging.jar"/>
+     <zipfileset src="resources/j2ssh-common.jar"/>
+     <zipfileset src="resources/j2ssh-core.jar"/>
+     <zipfileset src="resources/jcommon-1.0.15.jar"/>
+     <zipfileset src="resources/jfreechart-1.0.12.jar"/>
+   </jar>
+  </target>
+ 
+  <target name="clean" depends="init">
+    <delete dir="${evoker.build}"/>
+  </target>
+
+  <target name="main" depends="init">
+    <echo message="------------------------------------------------------------"/>
+    <echo message="welcome to evoker build file"/>
+    <echo message="Usage: ant [target-name]"/>
+    <echo message="where [target-name] is one of the following targets:"/>
+    <echo message="compile-evoker --> compiles the evoker classes only"/>
+    <echo message="evoker --> makes the executable jar file"/>
+    <echo message="clean --> cleans up after itself removing the build directory"/>
+    <echo message="------------------------------------------------------------"/>
+  </target>
+</project>
+
+
