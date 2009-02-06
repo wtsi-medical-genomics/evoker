@@ -249,7 +249,7 @@ public class Genoplot extends JFrame implements ActionListener {
         if (currentSNPinList != null){
             output.println(currentSNPinList + "\t" + v);
             if (!snpList.isEmpty()){
-                currentSNPinList = snpList.pop();
+                currentSNPinList = snpList.removeFirst();
                 plotIntensitas(currentSNPinList);
             }else{
                 plotIntensitas("ENDLIST");
@@ -363,7 +363,7 @@ public class Genoplot extends JFrame implements ActionListener {
         try{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             db.listNotify((LinkedList)snpList.clone());
-            currentSNPinList = snpList.pop();
+            currentSNPinList = snpList.removeFirst();
             plotIntensitas(currentSNPinList);
             returnToListPosition.setEnabled(true);
             yesButton.setEnabled(true);

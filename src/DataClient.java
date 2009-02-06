@@ -83,7 +83,7 @@ public class DataClient{
 
             //Fire off the script on the remote server to get the requested slice of data
             OutputStream out = session.getOutputStream();
-            String cmd = "cd "+ remoteDir + "\n./fandango.pl "+ snp + " " +
+            String cmd = "cd "+ remoteDir + "\n./evoker-helper.pl "+ snp + " " +
                     chrom + " " + collection + " " + index + " " + numinds +"\n";
             out.write(cmd.getBytes());
 

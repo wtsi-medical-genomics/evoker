@@ -182,7 +182,7 @@ public class DataDirectory {
     public void listNotify(final LinkedList<String> list) throws IOException{
         if (dc != null){
             //we need to fetch the first one in this thread so we can plot it as soon as it arrives
-            String firstSNP = list.pop();
+            String firstSNP = list.removeFirst();
             String chrom = md.getChrom(firstSNP);
             if (chrom != null){
                 for (String collection : samplesByCollection.keySet()){
