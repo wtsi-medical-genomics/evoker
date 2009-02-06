@@ -56,6 +56,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
 
         JPanel butPan = new JPanel();
         JButton okbut = new JButton("OK");
+        getRootPane().setDefaultButton(okbut);
         okbut.addActionListener(this);
         butPan.add(okbut);
         JButton cancelbut = new JButton("Cancel");

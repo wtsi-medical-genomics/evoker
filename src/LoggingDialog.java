@@ -15,6 +15,8 @@ public class LoggingDialog extends JDialog {
         setContentPane(scrollzor);
 
         ta.setFont(new Font("Monospaced",Font.PLAIN,12));
+        ta.setLineWrap(true);
+        ta.setWrapStyleWord(true);
 
         ta.append("********************\n");
         ta.append("Evoker...pre-release\n");
@@ -22,7 +24,7 @@ public class LoggingDialog extends JDialog {
     }
 
     public void log(String text){
-        ta.append(text+"\n\n");
+        ta.append(text+"\n");
     }
 
 }

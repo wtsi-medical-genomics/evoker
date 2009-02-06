@@ -26,7 +26,7 @@ public class PlotData {
         this.intensities.addAll(intensities);
     }
 
-    XYSeriesCollection callGenotypes(float cutoff){
+    XYSeriesCollection generatePoints(){
         if (intensities == null ||  calledGenotypes == null){
             return null;
         }

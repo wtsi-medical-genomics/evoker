@@ -93,7 +93,11 @@ public class MarkerData {
     }
 
     public String getChrom(String name){
-        return chromosomeBackLookup.get(markerTable.get(name).getChrom());
+        if (markerTable.get(name) != null){
+            return chromosomeBackLookup.get(markerTable.get(name).getChrom());
+        }else{
+            return null;
+        }
     }
 
     public int getNumSNPs() {

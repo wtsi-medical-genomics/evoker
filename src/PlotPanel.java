@@ -1,4 +1,3 @@
-import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.chart.JFreeChart;
@@ -6,14 +5,11 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import org.jfree.chart.renderer.xy.XYDotRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
@@ -49,8 +45,18 @@ public class PlotPanel extends JPanel {
 
     void refresh(){
         this.removeAll();
-        add(generatePlot(data.callGenotypes(1)));
-        add(generateInfo());
+        XYSeriesCollection xysc = data.generatePoints();
+        if (xysc != null){
+            add(generatePlot(xysc));
+            add(generateInfo());
+        }else{
+            this.setBackground(Color.WHITE);
+            add(Box.createVerticalGlue());
+            JLabel l = new JLabel("No data found for "+title);
+            l.setAlignmentX(Component.CENTER_ALIGNMENT);
+            add(l);
+            add(Box.createVerticalGlue());
+        }
     }
 
     void saveToFile(File f) throws IOException {
@@ -111,8 +117,10 @@ public class PlotPanel extends JPanel {
     }
 
     public void setMaxDim(double val){
-        jfc.getXYPlot().getDomainAxis().setRange(-0.1,val);
-        jfc.getXYPlot().getRangeAxis().setRange(-0.1,val);
+        if (jfc != null){
+            jfc.getXYPlot().getDomainAxis().setRange(-0.1,val);
+            jfc.getXYPlot().getRangeAxis().setRange(-0.1,val);
+        }
     }
 
     public static String formatPValue(double pval){

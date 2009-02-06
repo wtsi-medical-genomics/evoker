@@ -8,15 +8,14 @@ public class RemoteBedfileData extends RemoteBinaryData {
 
     RemoteBedfileData(DataClient dc, SampleData sd, MarkerData md, String collection) {
         super(dc, sd, md, collection);
-        bytesPerRecord = (int)Math.ceil(((double)numInds)/4);        
+        bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
     }
 
 
-    public Vector<Byte> getRecord(String name){
-        int snpIndex;
-        try {
-            snpIndex = md.getIndex(name,md.getSampleCollectionIndex(collection));
+    public Vector<Byte> getRecord(String name)throws IOException{
+        int snpIndex = md.getIndex(name,md.getSampleCollectionIndex(collection));
 
+        if (snpIndex > -1){
             //ask data client to get this SNP
             dc.getSNPFiles(name,md.getChrom(name),collection,snpIndex,numInds);
 
@@ -67,11 +66,9 @@ public class RemoteBedfileData extends RemoteBinaryData {
             }
 
             return genos;
-        }catch(IOException ioe) {
-            System.out.println("ioe = " + ioe);
-            //TODO: handle me
-            //TODO: I don't know anything about that SNP?
+        }else{
+            return null;
         }
-        return(null);
+
     }
 }

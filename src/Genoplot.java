@@ -29,7 +29,8 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
-    private LoggingDialog ld;
+
+    public static LoggingDialog ld;
 
     public static void main(String[] args){
 
@@ -82,6 +83,12 @@ public class Genoplot extends JFrame implements ActionListener {
         historyMenu.add(returnToListPosition);
         historyMenu.addSeparator();
         mb.add(historyMenu);
+
+        JMenu logMenu = new JMenu("Log");
+        JMenuItem showLogItem = new JMenuItem("Show Evoker log");
+        showLogItem.addActionListener(this);
+        logMenu.add(showLogItem);
+        mb.add(logMenu);
 
         setJMenuBar(mb);
 
@@ -172,11 +179,6 @@ public class Genoplot extends JFrame implements ActionListener {
 
         ld = new LoggingDialog(this);
         ld.pack();
-        ld.setVisible(true);
-        for (int i = 0; i < 100; i++){
-            ld.log("Snoo");
-        }
-
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
@@ -221,6 +223,8 @@ public class Genoplot extends JFrame implements ActionListener {
                 output = new PrintStream(fos);
             }else if (command.equals("Dump PNGs of all SNPs in list")){
                 dumpAll();
+            }else if (command.equals("Show Evoker log")){
+                ld.setVisible(true);
             }else if (command.equals("Quit")){
                 System.exit(0);
             }

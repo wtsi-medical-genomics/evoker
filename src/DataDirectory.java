@@ -40,6 +40,7 @@ public class DataDirectory {
     }
 
     DataDirectory(String filename) throws IOException{
+        boolean success = true;
 
         File directory = new File(filename);
 
@@ -51,18 +52,28 @@ public class DataDirectory {
             String root =  directory.getAbsolutePath() + File.separator + collection;
             for (String chrom : knownChroms.keySet()){
                 String name = root + "." + chrom;
-                //TODO: handle checking for missing files better
-                //we require a bimfile for this collection and chromosome:
-                md.addFile(name+".bim",collection,chrom);
 
-                //data files for this collection and chromosome:
-                tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",samplesByCollection.get(collection),
-                        md,collection,2));
-                tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",samplesByCollection.get(collection),
-                        md,collection));
+                success &= checkFile(name);
+
+                //even though we know that something is amiss, we want to keep cdring through the list so that
+                //we can log all the missing files at once.
+                if (success){
+                    //we require a bimfile for this collection and chromosome:
+                    md.addFile(name+".bim",collection,chrom);
+
+                    //data files for this collection and chromosome:
+                    tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",samplesByCollection.get(collection),
+                            md,collection,2));
+                    tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",samplesByCollection.get(collection),
+                            md,collection));
+                }
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
             genotypeDataByCollectionChrom.put(collection,tmpGenotypes);
+        }
+
+        if (!success){
+            throw new IOException("Could not find all required files!\nSee log for details.");
         }
 
     }
@@ -84,7 +95,7 @@ public class DataDirectory {
             String name = famFile.getName().substring(0,famFile.getName().length()-4);
             samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath()));
             numberofCollections++;
-            System.out.println("Found collection: " + name);
+            Genoplot.ld.log("Found collection: " + name);
         }
 
         if (numberofCollections == 0){
@@ -103,7 +114,7 @@ public class DataDirectory {
                 knownChroms.put(chunks[1],true);
                 md.addChromToLookup(chunks[1],counter);
                 counter++;
-                System.out.println("Found chromosome: " + chunks[1]);
+                Genoplot.ld.log("Found chromosome: " + chunks[1]);
             }
         }
 
@@ -121,15 +132,15 @@ public class DataDirectory {
     private boolean checkFile(String stem){
         boolean all = true;
         if (!(new File(stem+".bed").exists())){
-            System.out.println("Missing file: " + stem+".bed");
+            Genoplot.ld.log("Missing file: " + stem+".bed!");
             all = false;
         }
         if (!(new File(stem+".bnt").exists())){
-            System.out.println("Missing file: " + stem+".bnt");
+            Genoplot.ld.log("Missing file: " + stem+".bnt!");
             all = false;
         }
         if (!(new File(stem+".bim").exists())){
-            System.out.println("Missing file: " + stem+".bim");
+            Genoplot.ld.log("Missing file: " + stem+".bim!");
             all = false;
         }
         return all;
@@ -173,9 +184,11 @@ public class DataDirectory {
             //we need to fetch the first one in this thread so we can plot it as soon as it arrives
             String firstSNP = list.pop();
             String chrom = md.getChrom(firstSNP);
-            for (String collection : samplesByCollection.keySet()){
-                genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
-                intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
+            if (chrom != null){
+                for (String collection : samplesByCollection.keySet()){
+                    genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
+                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(firstSNP);
+                }
             }
 
             class BackgroundFetcher implements Runnable {
@@ -183,9 +196,11 @@ public class DataDirectory {
                     try{
                         for (String snp : list){
                             String chrom = md.getChrom(snp);
-                            for (String collection : samplesByCollection.keySet()){
-                                genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
-                                intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                            if (chrom != null){
+                                for (String collection : samplesByCollection.keySet()){
+                                    genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                                }
                             }
                         }
                     }catch (IOException ioe){

@@ -17,26 +17,32 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
     }
 
     public Vector<float[]> getRecord(String name) throws IOException{
-        BufferedInputStream bntIS = new BufferedInputStream(
-                new FileInputStream(dc.getLocalDir()+ File.separator+collection+"."+name+".bnt"),8192);
+        int snpIndex = md.getIndex(name,md.getSampleCollectionIndex(collection));
 
-        //read raw snp data
-        byte[] rawSnpData = new byte[bytesPerRecord];
-        bntIS.read(rawSnpData, 0, bytesPerRecord);
+        if (snpIndex > -1){
+            BufferedInputStream bntIS = new BufferedInputStream(
+                    new FileInputStream(dc.getLocalDir()+ File.separator+collection+"."+name+".bnt"),8192);
+
+            //read raw snp data
+            byte[] rawSnpData = new byte[bytesPerRecord];
+            bntIS.read(rawSnpData, 0, bytesPerRecord);
 
 
-        ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawSnpData);
-        rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
+            ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawSnpData);
+            rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        Vector<float[]> record = new Vector<float[]>();
-        for (int i = 0; i < numInds; i++){
-            float[] send = new float[valuesPerEntry];
-            for (int j = 0; j < valuesPerEntry; j++){
-                send[j] = rawDataBuffer.getFloat();
+            Vector<float[]> record = new Vector<float[]>();
+            for (int i = 0; i < numInds; i++){
+                float[] send = new float[valuesPerEntry];
+                for (int j = 0; j < valuesPerEntry; j++){
+                    send[j] = rawDataBuffer.getFloat();
+                }
+                record.add(send);
             }
-            record.add(send);
-        }
 
-        return record;
+            return record;
+        }else{
+            return null;
+        }
     }
 }

@@ -57,7 +57,7 @@ public class DataClient{
             int result = ssh.authenticate(pwd);
             // Evaluate the result
             if (result == AuthenticationProtocolState.COMPLETE) {
-                System.out.println("Success!");
+                Genoplot.ld.log("Successful connection to " + dcd.getHost());
                 ftp = ssh.openSftpClient();
                 ftp.cd(remoteDir);
                 ftp.lcd(localDir);
@@ -76,9 +76,7 @@ public class DataClient{
         String filestem = collection+"."+snp;
         if (!(new File(localDir+File.separator+filestem+".bed").exists() &&
                 new File(localDir+File.separator+filestem+".bnt").exists())){
-            System.out.println("Begin interaction.");
             long prev = System.currentTimeMillis();
-            long diff;
 
             SessionChannelClient session = ssh.openSessionChannel();
             session.startShell();
@@ -103,20 +101,17 @@ public class DataClient{
             }
 
             session.close();
-            diff = System.currentTimeMillis() - prev;
-            System.out.println("executed..."+diff);
-            prev = System.currentTimeMillis();
-            
+
             
             ftp.get(filestem+".bed");
             ftp.get(filestem+".bnt");
             ftp.rm(filestem+".bed");
             ftp.rm(filestem+".bnt");
 
-            diff = System.currentTimeMillis() - prev;
-            System.out.println("fetched..."+diff);
+            double time = ((double)(System.currentTimeMillis() - prev))/1000;
+            Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");
         }else{
-            System.out.println("SNP was cached.");
+            Genoplot.ld.log(snp +" for "+ collection +" was cached.");
         }
 
     }
