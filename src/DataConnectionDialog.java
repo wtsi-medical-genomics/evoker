@@ -35,8 +35,11 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
 
         JPanel localdirPanel = new JPanel();
         localdirPanel.add(new JLabel("Local directory: "));
-        locdirField = new JTextField(30);
+        locdirField = new JTextField(20);
         localdirPanel.add(locdirField);
+        JButton browseButton = new JButton("Browse");
+        browseButton.addActionListener(this);
+        localdirPanel.add(browseButton);
         contents.add(localdirPanel);
 
         JPanel userPanel = new JPanel();
@@ -75,6 +78,12 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
             localDir = locdirField.getText();
             host = hostField.getText();
             this.dispose();
+        }else if (e.getActionCommand().equals("Browse")){
+            JFileChooser jfc = new JFileChooser("user.dir");
+            jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);            
+            if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
+                locdirField.setText(jfc.getSelectedFile().getAbsolutePath());
+            }
         }else if (e.getActionCommand().equals("Cancel")){
             this.dispose();
         }
@@ -103,6 +112,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     public void clearPassword(){
         for (int i = 0; i < password.length; i++){
             password[i] = 0;
+            pf.setText("");
         }
     }
 

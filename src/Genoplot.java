@@ -20,6 +20,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private String currentSNPinList;
 
     JFileChooser jfc;
+    DataConnectionDialog dcd;
 
     private JButton yesButton;
     private JButton maybeButton;
@@ -42,6 +43,7 @@ public class Genoplot extends JFrame implements ActionListener {
         super("Evoke...");
 
         jfc = new JFileChooser("user.dir");
+        dcd = new DataConnectionDialog(this);
 
         JMenuBar mb = new JMenuBar();
 
@@ -209,7 +211,9 @@ public class Genoplot extends JFrame implements ActionListener {
                     finishLoadingDataSource();
                 }
             }else if (command.equals("Connect to remote server")){
-                DataClient dc = new DataClient(this);
+                dcd.pack();
+                dcd.setVisible(true);
+                DataClient dc = new DataClient(dcd);
                 if (dc.getConnectionStatus()){
                     db = new DataDirectory(dc);
                     finishLoadingDataSource();

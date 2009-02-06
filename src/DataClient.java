@@ -30,14 +30,11 @@ public class DataClient{
     private String localDir;
 
 
-    public DataClient(JFrame parent) throws IOException{
+    public DataClient(DataConnectionDialog dcd) throws IOException{
         Logger.getLogger("com.sshtools").setLevel(Level.WARNING);
 
 
         // Create a password authentication instance
-        DataConnectionDialog dcd = new DataConnectionDialog(parent);
-        dcd.pack();
-        dcd.setVisible(true);
         if (dcd.getUsername() != null){
             localDir = dcd.getLocalDirectory();
 
