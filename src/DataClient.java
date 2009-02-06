@@ -62,7 +62,6 @@ public class DataClient{
                 ftp.cd(remoteDir);
                 ftp.lcd(localDir);
             }else{
-                //TODO: handle connection error.
                  throw new IOException("Authentication to host "+dcd.getHost()+" failed.");
             }
         }
