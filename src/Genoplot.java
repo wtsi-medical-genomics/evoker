@@ -5,7 +5,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.Vector;
 import java.util.StringTokenizer;
-import java.util.ArrayDeque;
+import java.util.LinkedList;
 
 public class Genoplot extends JFrame implements ActionListener {
 
@@ -16,10 +16,9 @@ public class Genoplot extends JFrame implements ActionListener {
     private JPanel plotArea;
 
     private PrintStream output;
-    private ArrayDeque<String> snpList;
+    private LinkedList<String> snpList;
     private String currentSNPinList;
-    //private int snpListIndex;
-    //private boolean snpListActive;
+
     JFileChooser jfc;
 
     private JButton yesButton;
@@ -30,6 +29,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
+    private LoggingDialog ld;
 
     public static void main(String[] args){
 
@@ -170,6 +170,13 @@ public class Genoplot extends JFrame implements ActionListener {
         this.pack();
         this.setVisible(true);
 
+        ld = new LoggingDialog(this);
+        ld.pack();
+        ld.setVisible(true);
+        for (int i = 0; i < 100; i++){
+            ld.log("Snoo");
+        }
+
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
@@ -189,12 +196,11 @@ public class Genoplot extends JFrame implements ActionListener {
             }else if (command.equals("Return to current list position")){
                 plotIntensitas(currentSNPinList);
             }else if (command.equals("Random")){
-                plotIntensitas(db.getRandomSNP());                
+                plotIntensitas(db.getRandomSNP());
             }else if (command.startsWith("PLOTSNP")){
                 String[] bits = command.split("\\s");
                 plotIntensitas(bits[1]);
             }else if (command.equals("Open directory")){
-                JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
@@ -207,7 +213,6 @@ public class Genoplot extends JFrame implements ActionListener {
                     finishLoadingDataSource();
                 }
             }else if (command.equals("Load marker list")){
-                //JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     loadList(jfc.getSelectedFile().getAbsolutePath());
@@ -341,7 +346,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void loadList(String filename)throws IOException{
-        snpList = new ArrayDeque<String>();
+        snpList = new LinkedList<String>();
         BufferedReader listReader = new BufferedReader(new FileReader(filename));
         String currentLine;
         StringTokenizer st;
@@ -353,7 +358,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
         try{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            db.listNotify(snpList.clone());
+            db.listNotify((LinkedList)snpList.clone());
             currentSNPinList = snpList.pop();
             plotIntensitas(currentSNPinList);
             returnToListPosition.setEnabled(true);
@@ -397,6 +402,9 @@ public class Genoplot extends JFrame implements ActionListener {
                 pp.setMaxDim(maxdim);
                 plotHolder.add(pp);
             }
+        }catch (IOException ioe){
+            JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",
+                    JOptionPane.ERROR_MESSAGE);
         }finally{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }

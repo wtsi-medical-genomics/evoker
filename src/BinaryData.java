@@ -18,7 +18,7 @@ public abstract class BinaryData {
 
 
 
-    abstract Vector getRecord(String markerName);
+    abstract Vector getRecord(String markerName) throws IOException;
 
 
 }

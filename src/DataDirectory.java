@@ -1,9 +1,10 @@
+import javax.swing.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.ArrayDeque;
+import java.util.LinkedList;
 
 public class DataDirectory {
 
@@ -147,7 +148,7 @@ public class DataDirectory {
         }
     }
 
-    public PlotData getRecord(String snp, String collection){
+    public PlotData getRecord(String snp, String collection) throws IOException{
         /**if (collection.equals("ALL")){
             return getRecord(snp);
         }**/
@@ -167,7 +168,7 @@ public class DataDirectory {
         return r;
     }
 
-    public void listNotify(final ArrayDeque<String> list){
+    public void listNotify(final LinkedList<String> list) throws IOException{
         if (dc != null){
             //we need to fetch the first one in this thread so we can plot it as soon as it arrives
             String firstSNP = list.pop();
@@ -178,13 +179,18 @@ public class DataDirectory {
             }
 
             class BackgroundFetcher implements Runnable {
-                public void run(){
-                    for (String snp : list){
-                        String chrom = md.getChrom(snp);
-                        for (String collection : samplesByCollection.keySet()){
-                            genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
-                            intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                public void run() {
+                    try{
+                        for (String snp : list){
+                            String chrom = md.getChrom(snp);
+                            for (String collection : samplesByCollection.keySet()){
+                                genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                                intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                            }
                         }
+                    }catch (IOException ioe){
+                        JOptionPane.showMessageDialog(null,ioe.getMessage(),"File error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
