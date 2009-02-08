@@ -52,6 +52,7 @@ public class DataDirectory {
         File directory = new File(filename);
 
         Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
+        Genoplot.ld.log("Using files in " + filename);
 
         for(String collection : samplesByCollection.keySet()){
             Hashtable<String, BinaryFloatDataFile> tmpIntensity = new Hashtable<String, BinaryFloatDataFile>();
