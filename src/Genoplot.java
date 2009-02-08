@@ -325,6 +325,11 @@ public class Genoplot extends JFrame implements ActionListener {
             goButton.setEnabled(true);
             snpField.setEnabled(true);
             loadList.setEnabled(true);
+
+            this.setTitle("Evoke...["+db.getDisplayName()+"]");
+
+            plotArea.removeAll();
+            plotArea.repaint();
         }
     }
 

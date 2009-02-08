@@ -24,6 +24,7 @@ public class MarkerData {
 
     Hashtable<String,Marker> markerTable;
     Hashtable<String,Integer> collectionIndices;
+    Hashtable<String,Integer> snpsPerCollection;
     int numCollections;
     int runningCount;
 
@@ -31,6 +32,7 @@ public class MarkerData {
         this.numCollections = numCollections;
         markerTable = new Hashtable<String,Marker>();
         collectionIndices = new Hashtable<String,Integer>();
+        snpsPerCollection = new Hashtable<String,Integer>();
         chromosomeLookup = new Hashtable<String,Byte>();
         chromosomeBackLookup = new Hashtable<Byte,String>();
         runningCount = 0;
@@ -78,10 +80,7 @@ public class MarkerData {
             markerTable.get(snpid).addSampleCollection(runningCount,index++);
         }
         runningCount++;
-    }
-
-    public Vector<String> getSNPs(){
-        return new Vector<String>(markerTable.keySet());
+        snpsPerCollection.put(collection,index);
     }
 
     public String getAlleleA(String name){
@@ -100,8 +99,8 @@ public class MarkerData {
         }
     }
 
-    public int getNumSNPs() {
-        return getSNPs().size();
+    public int getNumSNPs(String collection) {
+        return snpsPerCollection.get(collection);
     }
 
     public Integer getIndex(String markerName, int sampleIndex){

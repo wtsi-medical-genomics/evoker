@@ -13,6 +13,7 @@ public class DataDirectory {
     Hashtable<String,SampleData> samplesByCollection;
     MarkerData md;
     DataClient dc;
+    String displayName;
 
     DataDirectory(DataClient dc) throws IOException{
 
@@ -31,12 +32,18 @@ public class DataDirectory {
                 md.addFile(name+".bim",collection,chrom);
 
                 //data files for this collection and chromosome:
-                tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,samplesByCollection.get(collection),md,collection,2));
-                tmpGenotypes.put(chrom,new RemoteBedfileData(dc,samplesByCollection.get(collection),md,collection));
+                tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
+                        samplesByCollection.get(collection).getNumInds(),
+                        md,collection,2));
+                tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
+                        samplesByCollection.get(collection).getNumInds(),
+                        md,collection));
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
             genotypeDataByCollectionChrom.put(collection,tmpGenotypes);
         }
+
+        displayName = dc.getDisplayName();        
     }
 
     DataDirectory(String filename) throws IOException{
@@ -62,9 +69,11 @@ public class DataDirectory {
                     md.addFile(name+".bim",collection,chrom);
 
                     //data files for this collection and chromosome:
-                    tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",samplesByCollection.get(collection),
+                    tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
+                            samplesByCollection.get(collection).getNumInds(),
                             md,collection,2));
-                    tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",samplesByCollection.get(collection),
+                    tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",
+                            samplesByCollection.get(collection).getNumInds(),
                             md,collection));
                 }
             }
@@ -75,6 +84,8 @@ public class DataDirectory {
         if (!success){
             throw new IOException("Could not find all required files!\nSee log for details.");
         }
+
+        displayName = filename;
 
     }
 
@@ -144,6 +155,10 @@ public class DataDirectory {
             all = false;
         }
         return all;
+    }
+
+    public String getDisplayName() {
+        return displayName;
     }
 
     class ExtensionFilter implements FilenameFilter{

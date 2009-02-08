@@ -8,10 +8,10 @@ import java.nio.ByteOrder;
 
 public class RemoteBinaryFloatData extends RemoteBinaryData {
 
-    private int valuesPerEntry;
+    protected int valuesPerEntry;
 
-    RemoteBinaryFloatData(DataClient dc, SampleData sd, MarkerData md, String collection, int vals) {
-        super(dc, sd, md, collection);
+    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals) {
+        super(dc, numInds, md, collection);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
     }
@@ -20,27 +20,11 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
         int snpIndex = md.getIndex(name,md.getSampleCollectionIndex(collection));
 
         if (snpIndex > -1){
-            BufferedInputStream bntIS = new BufferedInputStream(
-                    new FileInputStream(dc.getLocalDir()+ File.separator+collection+"."+name+".bnt"),8192);
+            BinaryFloatDataFile bnt = new BinaryFloatDataFile(
+                    dc.getLocalDir()+ File.separator+collection+"."+name+".bnt",
+                    this);
 
-            //read raw snp data
-            byte[] rawSnpData = new byte[bytesPerRecord];
-            bntIS.read(rawSnpData, 0, bytesPerRecord);
-
-
-            ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawSnpData);
-            rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            Vector<float[]> record = new Vector<float[]>();
-            for (int i = 0; i < numInds; i++){
-                float[] send = new float[valuesPerEntry];
-                for (int j = 0; j < valuesPerEntry; j++){
-                    send[j] = rawDataBuffer.getFloat();
-                }
-                record.add(send);
-            }
-
-            return record;
+            return bnt.getRecord(0);
         }else{
             return null;
         }

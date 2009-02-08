@@ -22,9 +22,14 @@ public class DataClient{
     private SshClient ssh;
     private SftpClient ftp;
     private String remoteDir;
+    private String displayName;
 
     public String getLocalDir() {
         return localDir;
+    }
+
+    public String getDisplayName(){
+        return displayName;
     }
 
     private String localDir;
@@ -58,6 +63,7 @@ public class DataClient{
                 ftp = ssh.openSftpClient();
                 ftp.cd(remoteDir);
                 ftp.lcd(localDir);
+                displayName = dcd.getHost()+":"+remoteDir;
             }else{
                  throw new IOException("Authentication to host "+dcd.getHost()+" failed.");
             }

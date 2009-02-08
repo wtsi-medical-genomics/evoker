@@ -6,11 +6,20 @@ public class BedfileDataFile extends BinaryDataFile{
 
     static String[] alleleMap = {"N","A","C","G","T"};
 
-    BedfileDataFile(String filename, SampleData sd, MarkerData md, String collection) {
-        super(filename, sd, md,collection);
+    BedfileDataFile(String filename, int numInds, MarkerData md, String collection) throws IOException{
+        super(filename, numInds, md, collection);
 
         bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
-        checkFileLength();
+        checkFile(bedMagic);
+    }
+
+    BedfileDataFile(String filename, RemoteBedfileData rbd) throws IOException{
+        super(filename, rbd.numInds, rbd.md, rbd.collection);
+
+        bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
+        numSNPs = 1;
+        
+        checkFile(bedMagic);
     }
 
     public Vector<Byte> getRecord(String name){
@@ -22,26 +31,11 @@ public class BedfileDataFile extends BinaryDataFile{
         //have index, now load bed file
         BufferedInputStream bedIS = new BufferedInputStream(new FileInputStream(file),8192);
 
-        //read headers
-        byte[] magicNumber = new byte[2];
-        bedIS.read(magicNumber,0, 2);
-        byte[] mode = new byte[1];
-        bedIS.read(mode, 0, 1);
-
-        //verify headers
-        if(!(magicNumber[0]==0x6c && magicNumber[1]==0x1b)) {
-            //Error: BED file version is not supported
-            //TODO: handle error
-        }
-        if(!(mode[0]==0x01)) {
-            //Error: only SNP-major mode supported
-            //TODO: handle error
-        }
 
         //skip to SNP of interest
         //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
         //java sux.
-        long remaining = snpIndex * bytesPerRecord;
+        long remaining = (snpIndex * bytesPerRecord)+3;
         while ((remaining = remaining - bedIS.skip(remaining)) > 0){
         }
 

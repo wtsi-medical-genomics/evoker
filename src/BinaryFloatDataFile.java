@@ -1,6 +1,4 @@
 import java.util.Vector;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -10,12 +8,23 @@ public class BinaryFloatDataFile extends BinaryDataFile{
 
     private int valuesPerEntry;
 
-    BinaryFloatDataFile(String filename, SampleData sd, MarkerData md, String collection, int vals) {
-        super(filename, sd, md,collection);
+    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals)
+            throws IOException{
+        super(filename, numInds, md,collection);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
-        checkFileLength();
+        checkFile(bntMagic);
+    }
+
+    BinaryFloatDataFile(String filename, RemoteBinaryFloatData rbfd) throws IOException{
+        super(filename,rbfd.numInds,rbfd.md,rbfd.collection);
+
+        this.valuesPerEntry = rbfd.valuesPerEntry;
+        bytesPerRecord = rbfd.bytesPerRecord;
+        this.numSNPs = 1;
+        
+        checkFile(bntMagic);
     }
 
     public Vector<float[]> getRecord(String name){
@@ -36,7 +45,7 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         //long remaining = snpIndex * bytesPerRecord;
         //while ((remaining = remaining - bis.skip(remaining)) > 0){
         //}
-        raf.seek(snpIndex*bytesPerRecord);
+        raf.seek((snpIndex*bytesPerRecord)+2);
 
         byte[] rawData = new byte[bytesPerRecord];
         raf.read(rawData);
