@@ -63,6 +63,12 @@ public class DataClient{
                 ftp = ssh.openSftpClient();
                 ftp.cd(remoteDir);
                 ftp.lcd(localDir);
+                try{
+                    ftp.stat("evoker-helper.pl");
+                }catch (IOException ioe){
+                    ssh.disconnect();
+                    throw new IOException("Required file: evoker-helper.pl not found on remote server.");
+                }
                 displayName = dcd.getHost()+":"+remoteDir;
             }else{
                  throw new IOException("Authentication to host "+dcd.getHost()+" failed.");
