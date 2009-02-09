@@ -38,13 +38,6 @@ public class MarkerData {
         runningCount = 0;
     }
 
-    /*public MarkerData (String bimFilename)throws IOException{
-        this.numCollections = 1;
-        markerTable = new Hashtable<String,Marker>();
-        collectionIndices = new Hashtable<String,Integer>();
-        runningCount = 0;
-        addFile(bimFilename);
-    } */
 
     public int getSampleCollectionIndex(String collection){
         return collectionIndices.get(collection);

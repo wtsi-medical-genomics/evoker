@@ -6,7 +6,9 @@ public class LinkedAxis extends NumberAxis {
     private double min;
     private double max;
 
-    public LinkedAxis(double min, double max){
+    public LinkedAxis(String label, double min, double max){
+        super(label);
+
         this.min = min;
         this.max = max;
     }

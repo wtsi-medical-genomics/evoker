@@ -1,6 +1,5 @@
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.data.Range;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -115,8 +114,8 @@ public class PlotPanel extends JPanel {
 
     public void setDimensions(double min, double max){
         if (jfc != null){
-            jfc.getXYPlot().setRangeAxis(new LinkedAxis(min,max));
-            jfc.getXYPlot().setDomainAxis(new LinkedAxis(min,max));
+            jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab,min,max));
+            jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab,min,max));
             jfc.getXYPlot().getDomainAxis().setRange(min,max);
             jfc.getXYPlot().getRangeAxis().setRange(min,max);
         }
