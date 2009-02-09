@@ -8,7 +8,7 @@ public class PlotData {
     
     private Vector<Byte> calledGenotypes;
     private Vector<float[]> intensities;
-    private double maf, genopc, hwpval, maxDim;
+    private double maf, genopc, hwpval, maxDim, minDim;
     private SampleData samples;
     Vector<Vector<String>> indsInClasses;
 
@@ -17,7 +17,8 @@ public class PlotData {
         this.calledGenotypes = calledGenotypes;
         this.intensities = intensities;
         this.samples = samples;
-        this.maxDim = 0;
+        this.maxDim = -100000;
+        this.minDim = 100000;
     }
 
 
@@ -45,22 +46,23 @@ public class PlotData {
         }
 
         for (int i = 0; i < intensities.size(); i++){
+            float[] intens = intensities.get(i);
             if (calledGenotypes.get(i) != null){
                 switch(calledGenotypes.get(i)) {
                     case 0:
-                        intensityDataSeriesHomo1.add(intensities.get(i)[0],intensities.get(i)[1]);
+                        intensityDataSeriesHomo1.add(intens[0],intens[1]);
                         indsInClasses.get(0).add(samples.getInd(i));
                         break;
                     case 1:
-                        intensityDataSeriesMissing.add(intensities.get(i)[0],intensities.get(i)[1]);
+                        intensityDataSeriesMissing.add(intens[0],intens[1]);
                         indsInClasses.get(1).add(samples.getInd(i));
                         break;
                     case 2:
-                        intensityDataSeriesHetero.add(intensities.get(i)[0],intensities.get(i)[1]);
+                        intensityDataSeriesHetero.add(intens[0],intens[1]);
                         indsInClasses.get(2).add(samples.getInd(i));
                         break;
                     case 3:
-                        intensityDataSeriesHomo2.add(intensities.get(i)[0],intensities.get(i)[1]);
+                        intensityDataSeriesHomo2.add(intens[0],intens[1]);
                         indsInClasses.get(3).add(samples.getInd(i));
                         break;
                     default:
@@ -69,12 +71,18 @@ public class PlotData {
                 }
             }
 
-            if (intensities.get(i)[0] > maxDim){
-                maxDim = intensities.get(i)[0];
+            if (intens[0] > maxDim){
+                maxDim = intens[0];
+            }
+            if (intens[0] < minDim){
+                minDim = intens[0];
             }
 
-            if (intensities.get(i)[1] > maxDim){
-                maxDim = intensities.get(i)[1];
+            if (intens[1] > maxDim){
+                maxDim = intens[1];
+            }
+            if (intens[1] < minDim){
+                minDim = intens[1];
             }
 
         }
@@ -210,5 +218,9 @@ public class PlotData {
 
     public double getMaxDim(){
         return maxDim;
+    }
+
+    public double getMinDim(){
+        return minDim;
     }
 }

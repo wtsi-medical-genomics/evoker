@@ -399,7 +399,8 @@ public class Genoplot extends JFrame implements ActionListener {
 
             Vector<String> v = db.getCollections();
             Vector<PlotPanel> plots = new Vector<PlotPanel>();
-            double maxdim=0;
+            double maxdim=-100000;
+            double mindim=100000;
             for (String c : v){
                 PlotPanel pp = new PlotPanel(c,"a","b",
                         db.getRecord(name, c));
@@ -408,11 +409,14 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (pp.getMaxDim() > maxdim){
                     maxdim = pp.getMaxDim();
                 }
+                if (pp.getMinDim() < mindim){
+                    mindim = pp.getMinDim();
+                }
                 plots.add(pp);
             }
 
             for (PlotPanel pp : plots){
-                pp.setMaxDim(maxdim);
+                pp.setDimensions(mindim,maxdim);
                 plotHolder.add(pp);
             }
         }catch (IOException ioe){

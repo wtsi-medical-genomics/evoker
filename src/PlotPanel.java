@@ -1,5 +1,6 @@
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.Range;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -79,19 +80,9 @@ public class PlotPanel extends JPanel {
                 PlotOrientation.VERTICAL, false, false, false);
 
         XYPlot thePlot = jfc.getXYPlot();
-        //BasicStroke dash = new BasicStroke(1,BasicStroke.CAP_BUTT,BasicStroke.JOIN_BEVEL,
-        //        1,new float[]{10,10},0);
-        //BasicStroke solid = new BasicStroke(1);
         thePlot.setBackgroundPaint(Color.white);
-        //thePlot.setDomainZeroBaselineVisible(true);
-        //thePlot.setDomainZeroBaselineStroke(solid);
-        //thePlot.setRangeZeroBaselineVisible(true);
-        //thePlot.setRangeZeroBaselineStroke(solid);
         thePlot.setOutlineVisible(false);
-        //thePlot.getDomainAxis().setAxisLineVisible(false);
-        //thePlot.getDomainAxis().setTickMarksVisible(false);
-        //thePlot.getRangeAxis().setAxisLineVisible(false);
-        //thePlot.getRangeAxis().setTickMarksVisible(false);
+
 
         XYItemRenderer xyd = thePlot.getRenderer();
         Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
@@ -113,13 +104,21 @@ public class PlotPanel extends JPanel {
     }
 
     public double getMaxDim(){
-        return 1.05*data.getMaxDim();
+        double range = data.getMaxDim() - data.getMinDim();
+        return data.getMaxDim() + 0.05*range;
     }
 
-    public void setMaxDim(double val){
+    public double getMinDim(){
+        double range = data.getMaxDim() - data.getMinDim();
+        return data.getMinDim() - 0.05*range;
+    }
+
+    public void setDimensions(double min, double max){
         if (jfc != null){
-            jfc.getXYPlot().getDomainAxis().setRange(-0.1,val);
-            jfc.getXYPlot().getRangeAxis().setRange(-0.1,val);
+            jfc.getXYPlot().setRangeAxis(new LinkedAxis(min,max));
+            jfc.getXYPlot().setDomainAxis(new LinkedAxis(min,max));
+            jfc.getXYPlot().getDomainAxis().setRange(min,max);
+            jfc.getXYPlot().getRangeAxis().setRange(min,max);
         }
     }
 
