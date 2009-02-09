@@ -47,6 +47,7 @@ public class PlotData {
 
         for (int i = 0; i < intensities.size(); i++){
             float[] intens = intensities.get(i);
+
             if (calledGenotypes.get(i) != null){
                 switch(calledGenotypes.get(i)) {
                     case 0:
@@ -71,18 +72,24 @@ public class PlotData {
                 }
             }
 
-            if (intens[0] > maxDim){
-                maxDim = intens[0];
-            }
-            if (intens[0] < minDim){
-                minDim = intens[0];
-            }
+            //illuminus uses [-1,-1] as a flag for missing data. technically we don't want to make it impossible
+            //for such a datapoint to exist, but we won't let this exact data point adjust the bounds of the plot.
+            //if it really is intentional, there will almost certainly be other nearby, negative points
+            //which will resize the bounds appropriately.
+            if (!(intens[0] == -1 && intens[1] == -1)){
+                if (intens[0] > maxDim){
+                    maxDim = intens[0];
+                }
+                if (intens[0] < minDim){
+                    minDim = intens[0];
+                }
 
-            if (intens[1] > maxDim){
-                maxDim = intens[1];
-            }
-            if (intens[1] < minDim){
-                minDim = intens[1];
+                if (intens[1] > maxDim){
+                    maxDim = intens[1];
+                }
+                if (intens[1] < minDim){
+                    minDim = intens[1];
+                }
             }
 
         }
