@@ -205,9 +205,10 @@ public class DataDirectory {
             return new PlotData(
                     genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
                     intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
-                    samplesByCollection.get(collection));
+                    samplesByCollection.get(collection),
+                    md.getAlleles(snp));
         }else{
-            return new PlotData(null,null,null);
+            return new PlotData(null,null,null,null);
         }
     }
 

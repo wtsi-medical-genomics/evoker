@@ -11,14 +11,16 @@ public class PlotData {
     private double maf, genopc, hwpval, maxDim, minDim;
     private SampleData samples;
     Vector<Vector<String>> indsInClasses;
+    private char[] alleles;
 
 
-    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples){
+    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples, char[] alleles){
         this.calledGenotypes = calledGenotypes;
         this.intensities = intensities;
         this.samples = samples;
         this.maxDim = -100000;
         this.minDim = 100000;
+        this.alleles = alleles;
     }
 
 
@@ -229,5 +231,9 @@ public class PlotData {
 
     public double getMinDim(){
         return minDim;
+    }
+
+    public char[] getAlleles() {
+        return alleles;
     }
 }

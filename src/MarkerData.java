@@ -73,18 +73,14 @@ public class MarkerData {
             if (markerTable.get(snpid) ==  null){
                 markerTable.put(snpid, new Marker(numCollections,a,b,chrom));
             }
-            markerTable.get(snpid).addSampleCollection(runningCount,index++);
+            markerTable.get(snpid).addSampleCollection(runningCount,index++,a,b,snpid);
         }
 
         snpsPerCollection.put(collection,index);
     }
 
-    public String getAlleleA(String name){
-        return markerTable.get(name).getAlleleA();
-    }
-
-    public String getAlleleB(String name){
-        return markerTable.get(name).getAlleleB();
+    public char[] getAlleles(String snp){
+        return markerTable.get(snp).getAlleles();
     }
 
     public String getChrom(String name){

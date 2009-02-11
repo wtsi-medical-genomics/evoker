@@ -415,8 +415,7 @@ public class Genoplot extends JFrame implements ActionListener {
             double maxdim=-100000;
             double mindim=100000;
             for (String c : v){
-                PlotPanel pp = new PlotPanel(c,"a","b",
-                        db.getRecord(name, c));
+                PlotPanel pp = new PlotPanel(c,db.getRecord(name, c));
 
                 pp.refresh();
                 if (pp.getMaxDim() > maxdim){

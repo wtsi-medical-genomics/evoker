@@ -32,10 +32,10 @@ public class PlotPanel extends JPanel {
     }
 
 
-    PlotPanel(String title, String xlab, String ylab, PlotData pd){
+    PlotPanel(String title, PlotData pd){
         this.title = title;
-        this.xlab = xlab;
-        this.ylab = ylab;
+        this.xlab = String.valueOf(pd.getAlleles()[0]);
+        this.ylab = String.valueOf(pd.getAlleles()[1]);
         this.data = pd;
 
         this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
