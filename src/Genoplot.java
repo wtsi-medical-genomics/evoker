@@ -338,6 +338,9 @@ public class Genoplot extends JFrame implements ActionListener {
             randomSNPButton.setEnabled(true);
             snpField.setEnabled(true);
             loadList.setEnabled(true);
+            while(historyMenu.getMenuComponentCount() > 2){
+                historyMenu.remove(2);
+            }
 
             this.setTitle("Evoke...["+db.getDisplayName()+"]");
 
