@@ -25,8 +25,8 @@ public class MarkerData {
     Hashtable<String,Marker> markerTable;
     Hashtable<String,Integer> collectionIndices;
     Hashtable<String,Integer> snpsPerCollection;
-    int numCollections;
-    int runningCount;
+    private int numCollections;
+    private int runningCount;
 
     public MarkerData(int numCollections){
         this.numCollections = numCollections;
@@ -35,7 +35,7 @@ public class MarkerData {
         snpsPerCollection = new Hashtable<String,Integer>();
         chromosomeLookup = new Hashtable<String,Byte>();
         chromosomeBackLookup = new Hashtable<Byte,String>();
-        runningCount = 0;
+        runningCount = -1;
     }
 
 
@@ -50,8 +50,11 @@ public class MarkerData {
 
 
     public void addFile(String bimFile, String collection, String chromosome) throws IOException {
+        if (collectionIndices.get(collection) == null){
+            runningCount++;
+            collectionIndices.put(collection,runningCount);
+        }
         byte chrom = chromosomeLookup.get(chromosome);
-        collectionIndices.put(collection,runningCount);
         String currentLine;
         StringTokenizer st;
         BufferedReader bimReader =  new BufferedReader(new FileReader(bimFile));
@@ -72,7 +75,7 @@ public class MarkerData {
             }
             markerTable.get(snpid).addSampleCollection(runningCount,index++);
         }
-        runningCount++;
+
         snpsPerCollection.put(collection,index);
     }
 
