@@ -16,6 +16,7 @@ public class DataDirectory {
     String displayName;
 
     DataDirectory(DataClient dc) throws IOException{
+        boolean success = true;
 
         this.dc = dc;
         File directory = dc.prepMetaFiles();
@@ -24,10 +25,11 @@ public class DataDirectory {
         for(String collection : samplesByCollection.keySet()){
             Hashtable<String, RemoteBinaryFloatData> tmpIntensity = new Hashtable<String, RemoteBinaryFloatData>();
             Hashtable<String, RemoteBedfileData> tmpGenotypes = new Hashtable<String, RemoteBedfileData>();
-            String root =  directory.getAbsolutePath() + File.separator + collection;
             for (String chrom : knownChroms.keySet()){
-                String name = root + "." + chrom;
-                //TODO: handle checking for missing files better
+                String name = collection + "." + chrom;
+                success &= checkFile(dc.getFilesInRemoteDir(),name);
+
+                name =  directory.getAbsolutePath() + File.separator + name;
                 //we require a bimfile for this collection and chromosome:
                 md.addFile(name+".bim",collection,chrom);
 
@@ -43,25 +45,30 @@ public class DataDirectory {
             genotypeDataByCollectionChrom.put(collection,tmpGenotypes);
         }
 
-        displayName = dc.getDisplayName();        
+        if (!success){
+            throw new IOException("Could not find all required files!\nSee log for details.");
+        }
+
+        Genoplot.ld.log("Using files in " + dc.getDisplayName());
+        displayName = dc.getDisplayName();
     }
 
     DataDirectory(String filename) throws IOException{
         boolean success = true;
 
         File directory = new File(filename);
+        String[] filesInDir = directory.list();
 
         Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
-        Genoplot.ld.log("Using files in " + filename);
 
         for(String collection : samplesByCollection.keySet()){
             Hashtable<String, BinaryFloatDataFile> tmpIntensity = new Hashtable<String, BinaryFloatDataFile>();
             Hashtable<String, BedfileDataFile> tmpGenotypes = new Hashtable<String, BedfileDataFile>();
-            String root =  directory.getAbsolutePath() + File.separator + collection;
             for (String chrom : knownChroms.keySet()){
-                String name = root + "." + chrom;
+                String name = collection + "." + chrom;
+                success &= checkFile(filesInDir,name);
 
-                success &= checkFile(name);
+                name =  directory.getAbsolutePath() + File.separator + name;
 
                 //even though we know that something is amiss, we want to keep cdring through the list so that
                 //we can log all the missing files at once.
@@ -86,6 +93,7 @@ public class DataDirectory {
             throw new IOException("Could not find all required files!\nSee log for details.");
         }
 
+        Genoplot.ld.log("Using files in " + filename);        
         displayName = filename;
 
     }
@@ -141,21 +149,34 @@ public class DataDirectory {
         return md.getRandomSNP();
     }
 
-    private boolean checkFile(String stem){
-        boolean all = true;
-        if (!(new File(stem+".bed").exists())){
-            Genoplot.ld.log("Missing file: " + stem+".bed!");
-            all = false;
+    private boolean checkFile(String[] filesInDir,String stem) throws IOException{
+        if (filesInDir != null){
+            boolean bed = false;
+            boolean bnt = false;
+            boolean bim = false;
+            for (String s : filesInDir){
+                if (s.equals(stem+".bed")){
+                    bed = true;
+                }else if (s.equals(stem+".bnt")){
+                    bnt = true;
+                }else if (s.equals(stem+".bim")){
+                    bim = true;
+                }
+            }
+
+            if (!bed){
+                Genoplot.ld.log("Missing file: " + stem+".bed!");
+            }
+            if (!bnt){
+                Genoplot.ld.log("Missing file: " + stem+".bnt!");
+            }
+            if (!bim){
+                Genoplot.ld.log("Missing file: " + stem+".bim!");
+            }
+            return bed & bnt & bim;
+        }else{
+            throw new IOException("Could not get list of files in data directory.");
         }
-        if (!(new File(stem+".bnt").exists())){
-            Genoplot.ld.log("Missing file: " + stem+".bnt!");
-            all = false;
-        }
-        if (!(new File(stem+".bim").exists())){
-            Genoplot.ld.log("Missing file: " + stem+".bim!");
-            all = false;
-        }
-        return all;
     }
 
     public String getDisplayName() {

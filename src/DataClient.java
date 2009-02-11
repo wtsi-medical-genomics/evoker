@@ -23,6 +23,7 @@ public class DataClient{
     private SftpClient ftp;
     private String remoteDir;
     private String displayName;
+    private List files;
 
     public String getLocalDir() {
         return localDir;
@@ -64,15 +65,30 @@ public class DataClient{
                 ftp.cd(remoteDir);
                 ftp.lcd(localDir);
                 try{
-                    ftp.stat("evoker-helper.pl");
+                    String perms = ftp.stat("evoker-helper.pl").getPermissionsString();
+                    if (!perms.endsWith("x")){
+                        throw new IOException("must be fully executable");
+                    }
                 }catch (IOException ioe){
                     ssh.disconnect();
-                    throw new IOException("Required file: evoker-helper.pl not found on remote server.");
+                    throw new IOException("Problem with evoker-helper.pl on remote server:\n"+ioe.getMessage());
                 }
                 displayName = dcd.getHost()+":"+remoteDir;
             }else{
                  throw new IOException("Authentication to host "+dcd.getHost()+" failed.");
             }
+        }
+    }
+
+    public String[] getFilesInRemoteDir() throws IOException{
+        if (files != null){
+            String[] out = new String[files.size()];
+            for (int i = 0; i < files.size(); i++){
+                out[i] = ((SftpFile)files.get(i)).getFilename();
+            }
+            return out;
+        }else{
+            throw new IOException("Cannot ls files in remote directory");
         }
     }
 
@@ -125,7 +141,7 @@ public class DataClient{
     }
 
     public File prepMetaFiles() throws IOException{
-        List files = ftp.ls();
+        files = ftp.ls();
 
         Iterator i = files.iterator();
         while (i.hasNext()){

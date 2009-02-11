@@ -32,6 +32,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenuItem returnToListPosition;
 
     public static LoggingDialog ld;
+    private JButton randomSNPButton;
 
     public static void main(String[] args){
 
@@ -105,8 +106,9 @@ public class Genoplot extends JFrame implements ActionListener {
         goButton.addActionListener(this);
         goButton.setEnabled(false);
         snpPanel.add(goButton);
-        JButton randomSNPButton = new JButton("Random");
+        randomSNPButton = new JButton("Random");
         randomSNPButton.addActionListener(this);
+        randomSNPButton.setEnabled(false);
         snpPanel.add(randomSNPButton);
         controlsPanel.add(snpPanel);
 
@@ -207,16 +209,26 @@ public class Genoplot extends JFrame implements ActionListener {
             }else if (command.equals("Open directory")){
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
-                    db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
-                    finishLoadingDataSource();
+                    try{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
+                        finishLoadingDataSource();
+                    }finally{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    }
                 }
             }else if (command.equals("Connect to remote server")){
                 dcd.pack();
                 dcd.setVisible(true);
                 DataClient dc = new DataClient(dcd);
                 if (dc.getConnectionStatus()){
-                    db = new DataDirectory(dc);
-                    finishLoadingDataSource();
+                    try{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        db = new DataDirectory(dc);
+                        finishLoadingDataSource();
+                    }finally{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    }
                 }
             }else if (command.equals("Load marker list")){
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -323,6 +335,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 this.setSize(new Dimension(700,750));
             }
             goButton.setEnabled(true);
+            randomSNPButton.setEnabled(true);
             snpField.setEnabled(true);
             loadList.setEnabled(true);
 
