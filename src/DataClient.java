@@ -52,9 +52,12 @@ public class DataClient{
             pwd.setUsername(dcd.getUsername());
             pwd.setPassword(new String(dcd.getPassword()));
             ssh = new SshClient();
-            ssh.connect(dcd.getHost(),new IgnoreHostKeyVerification());
-            remoteDir = dcd.getRemoteDirectory();
-            dcd.clearPassword();
+            try{
+                ssh.connect(dcd.getHost(),new IgnoreHostKeyVerification());
+                remoteDir = dcd.getRemoteDirectory();
+            }finally{
+                dcd.clearPassword();
+            }
 
             // Try the authentication
             int result = ssh.authenticate(pwd);
