@@ -14,13 +14,13 @@ my $bytesPerRecord = ceil($numinds/4);
 open (BED, "$collection.$chr.bed");
 open (BEDOUT, ">$collection.$snp.bed");
 
+my $magic_num;
 #magic number and SNP-major mode.
-print BEDOUT pack('B*',"011011000001101100000001");
-
-#jump to this SNP (the +3 is for the meta-data, as above)
-seek (BED, ($index*$bytesPerRecord)+3,0);
+read(BED, $magic_num, 3);
 
 my $buf;
+#jump to this SNP (the +3 is for the meta-data, as above)
+seek (BED, ($index*$bytesPerRecord)+3,0);
 read (BED, $buf, $bytesPerRecord);
 print BEDOUT $buf;
 
@@ -32,12 +32,12 @@ $bytesPerRecord = $numinds*8;
 open (BNT, "$collection.$chr.bnt");
 open (BNTOUT, ">$collection.$snp.bnt");
 
-#magic number
-print BNTOUT pack('B*',"0001101000110001");
+read (BNT, $magic_num, 2);
+print BNTOUT $magic_num;
 
 #jump to position (+2 for meta-data)
 seek (BNT, ($index*$bytesPerRecord)+2,0);
-read (BNT, $buf, $bytesPerRecord);
+read (BNT, $buf, $bytesPerRecord);	
 print BNTOUT $buf;
 
 close BNT;
