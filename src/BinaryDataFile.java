@@ -13,7 +13,7 @@ public abstract class BinaryDataFile extends BinaryData{
         this.file = new File(filename);
     }
 
-    protected void checkFile(byte[] headers) throws IOException{
+    public void checkFile(byte[] headers) throws IOException{
 
         //are the headers acceptable for this file?
         BufferedInputStream binaryIS = new BufferedInputStream(new FileInputStream(file),8192);

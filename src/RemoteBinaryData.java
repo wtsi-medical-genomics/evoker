@@ -8,7 +8,7 @@ public abstract class RemoteBinaryData extends BinaryData{
         this.dc = dc;
     }
 
-    protected void checkFile(byte[] header){
+    public void checkFile(byte[] header){
         //TODO: how to be able to run this check without unnecessarily slowing down the system?
     }
     
