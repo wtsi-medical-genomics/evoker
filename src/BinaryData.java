@@ -21,8 +21,8 @@ public abstract class BinaryData {
                                                                                                                     
 
 
-    abstract Vector getRecord(String markerName) throws IOException;
+    public abstract Vector getRecord(String markerName) throws IOException;
 
-    abstract void checkFile(byte[] headers) throws IOException;
+    public abstract void checkFile(byte[] headers) throws IOException;
 
 }
