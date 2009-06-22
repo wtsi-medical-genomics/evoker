@@ -7,6 +7,7 @@ import com.sshtools.j2ssh.authentication.AuthenticationProtocolState;
 import com.sshtools.j2ssh.transport.IgnoreHostKeyVerification;
 
 import javax.swing.*;
+
 import java.io.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -75,6 +76,29 @@ public class DataClient{
                 }catch (IOException ioe){
                     ssh.disconnect();
                     throw new IOException("Problem with evoker-helper.pl on remote server:\n"+ioe.getMessage());
+                }
+                
+                // check if the localdir contains files already
+                File[] localFiles = new File(localDir).listFiles();
+                if (localFiles.length > 0){
+                	Genoplot.ld.log("Files in the local dir");
+                	// ask the user if they wants it emptied
+                	int n = JOptionPane.showConfirmDialog(
+                			null, 
+                			"The local directory selected is not empty.\n Would you like to clear all files in this directory?",
+                			"Clear the local directory?",
+                			JOptionPane.YES_NO_OPTION,
+                			JOptionPane.QUESTION_MESSAGE );
+                	// n 0 = yes 1 = no
+                	if (n == 0) {
+                		for (File localFile : localFiles){
+                			try {
+                				localFile.delete();	
+                			}catch (SecurityException se){
+                				JOptionPane.showMessageDialog(null,se.getMessage(), "File delete error", JOptionPane.ERROR_MESSAGE);
+                			}
+                		}
+                	}
                 }
                 displayName = dcd.getHost()+":"+remoteDir;
             }else{
@@ -165,7 +189,17 @@ public class DataClient{
                 }
             }
         }
-
+        
+        i = files.iterator();
+        while (i.hasNext()){
+            String filename = ((SftpFile)i.next()).getFilename();
+            if (filename.endsWith(".qc")){
+                if (!new File(localDir+File.separator+filename).exists()){
+                    ftp.get(filename);
+                }
+            }
+        }
+        
         return new File(localDir);
     }
 
