@@ -10,14 +10,16 @@ public class PlotData {
     private Vector<float[]> intensities;
     private double maf, genopc, hwpval, maxDim, minDim;
     private SampleData samples;
+    private QCFilterData exclude;
     Vector<Vector<String>> indsInClasses;
     private char[] alleles;
 
 
-    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples, char[] alleles){
+    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles){
         this.calledGenotypes = calledGenotypes;
         this.intensities = intensities;
         this.samples = samples;
+        this.exclude = exclude;
         this.maxDim = -100000;
         this.minDim = 100000;
         this.alleles = alleles;
@@ -49,31 +51,62 @@ public class PlotData {
 
         for (int i = 0; i < intensities.size(); i++){
             float[] intens = intensities.get(i);
-
-            if (calledGenotypes.get(i) != null){
-                switch(calledGenotypes.get(i)) {
-                    case 0:
-                        intensityDataSeriesHomo1.add(intens[0],intens[1]);
-                        indsInClasses.get(0).add(samples.getInd(i));
-                        break;
-                    case 1:
-                        intensityDataSeriesMissing.add(intens[0],intens[1]);
-                        indsInClasses.get(1).add(samples.getInd(i));
-                        break;
-                    case 2:
-                        intensityDataSeriesHetero.add(intens[0],intens[1]);
-                        indsInClasses.get(2).add(samples.getInd(i));
-                        break;
-                    case 3:
-                        intensityDataSeriesHomo2.add(intens[0],intens[1]);
-                        indsInClasses.get(3).add(samples.getInd(i));
-                        break;
-                    default:
-                        //TODO: this is very bad
-                        break;
+            
+            // check if there is a valid exclude file loaded
+            if (exclude != null) {
+            	// check if the sample should be excluded before adding points
+                if (!exclude.isExcluded(samples.getInd(i))) {                	
+                	if (calledGenotypes.get(i) != null){
+                        switch(calledGenotypes.get(i)) {
+                            case 0:
+                                intensityDataSeriesHomo1.add(intens[0],intens[1]);
+                                indsInClasses.get(0).add(samples.getInd(i));
+                                break;
+                            case 1:
+                                intensityDataSeriesMissing.add(intens[0],intens[1]);
+                                indsInClasses.get(1).add(samples.getInd(i));
+                                break;
+                            case 2:
+                                intensityDataSeriesHetero.add(intens[0],intens[1]);
+                                indsInClasses.get(2).add(samples.getInd(i));
+                                break;
+                            case 3:
+                                intensityDataSeriesHomo2.add(intens[0],intens[1]);
+                                indsInClasses.get(3).add(samples.getInd(i));
+                                break;
+                            default:
+                                //TODO: this is very bad
+                                break;
+                        }
+                    }                
+                }	            	
+            } else {
+            	if (calledGenotypes.get(i) != null){
+                    switch(calledGenotypes.get(i)) {
+                        case 0:
+                            intensityDataSeriesHomo1.add(intens[0],intens[1]);
+                            indsInClasses.get(0).add(samples.getInd(i));
+                            break;
+                        case 1:
+                            intensityDataSeriesMissing.add(intens[0],intens[1]);
+                            indsInClasses.get(1).add(samples.getInd(i));
+                            break;
+                        case 2:
+                            intensityDataSeriesHetero.add(intens[0],intens[1]);
+                            indsInClasses.get(2).add(samples.getInd(i));
+                            break;
+                        case 3:
+                            intensityDataSeriesHomo2.add(intens[0],intens[1]);
+                            indsInClasses.get(3).add(samples.getInd(i));
+                            break;
+                        default:
+                            //TODO: this is very bad
+                            break;
+                    }
                 }
             }
-
+            
+            
             //illuminus uses [-1,-1] as a flag for missing data. technically we don't want to make it impossible
             //for such a datapoint to exist, but we won't let this exact data point adjust the bounds of the plot.
             //if it really is intentional, there will almost certainly be other nearby, negative points
