@@ -18,6 +18,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private PrintStream output;
     private LinkedList<String> snpList;
     private String currentSNPinList;
+    private String currentSNP = null;
 
     JFileChooser jfc;
     DataConnectionDialog dcd;
@@ -25,8 +26,10 @@ public class Genoplot extends JFrame implements ActionListener {
     private JButton yesButton;
     private JButton maybeButton;
     private JButton noButton;
-
+    private JMenu fileMenu;
     private JMenuItem loadList;
+    private JMenuItem loadExclude;
+    private JCheckBoxMenuItem filterData;
     private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
@@ -50,7 +53,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
         int menumask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
-        JMenu fileMenu = new JMenu("File");
+        fileMenu = new JMenu("File");
         JMenuItem openDirectory = new JMenuItem("Open directory");
         openDirectory.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, menumask));
         openDirectory.addActionListener(this);
@@ -64,6 +67,16 @@ public class Genoplot extends JFrame implements ActionListener {
         loadList.addActionListener(this);
         loadList.setEnabled(false);
         fileMenu.add(loadList);
+        loadExclude = new JMenuItem("Load exclude list");
+        loadExclude.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, menumask));
+        loadExclude.addActionListener(this);
+        loadExclude.setEnabled(false);
+        fileMenu.add(loadExclude);
+        filterData = new JCheckBoxMenuItem("Filter data");
+        filterData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, menumask));
+        filterData.addActionListener(this);
+        filterData.setEnabled(false);
+        fileMenu.add(filterData);
         /*JMenuItem dumpImages = new JMenuItem("Dump PNGs of all SNPs in list");
         dumpImages.addActionListener(this);
         fileMenu.add(dumpImages);*/
@@ -237,6 +250,29 @@ public class Genoplot extends JFrame implements ActionListener {
                 }
                 FileOutputStream fos = new FileOutputStream(jfc.getSelectedFile().getAbsolutePath()+".scores");
                 output = new PrintStream(fos);
+            }else if (command.equals("Load exclude list")) {       	            	
+            	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            	if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){            		            	
+            		// TODO: before setting as the new list check it is a valid not empty exclude file
+            		db.setExcludeList(new QCFilterData(jfc.getSelectedFile().getAbsolutePath()));            		
+            		db.setFilterState(true);
+            		filterData.setEnabled(true);
+            		filterData.setSelected(true);
+            		Genoplot.ld.log("Loaded exclude file: " + jfc.getSelectedFile().getName());
+            		if (currentSNP != null){
+                		plotIntensitas(currentSNP);
+                	}
+                }           
+            }else if (command.equals("Filter data")){
+            	// turn filtering on/off
+            	if (filterData.isSelected()) {
+            		db.setFilterState(true);
+            	} else {
+            		db.setFilterState(false);
+            	}
+            	if (currentSNP != null){
+            		plotIntensitas(currentSNP);
+            	}
             }else if (command.equals("Dump PNGs of all SNPs in list")){
                 dumpAll();
             }else if (command.equals("Show Evoker log")){
@@ -338,10 +374,16 @@ public class Genoplot extends JFrame implements ActionListener {
             randomSNPButton.setEnabled(true);
             snpField.setEnabled(true);
             loadList.setEnabled(true);
+            loadExclude.setEnabled(true);
             while(historyMenu.getMenuComponentCount() > 2){
                 historyMenu.remove(2);
             }
-
+            if(db.qcList() != null){
+            	// if a exclude file is loaded from the directory enable filtering
+            	filterData.setEnabled(true);
+            	filterData.setSelected(true);
+            }
+                        
             this.setTitle("Evoke...["+db.getDisplayName()+"]");
 
             plotArea.removeAll();
@@ -355,7 +397,8 @@ public class Genoplot extends JFrame implements ActionListener {
 
         if (name != null){
             if (!name.equals("ENDLIST")){
-                plotArea.add(new JLabel(name));
+                currentSNP = name;
+            	plotArea.add(new JLabel(name));
                 fetchRecord(name);
                 viewedSNP(name);
             }else{
