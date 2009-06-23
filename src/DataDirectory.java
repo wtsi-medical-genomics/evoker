@@ -1,8 +1,14 @@
 import javax.swing.*;
+
+import com.sun.tools.javac.util.List;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.LinkedList;
 
@@ -11,6 +17,10 @@ public class DataDirectory {
     Hashtable<String,Hashtable<String,? extends BinaryData>> intensityDataByCollectionChrom;
     Hashtable<String,Hashtable<String, ? extends BinaryData>> genotypeDataByCollectionChrom;
     Hashtable<String,SampleData> samplesByCollection;
+    
+    QCFilterData filterList;
+    boolean filterState;
+    
     MarkerData md;
     DataClient dc;
     String displayName;
@@ -60,10 +70,10 @@ public class DataDirectory {
         String[] filesInDir = directory.list();
 
         Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
-
+        
         for(String collection : samplesByCollection.keySet()){
             Hashtable<String, BinaryFloatDataFile> tmpIntensity = new Hashtable<String, BinaryFloatDataFile>();
-            Hashtable<String, BedfileDataFile> tmpGenotypes = new Hashtable<String, BedfileDataFile>();
+            Hashtable<String, BedfileDataFile> tmpGenotypes = new Hashtable<String, BedfileDataFile>();       
             for (String chrom : knownChroms.keySet()){
                 String name = collection + "." + chrom;
                 success &= checkFile(filesInDir,name);
@@ -123,6 +133,19 @@ public class DataDirectory {
         }
 
         md = new MarkerData(numberofCollections);
+        
+        // is there a ".qc" file in the directory?
+        File[] qcfiles = directory.listFiles(new ExtensionFilter(".qc"));
+        if (qcfiles.length > 0) {
+        	// for now just take the first qc file found, later load all qc files and list in the menu with the ability to select which file to use
+        	File qcFile = qcfiles[0];
+        	String name = qcFile.getName();
+        	// parse the qc file and store all the samples to exclude in a vector
+        	this.setExcludeList(new QCFilterData(qcFile.getAbsolutePath()));
+        	// turn filtering on
+        	this.setFilterState(true);
+        	Genoplot.ld.log("Loaded exclude file: " + name);
+        }
 
         //what chromosomes do we have here?
         File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
@@ -141,7 +164,7 @@ public class DataDirectory {
         if (knownChroms.keySet().size() == 0){
             throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
         }
-
+        
         return knownChroms;
     }
 
@@ -202,13 +225,14 @@ public class DataDirectory {
         }**/
         String chrom = md.getChrom(snp);
         if (chrom != null){
-            return new PlotData(
+        	return new PlotData(
                     genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
                     intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
                     samplesByCollection.get(collection),
+                    qcList(),
                     md.getAlleles(snp));
         }else{
-            return new PlotData(null,null,null,null);
+            return new PlotData(null,null,null,null,null);
         }
     }
 
@@ -255,4 +279,28 @@ public class DataDirectory {
         return (dc != null);
     }
 
+    public QCFilterData qcList() {
+    	if (filterState == true) {
+    		return this.getExcludeList();
+    	} else {
+    		return null;
+    	}
+    }
+
+    public boolean getFilterState() {
+    	return filterState;
+    }
+	  	
+    public void setFilterState(boolean state) {
+    	this.filterState = state;
+    }
+	
+    public QCFilterData getExcludeList() {
+		return filterList;
+	}
+    
+    public void setExcludeList(QCFilterData qc) {
+		this.filterList = qc; 
+	}	    
+   
 }
