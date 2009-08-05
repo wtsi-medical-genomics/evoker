@@ -2,20 +2,23 @@
 public class Marker {
     int[] indices;
     byte chrom;
-    char[] alleles;
+    char alleleA;
+    char alleleB;
 
     public Marker (int numCollections, char alleleA, char alleleB, byte chrom){
         this.indices = new int[numCollections];
         for (int i = 0; i < numCollections; i++){
             indices[i] = -1;
         }
-        this.alleles = new char[]{alleleA,alleleB};
+        this.alleleA = alleleA;
+        this.alleleB = alleleB;
         this.chrom = chrom;
     }
 
     public void addSampleCollection(int sampleIndex, int markerIndex, char alleleA, char alleleB, String snp){
-        if (alleleA != alleles[0] || alleleB != alleles[1]){
+        if (alleleA != this.alleleA || alleleB != this.alleleB){
             Genoplot.ld.log("Warning, alleles do not match across collections for "+snp);
+            //TODO: if they are just flipped around, should be able to figure that out and swap 'em
         }
         indices[sampleIndex] = markerIndex;
     }
@@ -29,7 +32,7 @@ public class Marker {
     }
 
     public char[] getAlleles(){
-        return alleles;
+        return new char[]{alleleA,alleleB};
     }
 }
 

@@ -4,7 +4,6 @@ import java.awt.event.*;
 import java.awt.*;
 import java.io.*;
 import java.util.Vector;
-import java.util.StringTokenizer;
 import java.util.LinkedList;
 
 public class Genoplot extends JFrame implements ActionListener {
@@ -87,7 +86,7 @@ public class Genoplot extends JFrame implements ActionListener {
             quitItem.addActionListener(this);
             fileMenu.add(quitItem);
         }
-        
+
         mb.add(fileMenu);
 
 
@@ -188,7 +187,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 System.exit(0);
             }
         });
-        
+
 
         this.setContentPane(contentPanel);
         this.pack();
@@ -250,11 +249,11 @@ public class Genoplot extends JFrame implements ActionListener {
                 }
                 FileOutputStream fos = new FileOutputStream(jfc.getSelectedFile().getAbsolutePath()+".scores");
                 output = new PrintStream(fos);
-            }else if (command.equals("Load exclude list")) {       	            	
+            }else if (command.equals("Load exclude list")) {
             	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            	if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){            		            	
+            	if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
             		// TODO: before setting as the new list check it is a valid not empty exclude file
-            		db.setExcludeList(new QCFilterData(jfc.getSelectedFile().getAbsolutePath()));            		
+            		db.setExcludeList(new QCFilterData(jfc.getSelectedFile().getAbsolutePath()));
             		db.setFilterState(true);
             		filterData.setEnabled(true);
             		filterData.setSelected(true);
@@ -262,7 +261,7 @@ public class Genoplot extends JFrame implements ActionListener {
             		if (currentSNP != null){
                 		plotIntensitas(currentSNP);
                 	}
-                }           
+                }
             }else if (command.equals("Filter data")){
             	// turn filtering on/off
             	if (filterData.isSelected()) {
@@ -383,7 +382,7 @@ public class Genoplot extends JFrame implements ActionListener {
             	filterData.setEnabled(true);
             	filterData.setSelected(true);
             }
-                        
+
             this.setTitle("Evoke...["+db.getDisplayName()+"]");
 
             plotArea.removeAll();
@@ -421,10 +420,9 @@ public class Genoplot extends JFrame implements ActionListener {
         snpList = new LinkedList<String>();
         BufferedReader listReader = new BufferedReader(new FileReader(filename));
         String currentLine;
-        StringTokenizer st;
         while ((currentLine = listReader.readLine()) != null){
-            st = new StringTokenizer(currentLine);
-            snpList.add(st.nextToken());
+            String[] bits = currentLine.split("\n");
+            snpList.add(bits[0]);
         }
         listReader.close();
 

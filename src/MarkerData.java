@@ -1,5 +1,4 @@
 import java.util.Hashtable;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -56,24 +55,21 @@ public class MarkerData {
         }
         byte chrom = chromosomeLookup.get(chromosome);
         String currentLine;
-        StringTokenizer st;
         BufferedReader bimReader =  new BufferedReader(new FileReader(bimFile));
 
         //read through bim file to record marker order so we can quickly index
         //into binary files
         int index = 0;
+        String[] bits;
         while ((currentLine = bimReader.readLine()) != null){
-            st = new StringTokenizer(currentLine);
-            String chromVal = st.nextToken();
-            String snpid = st.nextToken(); //snpid
-            st.nextToken(); //gendist
-            st.nextToken(); //physical position
-            char a = st.nextToken().toCharArray()[0];
-            char b = st.nextToken().toCharArray()[0];
-            if (markerTable.get(snpid) ==  null){
-                markerTable.put(snpid, new Marker(numCollections,a,b,chrom));
+            bits = currentLine.split("\\s");
+            StringBuffer snpid = new StringBuffer(bits[1]); //snpid
+            char a = bits[4].toCharArray()[0];
+            char b = bits[5].toCharArray()[0];
+            if (markerTable.get(snpid.toString()) ==  null){
+                markerTable.put(snpid.toString(), new Marker(numCollections,a,b,chrom));
             }
-            markerTable.get(snpid).addSampleCollection(runningCount,index++,a,b,snpid);
+            markerTable.get(snpid.toString()).addSampleCollection(runningCount,index++,a,b,snpid.toString());
         }
 
         snpsPerCollection.put(collection,index);

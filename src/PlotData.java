@@ -51,11 +51,11 @@ public class PlotData {
 
         for (int i = 0; i < intensities.size(); i++){
             float[] intens = intensities.get(i);
-            
+
             // check if there is a valid exclude file loaded
             if (exclude != null) {
             	// check if the sample should be excluded before adding points
-                if (!exclude.isExcluded(samples.getInd(i))) {                	
+                if (!exclude.isExcluded(samples.getInd(i))) {
                 	if (calledGenotypes.get(i) != null){
                         switch(calledGenotypes.get(i)) {
                             case 0:
@@ -78,8 +78,8 @@ public class PlotData {
                                 //TODO: this is very bad
                                 break;
                         }
-                    }                
-                }	            	
+                    }
+                }
             } else {
             	if (calledGenotypes.get(i) != null){
                     switch(calledGenotypes.get(i)) {
@@ -105,8 +105,8 @@ public class PlotData {
                     }
                 }
             }
-            
-            
+
+
             //illuminus uses [-1,-1] as a flag for missing data. technically we don't want to make it impossible
             //for such a datapoint to exist, but we won't let this exact data point adjust the bounds of the plot.
             //if it really is intentional, there will almost certainly be other nearby, negative points
@@ -267,6 +267,10 @@ public class PlotData {
     }
 
     public char[] getAlleles() {
-        return alleles;
+        if (alleles != null){
+            return alleles;
+        }else{
+            return new char[]{' ',' '};
+        }
     }
 }

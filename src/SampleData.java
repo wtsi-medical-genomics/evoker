@@ -1,5 +1,3 @@
-import java.util.Hashtable;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -15,15 +13,11 @@ public class SampleData {
 
         BufferedReader famReader = new BufferedReader(new FileReader(famFilename));
         String currentLine;
-        StringTokenizer st;
+        String[] bits;
         while ((currentLine = famReader.readLine()) != null){
-            st = new StringTokenizer(currentLine);
-            while (st.hasMoreTokens()){
-                st.nextToken();
-                inds.add(st.nextToken());
-                //todo: put remaining data somewhere
-                break;
-            }
+            bits = currentLine.split("\\s");
+            String sample = bits[1];
+            inds.add(sample);
         }
         famReader.close();
 
