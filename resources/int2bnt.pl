@@ -1,14 +1,19 @@
 #!/usr/bin/perl
 
-
 ## Description: This script generates binary intensity files for use in evoker
-## for now we assume that this file has the same snps and samples as
-## the bim and fam files for the mathing bed file
+## for now we assume that this file has the same snps and samples as the bim and fam files for the mathing bed file
 ##
 ## Usage: >./int2bnt.pl collection.chr.int --filetype="chiamo"
 ## Input: Intensity file in one of the accepted formats
-## Output: Binary Intensity file 
-## Arguments: --filetype chaimo, illuminus, affy
+## Output: Binary Intensity file (.bnt)
+## Arguments: --filetype [chaimo affy illuminus]
+## default format:
+##	A matrix of intensities with SNPs as rows and individuals as pairs of whitespace–separated columns. 
+## chaimo input format:  
+## 	The format of the signal data is tab-delimited plain text, one line per SNP, consisting of IDs, position, alleles and one pair of intensities per sample for each of the two alleles.
+## affy birdsuite format: 
+##	Birdsuite allele_summary file, which has the intensities of each allele of each SNP in matrix format. (two lines per SNP, one for each allele)
+## illuminus format: 
 ##
 ## NOTE: For illunia see illumina_parser.pl
 ##
@@ -35,20 +40,15 @@ if ($inputfile =~ /\.gz$/){
 	open (IN, $inputfile) or die "Error: Can't open '$inputfile': $!";
 }
 
-## pick a file type
-if ($filetype =~ /chiamo/i) {
-	## chiamo files have two header lines?, one with colmn names and another with the data type of each column?
-	## separated by spaces not tabs	
-	<IN>;
-
-	while (<IN>){
-  		my @fields = split;
-  		  		
-  		for (my $i = 5; $i <= $#fields; $i++){
-   	 		print OUT pack('f*',$fields[$i]);
+if ($filetype =~ /chiamo/i) {	 
+	my $header = <IN>;
+	while (my $line = <IN>){
+  		chomp($line);
+  		my @fields = split(/\t/, $line);
+  		for (my $i = 5; $i < scalar(@fields); $i++){
+   	 		print OUT pack('f*', $fields[$i]);
   		}  		
 	}
-	
 } elsif ($filetype =~ /affy/i) {
 	my %header_info;
 	my @allele_a;
@@ -59,12 +59,12 @@ if ($filetype =~ /chiamo/i) {
 		$header_info{$param} = $val; 
 		$header_line = <IN>;	
 	}
+	## the line which broke out of the while loop contains the column headings
 	my $col_headings = $header_line;
 	my $SAMPLE_NUM   = $header_info{'affymetrix-algorithm-param-apt-opt-cel-count'};
 
 	while (my $line = <IN>) {
 		chomp($line);
-		## parse the data lines
 		my @allele = split(/\t/, $line);
 		my $snp_id = $allele[0];
 		if ($snp_id =~ /-A$/i) {
@@ -72,13 +72,13 @@ if ($filetype =~ /chiamo/i) {
 		} elsif ($snp_id =~ /-B$/i) {
 			@allele_b = @allele;
 		}
-		## if both allele arrays hold the correct amount of intensity values print them out +1 is the snp id
+		## when the A and B allele data for a SNP is parsed print the intensity values out, this is tested by both allele arrays being the correct size  (+1 is the SNP id)
 		if (scalar(@allele_a) == $SAMPLE_NUM + 1 && scalar(@allele_b) == $SAMPLE_NUM + 1) {
 			my $snp_id_a = shift(@allele_a);
 			my $snp_id_b = shift(@allele_b);
+			## remove the trailing allele
 			$snp_id_a =~ s/-A$//;
 			$snp_id_b =~ s/-B$//;
-			## make sure the two arrays correspond to the same snp
 			if ($snp_id_a eq $snp_id_b) {
 				for (my $i=0; $i<@allele_a; $i++) {
 					print OUT pack('f*', ($allele_a[$i],$allele_b[$i]));
@@ -86,26 +86,20 @@ if ($filetype =~ /chiamo/i) {
 				@allele_a = ();
 				@allele_b = ();	
 			} else {
-				die "Affy Error: SNP IDs do not match '$snp_id_a' '$snp_id_b'";
+				die "Affy Error: IDs do not match '$snp_id_a' '$snp_id_b'";
 			}
 		}
 	}
-	
 } elsif ($filetype =~ /illuminus/i) {
-  	## not seen one of these files yet	
-  				
+  	## not seen one of these files yet				
 } else {
-	## default file format described in documentation
 	<IN>;
-
 	while (<IN>){
-  		my @fields = split;
-  		  		
+  		my @fields = split; 		
   		for (my $i = 1; $i <= $#fields; $i++){
    	 		print OUT pack('f*',$fields[$i]);
   		}	
 	}
-	
 }
 
 close IN;
