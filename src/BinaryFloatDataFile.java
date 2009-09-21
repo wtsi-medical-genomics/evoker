@@ -45,7 +45,7 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         //long remaining = snpIndex * bytesPerRecord;
         //while ((remaining = remaining - bis.skip(remaining)) > 0){
         //}
-        raf.seek((snpIndex*bytesPerRecord)+2);
+        raf.seek((snpIndex*bytesPerRecord)+bntHeaderOffset);
 
         byte[] rawData = new byte[bytesPerRecord];
         raf.read(rawData);
