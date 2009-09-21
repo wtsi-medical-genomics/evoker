@@ -2,18 +2,15 @@
 
 ## Description: This script generates both .bnt and .bed files from an illumina file
 ## Usage: ./illumina_parser illumina_file.txt
-## Input: an illumina file 
-## Output: .bnt and .bed files 
-## Arguments:
+## Input: A BeadStudio output file 
+## Output: Evoker compatible .bnt and .bed files 
+## Arguments: 
 ## Author: JAM
 
 use strict;
 
 my $inputfile = $ARGV[0];
 open(HEAD, $inputfile) or die "cant open input '$inputfile': $!";
-
-## split files by chromosome?
-my $chr = 1;
 
 $inputfile =~ /(.+)\.txt/;
 my $name = $1;
@@ -50,8 +47,8 @@ unlink("$name.tmp") if system("sort -k 1,1 -k 2,2 $name.tmp > $name.tmp.sort") =
 
 ## now parse the intensity values and genotypes
 open(IN, "$name.tmp.sort") or die "Can't open sorted data: $!";
-open(BNT, "> $name.$chr.bnt") or die "Can't open bnt output file: $!";
-open(BED, "> $name.$chr.bed") or die "Can't open bed output file: $!";
+open(BNT, "> $name.bnt") or die "Can't open bnt output file: $!";
+open(BED, "> $name.bed") or die "Can't open bed output file: $!";
 
 ## magic number to ensure the binary is a real evoker file not just garbage
 print BNT pack('B*',"0001101000110001");
@@ -202,7 +199,7 @@ close(BNT);
 close(BED);
 
 ## if it looks like printing the bnt and bed filed worked delete the tmp sorted file
-#if (-s "$inputfile.bnt" && -s "$inputfile.bed") {
-#	unlink("$inputfile.tmp.sort");
-#}
+if (-s "$inputfile.bnt" && -s "$inputfile.bed") {
+	unlink("$inputfile.tmp.sort");
+}
 
