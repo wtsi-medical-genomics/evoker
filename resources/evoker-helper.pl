@@ -8,6 +8,7 @@ my $chr = $ARGV[1];
 my $collection = $ARGV[2];
 my $index = $ARGV[3];
 my $numinds = $ARGV[4];
+my $bnt_offset = $ARGV[5];
 
 #generate the .bed file for just this SNP.
 my $bytesPerRecord = ceil($numinds/4);
@@ -17,6 +18,7 @@ open (BEDOUT, ">$collection.$snp.bed");
 my $magic_num;
 #magic number and SNP-major mode.
 read(BED, $magic_num, 3);
+print BEDOUT $magic_num;
 
 my $buf;
 #jump to this SNP (the +3 is for the meta-data, as above)
@@ -32,11 +34,11 @@ $bytesPerRecord = $numinds*8;
 open (BNT, "$collection.$chr.bnt");
 open (BNTOUT, ">$collection.$snp.bnt");
 
-read (BNT, $magic_num, 2);
+read (BNT, $magic_num, $bnt_offset);
 print BNTOUT $magic_num;
 
-#jump to position (+2 for meta-data)
-seek (BNT, ($index*$bytesPerRecord)+2,0);
+#jump to position
+seek (BNT, ($index*$bytesPerRecord)+$bnt_offset,0);
 read (BNT, $buf, $bytesPerRecord);	
 print BNTOUT $buf;
 
