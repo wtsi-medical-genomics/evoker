@@ -123,7 +123,7 @@ public class DataClient{
         return (ssh != null);
     }
 
-    public void getSNPFiles(String snp, String chrom, String collection, int index, int numinds) throws IOException{
+    public void getSNPFiles(String snp, String chrom, String collection, int index, int numinds, int totNumSNPs) throws IOException{
         String filestem = collection+"."+snp;
         if (!(new File(localDir+File.separator+filestem+".bed").exists() &&
                 new File(localDir+File.separator+filestem+".bnt").exists())){
@@ -135,7 +135,7 @@ public class DataClient{
             //Fire off the script on the remote server to get the requested slice of data
             OutputStream out = session.getOutputStream();
             String cmd = "cd "+ remoteDir + "\n./evoker-helper.pl "+ snp + " " +
-                    chrom + " " + collection + " " + index + " " + numinds +"\n";
+                    chrom + " " + collection + " " + index + " " + numinds + " " + totNumSNPs + "\n";
             out.write(cmd.getBytes());
 
 
