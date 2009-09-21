@@ -8,7 +8,7 @@ my $chr = $ARGV[1];
 my $collection = $ARGV[2];
 my $index = $ARGV[3];
 my $numinds = $ARGV[4];
-my $bnt_offset = $ARGV[5];
+my $tot_snps = $ARGV[5];
 
 #generate the .bed file for just this SNP.
 my $bytesPerRecord = ceil($numinds/4);
@@ -33,6 +33,9 @@ close BEDOUT;
 $bytesPerRecord = $numinds*8;
 open (BNT, "$collection.$chr.bnt");
 open (BNTOUT, ">$collection.$snp.bnt");
+
+my $filesize = -s BNT;
+my $bnt_offset = $filesize - ($bytesPerRecord * $tot_snps);
 
 read (BNT, $magic_num, $bnt_offset);
 print BNTOUT $magic_num;
