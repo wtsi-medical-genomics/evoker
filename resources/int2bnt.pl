@@ -1,23 +1,22 @@
 #!/usr/bin/perl
 
-## Description: This script generates binary intensity files for use in evoker
-## for now we assume that this file has the same snps and samples as the bim and fam files for the mathing bed file
+## Description: This script generates binary intensity files in the format required by Evoker
+## Note: We assume that the input intensity file has the same snps and samples as the bim and fam files for the mathing bed file
 ##
-## Usage: >./int2bnt.pl collection.chr.int --filetype="chiamo"
-## Input: Intensity file in one of the accepted formats
-## Output: Binary Intensity file (.bnt)
-## Arguments: --filetype [chaimo affy illuminus]
+## Usage: >./int2bnt.pl collection.chr.int --filetype="illuminus"
+## Input: Intensity file in one of the accepted formats named in the form collection.chromosome.int
+## Output: Binary Intensity file collection.chromosome.bnt
+## Arguments: --filetype [chaimo | affy | illuminus]
 ## default format:
 ##	A matrix of intensities with SNPs as rows and individuals as pairs of whitespace–separated columns. 
 ## chaimo input format:  
-## 	The format of the signal data is tab-delimited plain text, one line per SNP, consisting of IDs, position, alleles and one pair of intensities per sample for each of the two alleles.
+## 	Tab-delimited plain text, one line per SNP, consisting of AffyID, RSID, position, alleleA, alleleB and one pair of intensities per sample for each of the two alleles
 ## affy birdsuite format: 
 ##	Birdsuite allele_summary file, which has the intensities of each allele of each SNP in matrix format. (two lines per SNP, one for each allele)
 ## illuminus format: 
-##
-## NOTE: For illunia see illumina_parser.pl
-##
-## Author: JAM
+##	Tab-delimited plain text, one line per SNP, consisting of ID, position, alleles and one pair of intensities per sample for each of the two alleles
+## 
+## TODO: deal with NA values in chiamo and affy files
 
 use strict;
 use Getopt::Long;
@@ -61,6 +60,9 @@ if ($filetype =~ /chiamo/i) {
 	}
 	## the line which broke out of the while loop contains the column headings
 	my $col_headings = $header_line;
+	## generate a family file for testing
+	
+	
 	my $SAMPLE_NUM   = $header_info{'affymetrix-algorithm-param-apt-opt-cel-count'};
 
 	while (my $line = <IN>) {
@@ -91,7 +93,19 @@ if ($filetype =~ /chiamo/i) {
 		}
 	}
 } elsif ($filetype =~ /illuminus/i) {
-  	## not seen one of these files yet				
+  	my $header = <IN>;
+	while (my $line = <IN>){
+  		chomp($line);
+  		my @fields = split(/\t/, $line);
+  		for (my $i = 5; $i < scalar(@fields); $i++){
+   	 		my $int = $fields[$i];
+   	 		if ($int eq 'NaN') {
+   	 			print OUT pack('f*', -1);
+   	 		} else {
+   	 			print OUT pack('f*', $int);	
+   	 		}
+  		}  		
+	}				
 } else {
 	<IN>;
 	while (<IN>){
