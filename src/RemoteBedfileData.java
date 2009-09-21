@@ -17,7 +17,7 @@ public class RemoteBedfileData extends RemoteBinaryData {
 
         if (snpIndex > -1){
             //ask data client to get this SNP
-            dc.getSNPFiles(name,md.getChrom(name),collection,snpIndex,numInds);
+            dc.getSNPFiles(name,md.getChrom(name),collection,snpIndex,numInds,totNumSNPs);
 
             BedfileDataFile bed = new BedfileDataFile(dc.getLocalDir()+ File.separator+collection+"."+name+".bed",
                     this);
