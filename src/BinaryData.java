@@ -12,9 +12,15 @@ public abstract class BinaryData {
     protected int numSNPs;
     protected int bytesPerRecord;
 
+    // default header offset for the 2 byte magic number
+    protected int bntHeaderOffset = 2;
+     // to hold the total number of snps when using remote data
+    protected int totNumSNPs;
+
     BinaryData(int numInds, MarkerData md, String collection){
         this.numInds = numInds;
         this.numSNPs = md.getNumSNPs(collection);
+        this.totNumSNPs = md.getNumSNPs(collection);
         this.md = md;
         this.collection = collection;
     }
