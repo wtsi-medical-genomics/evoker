@@ -48,7 +48,8 @@ public class MarkerData {
     }
 
 
-    public void addFile(String bimFile, String collection, String chromosome) throws IOException {
+    public void addFile(String bimFile, String collection, String chromosome,
+                        boolean isOx) throws IOException {
         if (collectionIndices.get(collection) == null){
             runningCount++;
             collectionIndices.put(collection,runningCount);
@@ -63,9 +64,16 @@ public class MarkerData {
         String[] bits;
         while ((currentLine = bimReader.readLine()) != null){
             bits = currentLine.split("\\s");
-            StringBuffer snpid = new StringBuffer(bits[1]); //snpid
-            char a = bits[4].toCharArray()[0];
-            char b = bits[5].toCharArray()[0];
+            StringBuffer snpid = new StringBuffer(bits[1]);
+
+            char a,b;
+            if (isOx){
+                a = bits[3].toCharArray()[0];
+                b = bits[4].toCharArray()[0];
+            }else{
+                a = bits[4].toCharArray()[0];
+                b = bits[5].toCharArray()[0];
+            }
             if (markerTable.get(snpid.toString()) ==  null){
                 markerTable.put(snpid.toString(), new Marker(numCollections,a,b,chrom));
             }

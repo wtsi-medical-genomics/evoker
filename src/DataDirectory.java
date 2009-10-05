@@ -32,17 +32,42 @@ public class DataDirectory {
         File directory = dc.prepMetaFiles();
         Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
 
+        String oxPlatform = "";
+        if (dc.isOxFormat()){
+            int i = 0,a = 0;
+            for (String s : dc.getFilesInRemoteDir()){
+                if (s.contains("illumina")){
+                    oxPlatform = "illumina";
+                    i = 1;
+                }else if (s.contains("affy")){
+                    oxPlatform = "affy";
+                    a = 1;
+                }
+            }
+            if (i+a == 0){
+                throw new IOException("Cannot find either *affy or *illumina Oxford files.");
+            }
+            if (i+a > 1){
+                throw new IOException("Found both *affy and *illumina Oxford files. Please use one or the other.");
+            }
+        }
+
         for(String collection : samplesByCollection.keySet()){
             Hashtable<String, RemoteBinaryFloatData> tmpIntensity = new Hashtable<String, RemoteBinaryFloatData>();
             Hashtable<String, RemoteBedfileData> tmpGenotypes = new Hashtable<String, RemoteBedfileData>();
             for (String chrom : knownChroms.keySet()){
-                String name = collection + "." + chrom;
-                success &= checkFile(dc.getFilesInRemoteDir(),name);
+                if (dc.isOxFormat()){
+                    String name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
+                    name = directory.getAbsolutePath() + File.separator + name;
+                    md.addFile(name,collection,chrom,true);
+                }else{
+                    String name = collection + "." + chrom;
+                    success &= checkFile(dc.getFilesInRemoteDir(),name);
 
-                name =  directory.getAbsolutePath() + File.separator + name;
-                //we require a bimfile for this collection and chromosome:
-                md.addFile(name+".bim",collection,chrom);
-
+                    name =  directory.getAbsolutePath() + File.separator + name;
+                    //we require a bimfile for this collection and chromosome:
+                    md.addFile(name+".bim",collection,chrom,false);
+                }
                 //data files for this collection and chromosome:
                 tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
                         samplesByCollection.get(collection).getNumInds(),
@@ -84,7 +109,7 @@ public class DataDirectory {
                 //we can log all the missing files at once.
                 if (success){
                     //we require a bimfile for this collection and chromosome:
-                    md.addFile(name+".bim",collection,chrom);
+                    md.addFile(name+".bim",collection,chrom,false);
 
                     //data files for this collection and chromosome:
                     tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
@@ -123,7 +148,16 @@ public class DataDirectory {
         for (File famFile : fams){
             //stash all sample data in Hashtable keyed on collection name.
             String name = famFile.getName().substring(0,famFile.getName().length()-4);
-            samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath()));
+            samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(),false));
+            numberofCollections++;
+            Genoplot.ld.log("Found collection: " + name);
+        }
+
+        File[] oxFams = directory.listFiles(new ExtensionFilter(".sample"));
+        for (File sampleFile : oxFams){
+            //see if we have oxford style sample files. yeesh.
+            String name = sampleFile.getName().split("_")[0];
+            samplesByCollection.put(name, new SampleData(sampleFile.getAbsolutePath(),true));
             numberofCollections++;
             Genoplot.ld.log("Found collection: " + name);
         }
@@ -161,6 +195,20 @@ public class DataDirectory {
             }
         }
 
+        //see if we have oxford style snp files...
+        //TODO: do this in a less heinous way? should probably feed in the boolean and separate the ox/non-ox searches
+        File [] snpFiles = directory.listFiles(new ExtensionFilter(".snp"));
+        for (File snpFile : snpFiles){
+            String[] chunks = snpFile.getName().split("_");
+            if (knownChroms.get(chunks[1]) == null){
+                knownChroms.put(chunks[1],true);
+                md.addChromToLookup(chunks[1],counter);
+                counter++;
+                Genoplot.ld.log("Found chromosome: " + chunks[1]);
+            }
+        }
+
+
         if (knownChroms.keySet().size() == 0){
             throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
         }
@@ -172,7 +220,7 @@ public class DataDirectory {
         return md.getRandomSNP();
     }
 
-    private boolean checkFile(String[] filesInDir,String stem) throws IOException{
+    private boolean checkFile(String[] filesInDir, String stem) throws IOException{
         if (filesInDir != null){
             boolean bed = false;
             boolean bnt = false;

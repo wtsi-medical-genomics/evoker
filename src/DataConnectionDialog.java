@@ -14,6 +14,8 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     private JTextField locdirField;
     private JTextField hostField;
     private JCheckBox emptyIt;
+    private JRadioButton defaultFormatButton;
+    private JRadioButton oxfordFormatButton;
 
     public DataConnectionDialog(JFrame parent){
         super(parent,"Data Connection",true);
@@ -42,18 +44,41 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         localdirPanel.add(browseButton);
         contents.add(localdirPanel);
 
+        JPanel bottomPanel = new JPanel();
+
+        JPanel loginPanel = new JPanel();
+        loginPanel.setLayout(new BoxLayout(loginPanel,BoxLayout.Y_AXIS));
+
         JPanel userPanel = new JPanel();
         userPanel.add(new JLabel("Username: "));
         userField = new JTextField(10);
         userPanel.add(userField);
-        contents.add(userPanel);
+        loginPanel.add(userPanel);
 
         JPanel passPanel = new JPanel();
         passPanel.add(new JLabel("Password: "));
         pf = new JPasswordField(8);
         passPanel.add(pf);
-        contents.add(passPanel);
+        loginPanel.add(passPanel);
 
+        bottomPanel.add(loginPanel);
+
+        ButtonGroup bg = new ButtonGroup();
+        JPanel formatPanel = new JPanel();
+        formatPanel.setLayout(new BoxLayout(formatPanel,BoxLayout.Y_AXIS));
+
+        defaultFormatButton = new JRadioButton("Default format");
+        formatPanel.add(defaultFormatButton);
+        defaultFormatButton.setSelected(true);
+        bg.add(defaultFormatButton);
+        oxfordFormatButton = new JRadioButton("Oxford format");
+        formatPanel.add(oxfordFormatButton);
+        bg.add(oxfordFormatButton);
+
+        bottomPanel.add(formatPanel);
+        contents.add(bottomPanel);
+
+        //TODO: should this be reactivated?
         emptyIt = new JCheckBox("Clear local cache?");
         //contents.add(emptyIt);
 
@@ -107,6 +132,11 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
 
     public String getHost() {
         return host;
+    }
+
+
+    public boolean isOxformat() {
+        return oxfordFormatButton.isSelected();
     }
 
     public void clearPassword(){

@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.List;
 import java.util.Iterator;
-import java.util.Vector;
 
 
 public class DataClient{
@@ -25,6 +24,7 @@ public class DataClient{
     private String remoteDir;
     private String displayName;
     private List files;
+    private boolean oxFormat;
 
     public String getLocalDir() {
         return localDir;
@@ -44,11 +44,7 @@ public class DataClient{
         // Create a password authentication instance
         if (dcd.getUsername() != null){
             localDir = dcd.getLocalDirectory();
-
-            //clean up locally if asked.
-            if (dcd.getEmpty()){
-                File ld = new File(localDir);
-            }
+            oxFormat = dcd.isOxformat();
 
             pwd.setUsername(dcd.getUsername());
             pwd.setPassword(new String(dcd.getPassword()));
@@ -81,7 +77,7 @@ public class DataClient{
                 // check if the localdir contains files already
                 File[] localFiles = new File(localDir).listFiles();
                 if (localFiles.length > 0){
-                	Genoplot.ld.log("Files in the local dir");
+                	Genoplot.ld.log("Files in the local directory");
                 	// ask the user if they wants it emptied
                 	int n = JOptionPane.showConfirmDialog(
                 			null, 
@@ -167,13 +163,25 @@ public class DataClient{
 
     }
 
+
+    public boolean isOxFormat() {
+        return oxFormat;
+    }
+
     public File prepMetaFiles() throws IOException{
         files = ftp.ls();
+
+        String famending = ".fam";
+        String bimending = ".bim";        
+        if (oxFormat){
+            famending = ".sample";
+            bimending = ".snp";
+        }
 
         Iterator i = files.iterator();
         while (i.hasNext()){
             String filename = ((SftpFile)i.next()).getFilename();
-            if (filename.endsWith(".fam")){
+            if (filename.endsWith(famending)){
                 if (!new File(localDir+File.separator+filename).exists()){
                     ftp.get(filename);
                 }
@@ -183,7 +191,7 @@ public class DataClient{
         i = files.iterator();
         while (i.hasNext()){
             String filename = ((SftpFile)i.next()).getFilename();
-            if (filename.endsWith(".bim")){
+            if (filename.endsWith(bimending)){
                 if (!new File(localDir+File.separator+filename).exists()){
                     ftp.get(filename);
                 }

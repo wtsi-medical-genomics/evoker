@@ -7,13 +7,18 @@ public class SampleData {
 
     Vector<String> inds;
 
-    SampleData(String famFilename) throws IOException{
+    SampleData(String famFilename, boolean isOx) throws IOException{
 
         this.inds = new Vector<String>();
 
         BufferedReader famReader = new BufferedReader(new FileReader(famFilename));
         String currentLine;
         String[] bits;
+        if (isOx){
+            //strip headers
+            famReader.readLine();
+            famReader.readLine();
+        }
         while ((currentLine = famReader.readLine()) != null){
             bits = currentLine.split("\\s");
             String sample = bits[1];
