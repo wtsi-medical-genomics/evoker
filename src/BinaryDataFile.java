@@ -26,8 +26,13 @@ public abstract class BinaryDataFile extends BinaryData{
                     buf.order(ByteOrder.LITTLE_ENDIAN);
                     // in the case of remote data we need to compare the total snps as this is the value in the header
                     buf.putInt(this.totNumSNPs);
-                    // the inds value in the header is the number of columns two values per ind
-                    buf.putInt(this.numInds*2);
+                    if (file.getName().endsWith("bed")){
+                        // the inds value in the header is the number of columns--three values per ind
+                        buf.putInt(this.numInds*3);
+                    }else if (file.getName().endsWith("bnt")){
+                        // the inds value in the header is the number of columns--two values per ind
+                        buf.putInt(this.numInds*2);
+                    }
                     buf.clear();
                     headers = new byte[8];
                     buf.get(headers, 0, 8);
