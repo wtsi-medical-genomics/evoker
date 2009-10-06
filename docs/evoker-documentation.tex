@@ -1,7 +1,8 @@
 \documentclass{article}
 
 \title{Evoker: a genotype visualization tool}
-\author{Jeffrey C.\ Barrett\\\texttt{barrett@sanger.ac.uk}}
+\author{Jeffrey Barrett (\texttt{barrett@sanger.ac.uk})\\
+James Morris (\texttt{jm20@sanger.ac.uk})}
 \date{\today}
 
 \begin{document}
@@ -18,11 +19,16 @@ Using Evoker requires two important parts: the data, formatted and named in a sp
 
 \subsection{File formats and conventions}
 
-Evoker works with files formatted in the binary style of the widely-used \texttt{PLINK} program, along with one extension. Information about this format can be found at the \texttt{PLINK} website (see below). Evoker requires all of the \texttt{PLINK} style files (\texttt{.bed, .bim, .fam}), plus an additional binary intensity (\texttt{.bnt}) file, named according to a particular convention described below.
+Evoker can work with files formatted in two different ways, either using a default file format based around the binary style files of the widely-used \texttt{PLINK} program or an Oxford file format that is based on the files used in the \texttt{WTCCC2} project. 
 
-The data for your project (whether stored locally or remotely) should all be kept in a single directory to which you have read and write access. Because Evoker understands how to load and parse your data based on which files are in this directory you should not have any other \texttt{.bed/.bim/.fam/.bnt} files therein. The files in this directory are organised by `collection' (a group of samples, such as cases or controls) and `chromosome' (a group of SNPs on the same chromosome). Your project should have one \texttt{.fam} file per collection (named \texttt{collection.fam}) and one set of \texttt{.bed/.bim/.bnt} files per collection--chromosome combination (named \texttt{collection.chromosome.bed} etc.).
+In both cases the data for your project (whether stored locally or remotely) should all be kept in a single directory to which you have read and write access. Because Evoker understands how to load and parse your data based on which files are in this directory you should not have any other files inside that directory. The files in this directory are organised by `collection' (a group of samples, such as cases or controls) and `chromosome' (a group of SNPs on the same chromosome).
 
-If, for instance, you had a case collection and a control collection, each genotyped on SNPs from chromosomes 20-22, you would have files as follows:
+The collection groupings can be any subset of your data which you wish to plot separately, such as samples collected in different ways, or genotyped in different laboratories. Furthermore, `chromosomes' can really be any grouping of SNPs, as this designation is used mostly for bookkeeping by the program. Indeed, you could organise your data with only a single `genome' chromosome, requiring only one set of files per collection, but this will result in a performance loss when using Evoker.
+
+\subsubsection{Default format}
+The default file format works with files formatted in the binary style of the widely-used \texttt{PLINK} program, along with one extension. Information about this format can be found at the \texttt{PLINK} website (see below). In the default format Evoker requires all of the \texttt{PLINK} style files (\texttt{.bed, .bim, .fam}), plus an additional binary intensity (\texttt{.bnt}) file, named according to a particular convention. Using the default file format your project should have one \texttt{.fam} file per collection (named \texttt{collection.fam}) and one set of \texttt{.bed/.bim/.bnt} files per collection--chromosome combination (named \texttt{collection.chromosome.bed} etc.).
+
+If, for instance, you had a case collection and a control collection in the default format, each genotyped on SNPs from chromosomes 20-22, you would have files as follows:
 
 \begin{verbatim}
 case.fam
@@ -36,7 +42,22 @@ control.21.bed control.21.bim control.21.bnt
 control.22.bed control.22.bim control.22.bnt
 \end{verbatim}
 
-The collection groupings can be any subset of your data which you wish to plot separately, such as samples collected in different ways, or genotyped in different laboratories. Furthermore, `chromosomes' can really be any grouping of SNPs, as this designation is used mostly for bookkeeping by the program. Indeed, you could organise your data with only a single `genome' chromosome, requiring only one set of files per collection, but this will result in a performance loss when using Evoker.
+\subsubsection{Oxford format}
+The Oxford file format works with files formatted in the style of \texttt{WTCCC2} project files. Using the Oxford format Evoker requires \texttt{.gen.bin, .int.bin, .sample, .snp} files, the \texttt{.gen.bin} and the \texttt{.int.bin} files may be compressed such as \texttt{gen.bin.gz, int.bin.gz}. Like the default format the Oxford format files must be named according to a particular convention, your project should have one \texttt{.sample} file per collection (named \texttt{collection\_platform.sample}) and one set of \texttt{.gen.bin/.snp/.int.bin} files per collection--chromosome combination (named \texttt{collection\_chromosome\_platform.snp} etc.).
+
+If, for instance, you had a case collection and a control collection in the Oxford format, each genotyped using an Illumina platofrm on SNPs from chromosomes 20-22, you would have files as follows:
+
+\begin{verbatim}
+case_illumina.sample
+case_20_illumina.gen.bin case_20_illumina.snp case_20_illumina.int.bin 
+case_21_illumina.gen.bin case_21_illumina.snp case_21_illumina.int.bin 
+case_22_illumina.gen.bin case_22_illumina.snp case_22_illumina.int.bin
+
+control_illumina.sample
+control_20_illumina.gen.bin control_20_illumina.snp control_20_illumina.int.bin 
+control_21_illumina.gen.bin control_21_illumina.snp control_21_illumina.int.bin 
+control_22_illumina.gen.bin control_22_illumina.snp control_22_illumina.int.bin
+\end{verbatim}
 
 \subsection{Trying Evoker with the sample dataset}
 
@@ -73,11 +94,21 @@ The first SNP on the list, ``snp0'' should be plotted. Choose from the three app
 
 Because you must render a verdict in order, and only once, for each SNP, if you jump back to another SNP in the history, or type a SNP name in the box and click \texttt{Go} the Approval controls will be disabled until you've returned to the current list position, which can be done via a link in the \texttt{History} menu.
 
+\subsubsection{Excluding samples by list}
+Using Evoker you can view the impact that excluding certain samples (for example samples with a poor quality control score) has on clusters. To achieve this Evoker is able to read in a \texttt{.qc} file, this file is simply a list of the sample identifiers corresponding to the \texttt{.fam} file. Once this file is loaded the selected samples are excluded from all following plots while filtering remains turned on.
+
+A \texttt{.qc}  file can be loaded in two ways, if placed in the same directory as the \texttt{.fam/.bim/.bed/.bnt} files it will be loaded when the directory is opened  (note: if there is more than one \texttt{.qc} file in the directory the first found will be loaded), you can also load a  \texttt{.qc} after the data has been loaded by selecting \texttt{load exclude list} from the \texttt{file} menu. 
+
+Once loaded the samples being excluded can be viewed from the Evoker log. Each time a new \texttt{.qc} file is loaded the previously loaded list is overwritten. Lastly filtering of samples can be turned on and off at any time by simply selecting \texttt{filter} data from the \texttt{file} menu.
+
 \subsection{Creating the files}
 
-When using Evoker with your own data, you can use \texttt{PLINK} to create your \texttt{.bed/.bim/.fam} files, but you'll need a special program, included in this package, to generate the \texttt{.bnt} files for Evoker. This is probably the hardest part of preparing your data for Evoker. The \texttt{int2bnt.pl} script will transform text intensity files into the correct binary format used by Evoker, but it requires that you get your text files into the right format first!
+When using Evoker with your own data, you can use \texttt{PLINK} to create your \texttt{.bed/.bim/.fam} files, but you'll need a special program, included in this package, to generate the \texttt{.bnt} files for Evoker. This is probably the hardest part of preparing your data for Evoker. The \texttt{int2bnt.pl} script will transform text intensity files into the correct binary format used by Evoker, the \texttt{int2bnt.pl} script can accept intensity data in a number of formats which are explained in more detail below.
 
-The input format for \texttt{int2bnt.pl} is straightforward. It is a matrix of intensities with SNPs as rows and individuals as pairs of whitespace--separated columns. The SNPs must be in the same order as the corresponding \texttt{.bim} file, and each pair of intensities should appear in the same order as the pair of alleles in the relevant entry in the matching \texttt{.bim} file. The first row of the file is a header with the names of the samples (each repeated twice because there are two intensities per sample), which must be in the same order as the matching \texttt{.fam} file. An example for two individuals and three SNPs might look like this:
+All input files should be named in the style \texttt{collection.chromosome.int} and the SNPs must be in the same order as the corresponding \texttt{.bim} file, and each pair of intensities should appear in the same order as the pair of alleles in the relevant entry in the matching \texttt{.bim} file.
+
+\subsubsection{Default intensity format}
+The default input format for \texttt{int2bnt.pl} is straightforward. It is a matrix of intensities with SNPs as rows and individuals as pairs of whitespace--separated columns. The first row of the file is a header with the names of the samples (each repeated twice because there are two intensities per sample), which must be in the same order as the matching \texttt{.fam} file. An example for two individuals and three SNPs might look like this:
 
 \begin{verbatim}
 SNP CASE1 CASE1 CASE2 CASE2
@@ -86,13 +117,17 @@ rs456 0.502 0.511 0.499 0.520
 rs789 0.012 0.026 0.003 0.977
 \end{verbatim}
 
-\noindent This file should be named in the style \texttt{collection.chromosome.int} and if you run the program as follows:
+\subsubsection{Chiamo}
+If you use the Chiamo genotype calling program, the \texttt{int2bnt.pl} script is able to generate a \texttt{.bnt} file from the standard Chiamo input file. To use this file format just supply the following option when you run the \texttt{int2bnt.pl} script \texttt{--filetype "chiamo"}.
 
-\begin{verbatim}
-./int2bnt.pl collection.chromosome.int
-\end{verbatim}
+\subsubsection{Illuminus}
+If you use the Illuminus genotype calling program, the \texttt{int2bnt.pl} script is able to generate a \texttt{.bnt} file from the standard Illuminus input file. To use this file format just supply the following option when you run the \texttt{int2bnt.pl} script \texttt{--filetype "illuminus"}.
 
-\noindent It will produce a file called \texttt{collection.chromosome.bnt} in the Evoker binary intensity format (for details, see below).
+\subsubsection{Birdsuite}
+If you are using the Birdsuite collection of programs the \texttt{study.allele\_summary file} output file, is accepted as input by the \texttt{int2bnt.pl} script to generate a \texttt{.bnt} file. To use this file format just supply the following option when you run the \texttt{int2bnt.pl} script \texttt{--filetype "birdsuite"}.
+
+\subsubsection{BeadStudio}
+The Evoker package also contains a script called \texttt{parse\_illumina.pl} for parsing the text output files from the illumina BeadStudio software. The \texttt{parse\_illumina.pl} script will create the properly formatted \texttt{.bnt/} and \texttt{.bed/} files required by Evoker. 
 
 \section{Remote data access}
 
@@ -102,13 +137,11 @@ Your data directory should be set up in exactly the same fashion as above, excep
 
 Connect to a remote server by launching Evoker on your PC and selecting \texttt{Connect to remote server} from the \texttt{File} menu. Enter the name of the server you're connecting to, along with the absolute path of the data directory on the remote machine (see below for tips on specifying the correct path). Evoker requires a `scratch' directory on your computer to keep some (small) files it uses. This should be a directory you can read and write, but \emph{should not contain any other important files} because Evoker will overwrite files with the same names without warning. This should also be specified as an absolute path, but the \texttt{Browse} button can be used to help find the correct directory and its path.
 
-Enter your login details and click \texttt{OK} to connect. There might be a long delay the first time you connect to a remote data source because Evoker must download all the \texttt{.bim} and \texttt{.fam} files to the local directory. Evoker should work exactly the same as when the data files are stored locally, with the caveat that performance will be slower since data is being passed across the network. Note that Evoker uses files in the scratch directory to save time if they've already been requested from the remote server. It's a good idea to clean out this directory if data on the remote server has changed, or if you're connecting to multiple remote data sources. The log will show some detail about the data being sent across the network.
+Enter your login details, and select either the `Default' or `Oxford' format as appropriate and click \texttt{OK} to connect. There might be a long delay the first time you connect to a remote data source because Evoker must download all the \texttt{.bim} and \texttt{.fam} files to the local directory. Evoker should work exactly the same as when the data files are stored locally, with the caveat that performance will be slower since data is being passed across the network. Note that Evoker uses files in the scratch directory to save time if they've already been requested from the remote server. Each time you connect to a remote data source you will be given the option of deleting all the files in your local directory, it's a good idea to clean out this directory if data on the remote server has changed, or if you're connecting to multiple remote data sources. The log will show some detail about the data being sent across the network.
 
 If you load a SNP list while using a remote data source, Evoker will download the data for all SNPs in the list in the background. This means that, unless you make very rapid Approval decisions, the program should be able to `keep up' with you and appear more responsive.
 
 \section{Additional Resources and tips}
-
-
 
 \subsection{The binary intensity format}
 
@@ -119,15 +152,19 @@ The binary intensity format is very simple. First, a `magic number' of two bytes
 
 \noindent After these, each point is stored as a pair of 4--byte floats (for the intensity of the two alleles). These are simply packed in the same order as the text intensity files described above (a pair for each individual for the first SNP, then the same for the second SNP and so on).
 
+Evoker can also accept binary intensity data that uses two four byte integer values representing the number of rows of data (SNPs) and the number of columns (samples) as a header.
+
 \subsection{Tips}
 
-The perl scripts included are intended to work in most UNIX environments. They assume that the perl executable can be found at \texttt{/usr/bin/perl}, which you can change if for some reason that is not the case on your system.  Finally, make sure that the script is `world executable'. You can accomplish this with the following command: 
+The perl scripts included are intended to work in most UNIX environments. They assume that the perl executable can be found in your path.  Also, make sure that the script is `world executable'. You can accomplish this with the following command: 
 
 \begin{verbatim}
 chmod +x evoker-helper.pl
 \end{verbatim}
 
 \noindent An easy way to get the correct string to enter in the data connection dialog for the remote directory is to login to that machine, change to that directory and run the \texttt{pwd} command, which will print the absolute path to that directory, which you can then cut and paste into the Evoker window.
+
+\noindent While Evoker will handle Oxford format data which is compressed (\texttt{.gz}), the program will be more responsive if you unzip everything in the remote directory.
 
 \subsection{Resources}
 Evoker.jar requires Java 5.0 or newer to run. You can download the latest version of Java at \texttt{www.java.com}
