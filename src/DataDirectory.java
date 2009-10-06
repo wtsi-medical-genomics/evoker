@@ -20,6 +20,7 @@ public class DataDirectory {
     
     QCFilterData filterList;
     boolean filterState;
+    String oxPlatform = "";
     
     MarkerData md;
     DataClient dc;
@@ -32,7 +33,6 @@ public class DataDirectory {
         File directory = dc.prepMetaFiles();
         Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
 
-        String oxPlatform = "";
         if (dc.isOxFormat()){
             int i = 0,a = 0;
             for (String s : dc.getFilesInRemoteDir()){
@@ -50,6 +50,7 @@ public class DataDirectory {
             if (i+a > 1){
                 throw new IOException("Found both *affy and *illumina Oxford files. Please use one or the other.");
             }
+            dc.setOxPlatform(oxPlatform);
         }
 
         for(String collection : samplesByCollection.keySet()){
