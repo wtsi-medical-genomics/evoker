@@ -12,8 +12,10 @@ public abstract class BinaryData {
     protected int numSNPs;
     protected int bytesPerRecord;
 
-    // default header offset for the 2 byte magic number
+    // default header offset for bnt files
     protected int bntHeaderOffset = 2;
+    // default header offset for bed files
+    protected int bedHeaderOffset = 3;
      // to hold the total number of snps when using remote data
     protected int totNumSNPs;
 
