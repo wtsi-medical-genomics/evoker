@@ -35,7 +35,7 @@ public class BedfileDataFile extends BinaryDataFile{
         //skip to SNP of interest
         //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
         //java sux.
-        long remaining = (snpIndex * bytesPerRecord)+3;
+        long remaining = (snpIndex * bytesPerRecord)+bedHeaderOffset;
         while ((remaining = remaining - bedIS.skip(remaining)) > 0){
         }
 
@@ -49,7 +49,7 @@ public class BedfileDataFile extends BinaryDataFile{
         //1 == missing
         //2 == hetero
         //3 == homo 2
-        byte[] snpData = new byte[numInds+3];
+        byte[] snpData = new byte[numInds+bedHeaderOffset];
         int genoCount = 0;
         for (byte aRawSnpData : rawSnpData) {
             snpData[genoCount++] = (byte) ((aRawSnpData & (byte) 0x03) >>> 0);
