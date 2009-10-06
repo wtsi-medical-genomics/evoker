@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+## generate the .bnt and .bed files for just one SNP.
+
 use strict;
 use POSIX qw(ceil floor);
 use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
@@ -11,47 +13,51 @@ my $index      = $ARGV[3];
 my $numinds    = $ARGV[4];
 my $tot_snps   = $ARGV[5];
 my $oxford     = $ARGV[6];
-my $platform   = $ARGV[7];
+my $platform   = "illumina"; #$ARGV[7];
 my $cutoff     = 0.9;
 my $magic_num;
 my $bytesPerRecord;
 my $buf;
+
+open (TEST, ">test");
+print TEST "[$oxford]\n";
+close TEST;
 
 open (BNTOUT, ">$collection.$snp.bnt");
 open (BEDOUT, ">$collection.$snp.bed");
 
 if ($oxford) {
 	
-	## Genotype Data
-	my $file;
+	## .bed file
+	my $gen_file;
 	## perl 5+ includes this module, so hopefully most users will have it.
 	if (-s "$collection\_$chr\_$platform.gen.bin.gz") {
-	    $file = new IO::Uncompress::Gunzip "$collection\_$chr\_$platform.gen.bin.gz";
+	    $gen_file = new IO::Uncompress::Gunzip "$collection\_$chr\_$platform.gen.bin.gz";
 	} else {
-	    open($file, "<","$collection\_$chr\_$platform.gen.bin");
+	    open($gen_file, "<","$collection\_$chr\_$platform.gen.bin");
 	}
-
-	#magic number and SNP-major mode.
-	print BEDOUT pack('B*',"011011000001101100000001");
+	#magic number
+	read ($gen_file, $magic_num, 8);
+	print BEDOUT $magic_num;
 	
 	#jump to position
 	$bytesPerRecord = $numinds*12;
-	seek ($file, ($index*$bytesPerRecord)+8, 0);
+	seek ($gen_file, ($index*$bytesPerRecord)+8, 0);
 	
 	my $bytecounter = 0;
 	my $byte        = "";
 	my $individual;
 	for ( my $i = 0 ; $i < $numinds ; $i++ ) {
 	    my $b_aa;
-	    read( $file, $b_aa, 4 );
+	    read( $gen_file, $b_aa, 4 );
 	    my $aa = unpack( 'f*', $b_aa );
 	    
 	    my $b_ab;
-	    read( $file, $b_ab, 4 );
+	    read( $gen_file, $b_ab, 4 );
 	    my $ab = unpack( 'f*', $b_ab );
 	    
 	    my $b_bb;
-	    read( $file, $b_bb, 4 );
+	    read( $gen_file, $b_bb, 4 );
 	    my $bb = unpack( 'f*', $b_bb );
 
 	    if ( $aa > $cutoff ) {
@@ -84,55 +90,55 @@ if ($oxford) {
 		}
 		print BEDOUT pack( 'B*', $byte );
 	}
+	close $gen_file;
 	
-	## Intensity Data
-	my $file;
+	## .bnt file
+	my $int_file;
 	## perl 5+ includes this module, so hopefully most users will have it.
 	if (-s "$collection\_$chr\_$platform.int.bin.gz") {
-	    $file = new IO::Uncompress::Gunzip "$collection\_$chr\_$platform.int.bin.gz";
+	    $int_file = new IO::Uncompress::Gunzip "$collection\_$chr\_$platform.int.bin.gz";
 	} else {
-	    open ($file, "<", "$collection\_$chr\_$platform.int.bin");
+	    open ($int_file, "<", "$collection\_$chr\_$platform.int.bin");
 	}
-
-	read ($file, $magic_num, 8);
+	
+	read ($int_file, $magic_num, 8);
 	print BNTOUT $magic_num;
-
+	
 	#jump to position
 	$bytesPerRecord = $numinds*8;
-	seek ($file, ($index*$bytesPerRecord)+8, 0);
-	read ($file, $buf, $bytesPerRecord);	
+	seek ($int_file, ($index*$bytesPerRecord)+8, 0);
+	read ($int_file, $buf, $bytesPerRecord);	
 	print BNTOUT $buf;
+	close $int_file;
 	
 } else {
-	#generate the .bed file for just this SNP.
+	## .bed file
 	$bytesPerRecord = ceil($numinds/4);
 	open (BED, "$collection.$chr.bed");
-		
-	#magic number and SNP-major mode.
+	#magic number and SNP-major mode
 	read(BED, $magic_num, 3);
 	print BEDOUT $magic_num;
 	
-	#jump to this SNP (the +3 is for the meta-data, as above)
+	#jump to position
 	seek (BED, ($index*$bytesPerRecord)+3,0);
 	read (BED, $buf, $bytesPerRecord);
 	print BEDOUT $buf;
-
-	#generate the .bnt file for just this SNP.
-	$bytesPerRecord = $numinds*8;
-		
-	open (BNT, "$collection.$chr.bnt");
+	close BED;
 	
+	## .bnt file
+	$bytesPerRecord = $numinds*8;
+	open (BNT, "$collection.$chr.bnt");
 	read (BNT, $magic_num, 2);
 	print BNTOUT $magic_num;
-
+	
 	#jump to position
 	seek (BNT, ($index*$bytesPerRecord)+2, 0);
 	read (BNT, $buf, $bytesPerRecord);	
 	print BNTOUT $buf;
+	close BNT;
+	
 }
 
-close BED;
-close BNT;
 close BEDOUT;
 close BNTOUT;
 
