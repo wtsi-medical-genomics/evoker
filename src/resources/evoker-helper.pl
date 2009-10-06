@@ -13,15 +13,11 @@ my $index      = $ARGV[3];
 my $numinds    = $ARGV[4];
 my $tot_snps   = $ARGV[5];
 my $oxford     = $ARGV[6];
-my $platform   = "illumina"; #$ARGV[7];
+my $platform   = $ARGV[7];
 my $cutoff     = 0.9;
 my $magic_num;
 my $bytesPerRecord;
 my $buf;
-
-open (TEST, ">test");
-print TEST "[$oxford]\n";
-close TEST;
 
 open (BNTOUT, ">$collection.$snp.bnt");
 open (BEDOUT, ">$collection.$snp.bed");
