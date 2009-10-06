@@ -25,6 +25,7 @@ public class DataClient{
     private String displayName;
     private List files;
     private boolean oxFormat;
+    private String oxPlatform;
 
     public String getLocalDir() {
         return localDir;
@@ -127,11 +128,19 @@ public class DataClient{
 
             SessionChannelClient session = ssh.openSessionChannel();
             session.startShell();
-
+            
+            // variable to pass to the evoker-helper.pl script
+            int oxStatus;
+            if (oxFormat){
+                oxStatus = 1;
+            } else {
+            	oxStatus = 0;
+            }
+            
             //Fire off the script on the remote server to get the requested slice of data
             OutputStream out = session.getOutputStream();
             String cmd = "cd "+ remoteDir + "\nperl evoker-helper.pl "+ snp + " " +
-                    chrom + " " + collection + " " + index + " " + numinds + " " + totNumSNPs + "\n";
+                    chrom + " " + collection + " " + index + " " + numinds + " " + totNumSNPs + " " + oxStatus+ " " + this.getOxPlatform() + "\n";
             out.write(cmd.getBytes());
 
 
@@ -210,5 +219,13 @@ public class DataClient{
         
         return new File(localDir);
     }
+
+	public void setOxPlatform(String oxPlatform) {
+		this.oxPlatform = oxPlatform;
+	}
+
+	public String getOxPlatform() {
+		return oxPlatform;
+	}
 
 }
