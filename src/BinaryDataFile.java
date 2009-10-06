@@ -38,6 +38,7 @@ public abstract class BinaryDataFile extends BinaryData{
                     buf.get(headers, 0, 8);
                     
                     bntHeaderOffset = 8;
+                    bedHeaderOffset = 8;
                 } else{
                     throw new IOException(file +
                         " is not properly formatted.\n(Incorrect length.)");
