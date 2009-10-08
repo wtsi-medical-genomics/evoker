@@ -39,6 +39,9 @@ public class DataDirectory {
                 if (s.contains("illumina")){
                     oxPlatform = "illumina";
                     i = 1;
+                }else if (s.contains("affymetrix")){
+                    oxPlatform = "affymetrix";
+                    a = 1;
                 }else if (s.contains("affy")){
                     oxPlatform = "affy";
                     a = 1;
