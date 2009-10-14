@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 ## generate the .bnt and .bed files for just one SNP.
 
 use strict;
