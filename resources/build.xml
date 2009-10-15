@@ -63,7 +63,20 @@
      <zipfileset src="resources/jfreechart-1.0.12.jar"/>
    </jar>
   </target>
- 
+  
+  <!-- Create a windows compatable .exe file -->
+  <target name="windows" depends="evoker">
+  	<property name="launch4j.dir" location="/Users/jm20/Programs/launch4j" />
+  	<taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask" classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
+  	<launch4j configFile="l4j.xml" />
+  </target>
+	
+  <!-- Create a mac application -->
+  <target name="mac" depends="evoker">
+  	<taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" />
+  	<jarbundler dir="" name="Evoker" mainclass="Genoplot" jar="Evoker.jar" vmoptions="-Xmn1024m" />
+  </target>
+	
   <target name="clean" depends="init">
     <delete dir="${evoker.build}"/>
   </target>
@@ -75,6 +88,8 @@
     <echo message="where [target-name] is one of the following targets:"/>
     <echo message="compile-evoker --> compiles the evoker classes only"/>
     <echo message="evoker --> makes the executable jar file"/>
+  	<echo message="windows --> makes a windows compatable .exe file"/>
+  	<echo message="mac --> makes a mac application"/>
     <echo message="clean --> cleans up after itself removing the build directory"/>
     <echo message="------------------------------------------------------------"/>
   </target>
