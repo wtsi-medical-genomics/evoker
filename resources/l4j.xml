@@ -1,8 +1,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>/Users/jm20/work/build_evoker/bundle_test/Evoker.jar</jar>
-  <outfile>/Users/jm20/work/build_evoker/bundle_test/Evoker.exe</outfile>
+  <jar>./Evoker.jar</jar>
+  <outfile>./Evoker.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir></chdir>
