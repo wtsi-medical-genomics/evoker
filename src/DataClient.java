@@ -8,6 +8,8 @@ import com.sshtools.j2ssh.transport.IgnoreHostKeyVerification;
 
 import javax.swing.*;
 
+import sun.util.calendar.BaseCalendar.Date;
+
 import java.io.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -149,13 +151,22 @@ public class DataClient{
             InputStream in = session.getInputStream();
             byte buffer[] = new byte[1024];
             int read;
-            while((read = in.read(buffer)) > 0) {
-                String outstr = new String(buffer, 0, read);
+            long start = System.currentTimeMillis();
+                       
+            while((System.currentTimeMillis() - start)/1000 < 120) {
+            	read = in.read(buffer);
+            	String outstr = new String(buffer, 0, read);
+                System.out.print((System.currentTimeMillis() - start)/1000);
                 if (outstr.contains(snp)){
                     break;
                 }
             }
-
+            
+            if ((System.currentTimeMillis() - start)/1000 >= 120) {
+            	// if nothing is output from evoker-helper.pl in 2 minutes then die 
+            	throw new IOException("evoker-helper.pl is not responsive check the script will run");
+            }
+            
             session.close();
 
             
