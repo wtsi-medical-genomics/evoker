@@ -156,7 +156,6 @@ public class DataClient{
             while((System.currentTimeMillis() - start)/1000 < 120) {
             	read = in.read(buffer);
             	String outstr = new String(buffer, 0, read);
-                System.out.print((System.currentTimeMillis() - start)/1000);
                 if (outstr.contains(snp)){
                     break;
                 }
