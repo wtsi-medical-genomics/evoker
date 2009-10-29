@@ -25,11 +25,11 @@ public abstract class BinaryDataFile extends BinaryData{
                     ByteBuffer buf = ByteBuffer.allocate(8);
                     buf.order(ByteOrder.LITTLE_ENDIAN);
                     // in the case of remote data we need to compare the total snps as this is the value in the header
-                    buf.putInt(this.totNumSNPs);
-                    if (file.getName().endsWith("bed")){
+                    buf.putInt(this.totNumSNPs); 
+                    if (file.getName().endsWith("bed") || file.getName().endsWith("gen.bin") ){
                         // the inds value in the header is the number of columns--three values per ind
                         buf.putInt(this.numInds*3);
-                    }else if (file.getName().endsWith("bnt")){
+                    }else if (file.getName().endsWith("bnt") || file.getName().endsWith("int.bin")){
                         // the inds value in the header is the number of columns--two values per ind
                         buf.putInt(this.numInds*2);
                     }
@@ -40,7 +40,7 @@ public abstract class BinaryDataFile extends BinaryData{
                     bntHeaderOffset = 8;
                     bedHeaderOffset = 8;
                 } else{
-                    throw new IOException(file +
+                	throw new IOException(file +
                         " is not properly formatted.\n(Incorrect length.)");
                 }
             }
@@ -53,7 +53,7 @@ public abstract class BinaryDataFile extends BinaryData{
         BufferedInputStream binaryIS = new BufferedInputStream(new FileInputStream(file),8192);
         byte[] fromFile = new byte[headers.length];
         binaryIS.read(fromFile,0,headers.length);
-
+ 
         for (int i = 0; i < headers.length; i++){
             if (fromFile[i] != headers[i]){
                 throw new IOException(file +
