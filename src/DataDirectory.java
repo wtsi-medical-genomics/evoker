@@ -94,34 +94,78 @@ public class DataDirectory {
 
     DataDirectory(String filename) throws IOException{
         boolean success = true;
-
+        boolean oxFiles = false;
+        
         File directory = new File(filename);
         String[] filesInDir = directory.list();
-
+        
+        if (directory.listFiles(new ExtensionFilter(".snp")).length > 0) {
+        	oxFiles = true;
+        }
+        
         Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
+        
+        if (oxFiles){
+            int i = 0,a = 0;
+            for (String s : filesInDir){
+                if (s.contains("illumina")){
+                    oxPlatform = "illumina";
+                    i = 1;
+                }else if (s.contains("affymetrix")){
+                    oxPlatform = "affymetrix";
+                    a = 1;
+                }else if (s.contains("affy")){
+                    oxPlatform = "affy";
+                    a = 1;
+                }
+            }
+            if (i+a == 0){
+                throw new IOException("Cannot find either *affy or *illumina Oxford files.");
+            }
+            if (i+a > 1){
+                throw new IOException("Found both *affy and *illumina Oxford files. Please use one or the other.");
+            }
+        }
         
         for(String collection : samplesByCollection.keySet()){
             Hashtable<String, BinaryFloatDataFile> tmpIntensity = new Hashtable<String, BinaryFloatDataFile>();
-            Hashtable<String, BedfileDataFile> tmpGenotypes = new Hashtable<String, BedfileDataFile>();       
+            Hashtable<String, BinaryDataFile> tmpGenotypes = new Hashtable<String, BinaryDataFile>();       
             for (String chrom : knownChroms.keySet()){
-                String name = collection + "." + chrom;
-                success &= checkFile(filesInDir,name);
+            	String name;
+            	if (oxFiles){
+                    name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
+                    name = directory.getAbsolutePath() + File.separator + name;
+                    md.addFile(name,collection,chrom,true);
+                }else{
+                    name = collection + "." + chrom;
+                    success &= checkFile(filesInDir,name);
 
-                name =  directory.getAbsolutePath() + File.separator + name;
-
+                    name =  directory.getAbsolutePath() + File.separator + name;
+                    //we require a bimfile for this collection and chromosome:
+                    md.addFile(name+".bim",collection,chrom,false);
+                }
+            	
                 //even though we know that something is amiss, we want to keep cdring through the list so that
                 //we can log all the missing files at once.
                 if (success){
-                    //we require a bimfile for this collection and chromosome:
-                    md.addFile(name+".bim",collection,chrom,false);
-
                     //data files for this collection and chromosome:
-                    tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
-                            samplesByCollection.get(collection).getNumInds(),
-                            md,collection,2));
-                    tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",
-                            samplesByCollection.get(collection).getNumInds(),
-                            md,collection));
+                    if (oxFiles){
+                    	name = collection + "_" + chrom + "_" + oxPlatform;
+                        name = directory.getAbsolutePath() + File.separator + name;
+                    	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin",
+                                samplesByCollection.get(collection).getNumInds(),
+                                md,collection,2));
+                        tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin",
+                                samplesByCollection.get(collection).getNumInds(),
+                                md,collection));
+                    }else{
+                    	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
+                                samplesByCollection.get(collection).getNumInds(),
+                                md,collection,2));
+                        tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",
+                                samplesByCollection.get(collection).getNumInds(),
+                                md,collection));
+                    }
                 }
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
