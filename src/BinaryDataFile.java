@@ -9,6 +9,7 @@ import java.util.Vector;
 public abstract class BinaryDataFile extends BinaryData{
 
     File file;
+    protected boolean compressed;
 
     BinaryDataFile(String filename, int numInds, MarkerData md, String collection){
         super(numInds,md,collection);
@@ -18,20 +19,20 @@ public abstract class BinaryDataFile extends BinaryData{
     public void checkFile(byte[] headers) throws IOException{
 
         if (file != null){
-            if (file.length() != (numSNPs*bytesPerRecord) + headers.length){
-                if (file.length() == (numSNPs*bytesPerRecord) + 8){
-                    //alternate Oxford format
+        	if (file.length() != (numSNPs*bytesPerRecord) + headers.length){
+        		if (file.length() == (numSNPs*bytesPerRecord) + 8){
+        			//alternate Oxford format
                     //Change headers byte[] to be a new byte[] of the correct things as specified by numSNPs and numInds.
                     ByteBuffer buf = ByteBuffer.allocate(8);
                     buf.order(ByteOrder.LITTLE_ENDIAN);
                     // in the case of remote data we need to compare the total snps as this is the value in the header
                     buf.putInt(this.totNumSNPs); 
                     if (file.getName().endsWith("bed") || file.getName().endsWith("gen.bin") ){
-                        // the inds value in the header is the number of columns--three values per ind
+                    	// the inds value in the header is the number of columns--three values per ind
                         buf.putInt(this.numInds*3);
                     }else if (file.getName().endsWith("bnt") || file.getName().endsWith("int.bin")){
-                        // the inds value in the header is the number of columns--two values per ind
-                        buf.putInt(this.numInds*2);
+                    	// the inds value in the header is the number of columns--two values per ind
+                    	buf.putInt(this.numInds*2);
                     }
                     buf.clear();
                     headers = new byte[8];
@@ -39,27 +40,27 @@ public abstract class BinaryDataFile extends BinaryData{
                     
                     bntHeaderOffset = 8;
                     bedHeaderOffset = 8;
-                } else{
-                	throw new IOException(file +
-                        " is not properly formatted.\n(Incorrect length.)");
-                }
-            }
+        		} else{
+        			throw new IOException(file +
+        			" is not properly formatted.\n(Incorrect length.)");
+        		}
+        	}
         } else{
             //this is a useless message, but it implies badness 10000
             throw new IOException("File is null?!?");
         }
-
-        //are the headers acceptable for this file?
-        BufferedInputStream binaryIS = new BufferedInputStream(new FileInputStream(file),8192);
-        byte[] fromFile = new byte[headers.length];
-        binaryIS.read(fromFile,0,headers.length);
- 
-        for (int i = 0; i < headers.length; i++){
-            if (fromFile[i] != headers[i]){
-                throw new IOException(file +
-                        " is not properly formatted.\n(Magic number is incorrect.)");
-            }
-        }
+                
+       	//are the headers acceptable for this file?
+       	BufferedInputStream binaryIS = new BufferedInputStream(new FileInputStream(file),8192);
+       	byte[] fromFile = new byte[headers.length];
+       	binaryIS.read(fromFile,0,headers.length);
+         
+       	for (int i = 0; i < headers.length; i++){
+       		if (fromFile[i] != headers[i]){
+       			throw new IOException(file +
+       			" is not properly formatted.\n(Magic number is incorrect.)");
+       		}
+       	} 
     }
 
     public Vector getRecord(String markerName){
@@ -74,6 +75,10 @@ public abstract class BinaryDataFile extends BinaryData{
             //TODO: I don't know anything about that SNP?
         }
         return(null);
+    }
+    
+    public boolean isCompressed(){
+		return compressed;
     }
 
     abstract Vector getRecord(int index) throws IOException;
