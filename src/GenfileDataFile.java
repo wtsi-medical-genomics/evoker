@@ -2,7 +2,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Vector;
-import java.util.zip.*;
+import java.util.zip.GZIPInputStream;
 
 
 public class GenfileDataFile extends BinaryDataFile{
@@ -16,63 +16,78 @@ public class GenfileDataFile extends BinaryDataFile{
         checkFile(bedMagic);
     }
 	
+	GenfileDataFile(String filename, int numInds, MarkerData md, String collection, boolean zipped) throws IOException{
+        super(filename, numInds, md, collection);
+       
+        // there are 3 four byte values for each ind in the ox format files
+        bytesPerRecord = 3 * 4 * numInds;
+        compressed = true;
+        // set the header offset here for now as it would normally be set in the checkfile method
+        bedHeaderOffset = 8;
+        // compressed file - do not use checkFile()
+        // TODO: method for checking compressed files
+        
+        
+    }
+
 	public Vector<Byte> getRecord(int snpIndex) throws IOException{
         //have index, now load gen file
+		BufferedInputStream genIS;
 		Vector<Byte> genos = new Vector<Byte>();
 		
-        if (file.getName().endsWith("zip")){
-        	//TODO: open zip files
-        	//ZipFile genZIP = new ZipFile(filename);
-        	//InputStream zipIS = getinZipFile
-        } else{
-        	BufferedInputStream genIS = new BufferedInputStream(new FileInputStream(file),8192);
+        if (this.isCompressed()){
         	
-        	//skip to SNP of interest
-            //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
-            //java sux.
-            long remaining = (snpIndex * bytesPerRecord)+bedHeaderOffset;
-            while ((remaining = remaining - genIS.skip(remaining)) > 0){
-            }
-
-            //read raw snp data
-            byte[] binSnpData = new byte[bytesPerRecord];
-            genIS.read(binSnpData, 0, bytesPerRecord);
-            
-            // convert the binary data array into a float array
-            float[] floatSnpData = new float[numInds*3];
-            int count = 0;
-            for (int start = 0; start < bytesPerRecord; start = start + 4) {
-				floatSnpData[count] = arr2float(binSnpData, start);
-                count++;
-            }
-            
-            // loop through each set of three values and then decide on the genotype
-            for (int loop = 0; loop < floatSnpData.length; loop = loop + 3) {
-
-              float aa = floatSnpData[loop];
-              float ab = floatSnpData[loop+1];
-              float bb = floatSnpData[loop+2];
-              
-              //convert into array of genotypes
-              //genotype code is:
-              //0 == homo 1
-              //1 == missing
-              //2 == hetero
-              //3 == homo 2
-              if (aa > 0.9) {
-            	  genos.add((byte)0);
-              } else if (ab >0.9){
-            	  genos.add((byte)2);
-              } else if (bb > 0.9) {
-            	  genos.add((byte)3);
-              } else {
-            	  genos.add((byte)1);
-              }
-              
-            }
-                   
+        	genIS = new BufferedInputStream(new GZIPInputStream(new FileInputStream(file),8192));
+        	
+        } else{
+        	
+        	genIS = new BufferedInputStream(new FileInputStream(file),8192);
+        	
         }
-        
+                
+        //skip to SNP of interest
+        //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
+        //java sux.
+        long remaining = (snpIndex * bytesPerRecord)+bedHeaderOffset;
+        while ((remaining = remaining - genIS.skip(remaining)) > 0){
+        }
+
+        //read raw snp data
+        byte[] binSnpData = new byte[bytesPerRecord];
+        genIS.read(binSnpData, 0, bytesPerRecord);
+            
+        // convert the binary data array into a float array
+        float[] floatSnpData = new float[numInds*3];
+        int count = 0;
+        for (int start = 0; start < bytesPerRecord; start = start + 4) {
+        	floatSnpData[count] = arr2float(binSnpData, start);
+        	count++;
+        }
+            
+        // loop through each set of three values and then decide on the genotype
+        for (int loop = 0; loop < floatSnpData.length; loop = loop + 3) {
+
+        	float aa = floatSnpData[loop];
+        	float ab = floatSnpData[loop+1];
+        	float bb = floatSnpData[loop+2];
+              
+        	//convert into array of genotypes
+        	//genotype code is:
+        	//0 == homo 1
+        	//1 == missing
+        	//2 == hetero
+        	//3 == homo 2
+        	if (aa > 0.9) {
+        		genos.add((byte)0);
+        	} else if (ab >0.9){
+        		genos.add((byte)2);
+        	} else if (bb > 0.9) {
+            	  genos.add((byte)3);
+        	} else {
+        		genos.add((byte)1);
+            }
+        }
+                   
         return genos;
         
 	}

@@ -1,4 +1,7 @@
 import java.util.Vector;
+import java.util.zip.GZIPInputStream;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -15,6 +18,18 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
         checkFile(bntMagic);
+    }
+    
+    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, boolean zipped)
+    		throws IOException{
+    	super(filename, numInds, md,collection);
+    	this.valuesPerEntry = vals;
+    	bytesPerRecord = valuesPerEntry * 4 * numInds;
+    	compressed = true;
+    	bntHeaderOffset = 8;
+    	// compressed file - do not use checkFile()
+        // TODO: method for checking compressed files
+
     }
 
     BinaryFloatDataFile(String filename, RemoteBinaryFloatData rbfd) throws IOException{
@@ -33,22 +48,24 @@ public class BinaryFloatDataFile extends BinaryDataFile{
     }
 
     Vector<float[]> getRecord(int snpIndex) throws IOException{
-        //have index, now load float file
-        //FileInputStream fis = new FileInputStream(file);
-        RandomAccessFile raf = new RandomAccessFile(file,"r");
-        //BufferedInputStream bis = new BufferedInputStream(fis,8192);
-        //todo: should probably put a magic number at front of float files?
-
+        BufferedInputStream intIS;
+        
+        if (this.isCompressed()){	
+        	intIS = new BufferedInputStream(new GZIPInputStream(new FileInputStream(file),8192));
+        } else{
+        	intIS = new BufferedInputStream(new FileInputStream(file),8192);
+        }
+        
         //skip to SNP of interest
         //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
         //java sux.
-        //long remaining = snpIndex * bytesPerRecord;
-        //while ((remaining = remaining - bis.skip(remaining)) > 0){
-        //}
-        raf.seek((snpIndex*bytesPerRecord)+bntHeaderOffset);
+        long remaining = (snpIndex * bytesPerRecord)+bntHeaderOffset;
+        while ((remaining = remaining - intIS.skip(remaining)) > 0){
+        }
 
+        //read raw snp data
         byte[] rawData = new byte[bytesPerRecord];
-        raf.read(rawData);
+        intIS.read(rawData, 0, bytesPerRecord);
         ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawData);
         rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
