@@ -99,6 +99,7 @@ public class DataDirectory {
         File directory = new File(filename);
         String[] filesInDir = directory.list();
         
+        // check if the directory contains Oxford format files
         if (directory.listFiles(new ExtensionFilter(".snp")).length > 0) {
         	oxFiles = true;
         }
@@ -152,12 +153,27 @@ public class DataDirectory {
                     if (oxFiles){
                     	name = collection + "_" + chrom + "_" + oxPlatform;
                         name = directory.getAbsolutePath() + File.separator + name;
-                    	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin",
-                                samplesByCollection.get(collection).getNumInds(),
-                                md,collection,2));
-                        tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin",
-                                samplesByCollection.get(collection).getNumInds(),
-                                md,collection));
+                        boolean zipped = true;
+                        // check if the oxford int and gen files are in a compressed format
+                        if (new File(name+".int.bin.gz").exists()) {
+                        	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin.gz",
+                                    samplesByCollection.get(collection).getNumInds(),
+                                    md,collection,2,zipped));
+                        } else {
+                        	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin",
+                                    samplesByCollection.get(collection).getNumInds(),
+                                    md,collection,2));
+                        }
+                        if (new File(name+".gen.bin.gz").exists()) {
+                        	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin.gz",
+                                    samplesByCollection.get(collection).getNumInds(),
+                                    md,collection,zipped));
+                        	
+                        } else {
+                        	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin",
+                                    samplesByCollection.get(collection).getNumInds(),
+                                    md,collection));
+                        }
                     }else{
                     	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
                                 samplesByCollection.get(collection).getNumInds(),
