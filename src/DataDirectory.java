@@ -159,6 +159,7 @@ public class DataDirectory {
                         	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin.gz",
                                     samplesByCollection.get(collection).getNumInds(),
                                     md,collection,2,zipped));
+                        	System.out.print(name+".int.bin.gz");
                         } else {
                         	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin",
                                     samplesByCollection.get(collection).getNumInds(),
@@ -168,7 +169,7 @@ public class DataDirectory {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin.gz",
                                     samplesByCollection.get(collection).getNumInds(),
                                     md,collection,zipped));
-                        	
+                        	System.out.print(name+".gen.bin.gz");
                         } else {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin",
                                     samplesByCollection.get(collection).getNumInds(),
