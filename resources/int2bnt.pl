@@ -43,7 +43,7 @@ if ($filetype =~ /chiamo/i) {
 	my $header = <IN>;
 	while (my $line = <IN>){
   		chomp($line);
-  		my @fields = split(/\t/, $line);
+  		my @fields = split(/\s+/, $line);
   		for (my $i = 5; $i < scalar(@fields); $i++){
    	 		print OUT pack('f*', $fields[$i]);
   		}  		
@@ -96,8 +96,8 @@ if ($filetype =~ /chiamo/i) {
   	my $header = <IN>;
 	while (my $line = <IN>){
   		chomp($line);
-  		my @fields = split(/\t/, $line);
-  		for (my $i = 5; $i < scalar(@fields); $i++){
+  		my @fields = split(/\s+/, $line);
+  		for (my $i = 3; $i < scalar(@fields); $i++){
    	 		my $int = $fields[$i];
    	 		if ($int eq 'NaN') {
    	 			print OUT pack('f*', -1);
