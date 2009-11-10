@@ -16,7 +16,7 @@ public abstract class BinaryData {
     protected int bntHeaderOffset = 2;
     // default header offset for bed files
     protected int bedHeaderOffset = 3;
-     // to hold the total number of snps when using remote data
+     // to hold the total number of snps when using remote data, as the total number of snps is required for checking Oxformat header information
     protected int totNumSNPs;
 
     BinaryData(int numInds, MarkerData md, String collection){
