@@ -1,6 +1,8 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
 import java.util.Vector;
@@ -10,6 +12,8 @@ public class Genoplot extends JFrame implements ActionListener {
 
     private DataDirectory db;
 
+    String plottedSNP = null;
+    
     private JTextField snpField;
     private JButton goButton;
     private JPanel plotArea;
@@ -29,6 +33,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenuItem loadList;
     private JMenuItem loadExclude;
     private JCheckBoxMenuItem filterData;
+    private JMenuItem saveAll;
     private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
@@ -76,6 +81,10 @@ public class Genoplot extends JFrame implements ActionListener {
         filterData.addActionListener(this);
         filterData.setEnabled(false);
         fileMenu.add(filterData);
+        saveAll = new JMenuItem("Save SNP Plots");
+        saveAll.addActionListener(this);
+        saveAll.setEnabled(false);
+        fileMenu.add(saveAll);
         /*JMenuItem dumpImages = new JMenuItem("Dump PNGs of all SNPs in list");
         dumpImages.addActionListener(this);
         fileMenu.add(dumpImages);*/
@@ -201,7 +210,7 @@ public class Genoplot extends JFrame implements ActionListener {
         try{
             String command = actionEvent.getActionCommand();
             if (command.equals("Go")){
-                plotIntensitas(snpField.getText());
+                plotIntensitas(snpField.getText().trim());
             }else if (command.equals("No")){
                 noButton.requestFocusInWindow();
                 recordVerdict(-1);
@@ -274,6 +283,27 @@ public class Genoplot extends JFrame implements ActionListener {
             	}
             }else if (command.equals("Dump PNGs of all SNPs in list")){
                 dumpAll();
+            }else if (command.equals("Save SNP Plots")){
+            	File defaultFileName = new File(plottedSNP + ".png");
+            	jfc.setSelectedFile(defaultFileName);
+            	if(jfc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION){
+            		File png;
+            		if (!jfc.getSelectedFile().toString().endsWith(".png")){
+            			png = new File(jfc.getSelectedFile().toString() + ".png");
+            		} else{
+            			png = jfc.getSelectedFile();
+            		}
+            		BufferedImage image = new BufferedImage(plotArea.getWidth(), plotArea.getHeight(), BufferedImage.TYPE_INT_RGB);
+            		Graphics2D g2 = image.createGraphics();
+                	plotArea.paint(g2);
+                    g2.dispose();
+                    try {
+                      	ImageIO.write(image, "png", png);
+                    }
+                    catch(IOException ioe) {
+                    	System.out.println(ioe.getMessage());
+                    }
+            	}                
             }else if (command.equals("Show Evoker log")){
                 ld.setVisible(true);
             }else if (command.equals("Quit")){
@@ -374,6 +404,7 @@ public class Genoplot extends JFrame implements ActionListener {
             snpField.setEnabled(true);
             loadList.setEnabled(true);
             loadExclude.setEnabled(true);
+            saveAll.setEnabled(true);
             while(historyMenu.getMenuComponentCount() > 2){
                 historyMenu.remove(2);
             }
@@ -391,9 +422,9 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void plotIntensitas(String name){
-        plotArea.removeAll();
+    	plottedSNP = name;
+    	plotArea.removeAll();
         plotArea.setLayout(new BoxLayout(plotArea,BoxLayout.Y_AXIS));
-
         if (name != null){
             if (!name.equals("ENDLIST")){
                 currentSNP = name;
