@@ -62,7 +62,13 @@ public abstract class BinaryDataFile extends BinaryData{
        		}
        	} 
     }
-
+    
+    public void checkFile(byte[] headers, boolean zipped) throws IOException{
+    	//TODO: method for checking if compressed files are valid evoker files
+    	// get the uncompressed size of the file - for gzip files that where originally smaller than 4gb you can read the last 4 bytes of the file
+    	// at the moment we can assume this type of file is Oxford format
+    }
+    
     public Vector getRecord(String markerName){
         //do some checks on getting the data and handle errors centrally
         int snpIndex;
