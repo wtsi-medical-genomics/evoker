@@ -14,6 +14,8 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
         super(dc, numInds, md, collection);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
+        
+        //TODO:checkFile(collection + "." + chrom + "." + name +".bnt");
     }
 
     public Vector<float[]> getRecord(String name) throws IOException{

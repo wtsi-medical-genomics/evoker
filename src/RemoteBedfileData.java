@@ -9,6 +9,8 @@ public class RemoteBedfileData extends RemoteBinaryData {
     RemoteBedfileData(DataClient dc, int numInds, MarkerData md, String collection) {
         super(dc, numInds, md, collection);
         bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
+        
+        //TODO:checkFile(collection + "." + chrom + "." + name +".bed");
     }
 
 

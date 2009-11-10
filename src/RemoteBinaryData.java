@@ -16,15 +16,14 @@ public abstract class RemoteBinaryData extends BinaryData{
         this.dc = dc;
     }
 
-//    public void checkFile(String filename){
-//        //TODO: how to be able to run this check without unnecessarily slowing down the system?
+    public void checkFile(String filename){
+//      //TODO: how to be able to run this check without unnecessarily slowing down the system?
 //    	// get the size of the bed or bnt file
 //    	// compare this to what we are expecting
 //    	
 //    	// first get the file name 
 //    	// use evoker-helper.pl to get the size of the file?
 //    	String[] out = new String[1];
-//    	
 //    	
 //    	out[i] = ((SftpFile)files.get(i)).;
 //    	
@@ -35,5 +34,5 @@ public abstract class RemoteBinaryData extends BinaryData{
 //    			throw new IOException(file + " is not properly formatted.\n(Incorrect length.)");
 //    		}
 //    	}    	
-//    }        
+    }        
 }
