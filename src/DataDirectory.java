@@ -60,25 +60,32 @@ public class DataDirectory {
             Hashtable<String, RemoteBinaryFloatData> tmpIntensity = new Hashtable<String, RemoteBinaryFloatData>();
             Hashtable<String, RemoteBedfileData> tmpGenotypes = new Hashtable<String, RemoteBedfileData>();
             for (String chrom : knownChroms.keySet()){
-                if (dc.isOxFormat()){
-                    String name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
+            	String name;
+            	if (dc.isOxFormat()){
+                    name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
                     name = directory.getAbsolutePath() + File.separator + name;
                     md.addFile(name,collection,chrom,true);
+                    //data files for this collection and chromosome:
+                    tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
+                            samplesByCollection.get(collection).getNumInds(),
+                            md,collection,2));
+                    tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
+                            samplesByCollection.get(collection).getNumInds(),
+                            md,collection));
                 }else{
-                    String name = collection + "." + chrom;
+                    name = collection + "." + chrom;
                     success &= checkFile(dc.getFilesInRemoteDir(),name);
-
                     name =  directory.getAbsolutePath() + File.separator + name;
                     //we require a bimfile for this collection and chromosome:
                     md.addFile(name+".bim",collection,chrom,false);
+                    //data files for this collection and chromosome:
+                    tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
+                            samplesByCollection.get(collection).getNumInds(),
+                            md,collection,2,collection + "." + chrom + ".bnt"));
+                    tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
+                            samplesByCollection.get(collection).getNumInds(),
+                            md,collection,collection + "." + chrom + ".bed"));
                 }
-                //data files for this collection and chromosome:
-                tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
-                        samplesByCollection.get(collection).getNumInds(),
-                        md,collection,2));
-                tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
-                        samplesByCollection.get(collection).getNumInds(),
-                        md,collection));
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
             genotypeDataByCollectionChrom.put(collection,tmpGenotypes);
