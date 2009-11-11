@@ -237,5 +237,9 @@ public class DataClient{
 	public String getOxPlatform() {
 		return oxPlatform;
 	}
+	
+	public SftpClient getFTP() {
+		return ftp;
+	}
 
 }
