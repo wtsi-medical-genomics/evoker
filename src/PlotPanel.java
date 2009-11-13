@@ -81,10 +81,11 @@ public class PlotPanel extends JPanel {
         XYPlot thePlot = jfc.getXYPlot();
         thePlot.setBackgroundPaint(Color.white);
         thePlot.setOutlineVisible(false);
-
+        
+        
 
         XYItemRenderer xyd = thePlot.getRenderer();
-        Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
+        Shape dot = new Ellipse2D.Double(-1.5,-1.5,4,4);
         xyd.setSeriesShape(0, dot);
         xyd.setSeriesShape(1, dot);
         xyd.setSeriesShape(2, dot);
@@ -95,11 +96,14 @@ public class PlotPanel extends JPanel {
         xyd.setSeriesPaint(3, Color.RED);
 
         xyd.setBaseToolTipGenerator(new ZitPlotToolTipGenerator());
-
+        
         ChartPanel cp = new ChartPanel(jfc);
         cp.setDisplayToolTips(true);
-
-        return new ChartPanel(jfc);
+        cp.setDismissDelay(10000);
+        cp.setInitialDelay(0);
+        cp.setReshowDelay(0);
+        
+        return cp;
     }
 
     public double getMaxDim(){
