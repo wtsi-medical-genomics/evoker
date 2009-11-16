@@ -85,7 +85,7 @@ public class PlotPanel extends JPanel {
         
 
         XYItemRenderer xyd = thePlot.getRenderer();
-        Shape dot = new Ellipse2D.Double(-1.5,-1.5,4,4);
+        Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
         xyd.setSeriesShape(0, dot);
         xyd.setSeriesShape(1, dot);
         xyd.setSeriesShape(2, dot);
