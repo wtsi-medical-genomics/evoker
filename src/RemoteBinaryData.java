@@ -8,7 +8,9 @@ public abstract class RemoteBinaryData extends BinaryData{
         super (numInds,md,collection);
         this.dc = dc;
     }
-
+    public void checkFile(byte[] headers) throws IOException{
+    	throw new IOException("checkFile() for remote files requires a filename)");
+    }
     public void checkFile(String filename, byte[] headers) throws IOException{
         //TODO: check the magic numbers
     	String fileSizeString = dc.getFTP().stat(filename).getSize().toString();
