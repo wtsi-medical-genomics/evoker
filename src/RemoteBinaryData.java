@@ -14,7 +14,8 @@ public abstract class RemoteBinaryData extends BinaryData{
     public void checkFile(String filename, byte[] headers) throws IOException{
         //TODO: check the magic numbers
     	String fileSizeString = dc.getFTP().stat(filename).getSize().toString();
-    	Integer fileSize = Integer.parseInt(fileSizeString);
+    	
+    	Long fileSize = Long.parseLong(fileSizeString);
     	// check the size of the bnt or bed file using the default format header sizes
     	if (fileSize != (numSNPs*bytesPerRecord) + headers.length){
     		// check the size of the bnt or bed file using the Oxford format header sizes
