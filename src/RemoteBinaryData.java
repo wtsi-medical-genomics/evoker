@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.math.BigInteger;
 
 public abstract class RemoteBinaryData extends BinaryData{
 
@@ -14,12 +15,16 @@ public abstract class RemoteBinaryData extends BinaryData{
     public void checkFile(String filename, byte[] headers) throws IOException{
         //TODO: check the magic numbers
     	String fileSizeString = dc.getFTP().stat(filename).getSize().toString();
-    	
-    	Long fileSize = Long.parseLong(fileSizeString);
-    	// check the size of the bnt or bed file using the default format header sizes
-    	if (fileSize != (numSNPs*bytesPerRecord) + headers.length){
-    		// check the size of the bnt or bed file using the Oxford format header sizes
-    		if (fileSize != (numSNPs*bytesPerRecord) + 8){
+    	// All of the details in the Spec concerning overflow are ignored, as BigIntegers are made as large as necessary to accommodate the results of an operation.
+    	BigInteger fileSize       = new BigInteger(fileSizeString);
+    	BigInteger biOxHeaderSize = new BigInteger("8");
+    	BigInteger biHeaderSize   = BigInteger.valueOf(new Long(headers.length));
+    	BigInteger biNumSNPs      = BigInteger.valueOf(new Long(numSNPs));
+    	BigInteger biBPR          = BigInteger.valueOf(new Long(bytesPerRecord));
+    	BigInteger checkSize      = biNumSNPs.multiply(biBPR);
+    	    	    	
+    	if (!fileSize.equals(checkSize.add(biHeaderSize))) {
+    		if (!fileSize.equals(checkSize.add(biOxHeaderSize))){
     			throw new IOException(filename + " is not properly formatted.\n(Incorrect length.)");
     		}
     	}
