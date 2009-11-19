@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Vector;
@@ -19,8 +20,12 @@ public abstract class BinaryDataFile extends BinaryData{
     public void checkFile(byte[] headers) throws IOException{
 
         if (file != null){
-        	if (file.length() != (numSNPs*bytesPerRecord) + headers.length){
-        		if (file.length() == (numSNPs*bytesPerRecord) + 8){
+        	
+        	BigInteger fileSize       = BigInteger.valueOf(file.length());
+        	BigInteger checkSize      = BigInteger.valueOf(new Long(numSNPs)).multiply(BigInteger.valueOf(new Long(bytesPerRecord)));
+        	
+        	if (!fileSize.equals(checkSize.add(BigInteger.valueOf(new Long(headers.length))))) {
+        		if (fileSize.equals(checkSize.add(new BigInteger("8")))){
         			//alternate Oxford format
                     //Change headers byte[] to be a new byte[] of the correct things as specified by numSNPs and numInds.
                     ByteBuffer buf = ByteBuffer.allocate(8);
@@ -41,8 +46,7 @@ public abstract class BinaryDataFile extends BinaryData{
                     bntHeaderOffset = 8;
                     bedHeaderOffset = 8;
         		} else{
-        			throw new IOException(file +
-        			" is not properly formatted.\n(Incorrect length.)");
+        			throw new IOException(file + " is not properly formatted.\n(Incorrect length.)");
         		}
         	}
         } else{
