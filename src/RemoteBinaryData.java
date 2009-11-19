@@ -14,17 +14,12 @@ public abstract class RemoteBinaryData extends BinaryData{
     }
     public void checkFile(String filename, byte[] headers) throws IOException{
         //TODO: check the magic numbers
-    	String fileSizeString = dc.getFTP().stat(filename).getSize().toString();
-    	// All of the details in the Spec concerning overflow are ignored, as BigIntegers are made as large as necessary to accommodate the results of an operation.
-    	BigInteger fileSize       = new BigInteger(fileSizeString);
-    	BigInteger biOxHeaderSize = new BigInteger("8");
-    	BigInteger biHeaderSize   = BigInteger.valueOf(new Long(headers.length));
-    	BigInteger biNumSNPs      = BigInteger.valueOf(new Long(numSNPs));
-    	BigInteger biBPR          = BigInteger.valueOf(new Long(bytesPerRecord));
-    	BigInteger checkSize      = biNumSNPs.multiply(biBPR);
+    	
+    	BigInteger fileSize       = new BigInteger(dc.getFTP().stat(filename).getSize().toString());
+    	BigInteger checkSize      = BigInteger.valueOf(new Long(numSNPs)).multiply(BigInteger.valueOf(new Long(bytesPerRecord)));
     	    	    	
-    	if (!fileSize.equals(checkSize.add(biHeaderSize))) {
-    		if (!fileSize.equals(checkSize.add(biOxHeaderSize))){
+    	if (!fileSize.equals(checkSize.add(BigInteger.valueOf(new Long(headers.length))))) {
+    		if (!fileSize.equals(checkSize.add(new BigInteger("8")))){
     			throw new IOException(filename + " is not properly formatted.\n(Incorrect length.)");
     		}
     	}
