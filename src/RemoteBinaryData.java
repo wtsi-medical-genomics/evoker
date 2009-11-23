@@ -13,7 +13,6 @@ public abstract class RemoteBinaryData extends BinaryData{
     	throw new IOException("checkFile() for remote files requires a filename)");
     }
     public void checkFile(String filename, byte[] headers) throws IOException{
-        //TODO: check the magic numbers
     	
     	BigInteger fileSize       = new BigInteger(dc.getFTP().stat(filename).getSize().toString());
     	BigInteger checkSize      = BigInteger.valueOf(new Long(numSNPs)).multiply(BigInteger.valueOf(new Long(bytesPerRecord)));
