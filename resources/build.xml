@@ -74,7 +74,7 @@
   <!-- Create a mac application -->
   <target name="mac" depends="evoker">
   	<taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" />
-  	<jarbundler dir="" name="Evoker" mainclass="Genoplot" jar="Evoker.jar" vmoptions="-Xmn1024m" />
+  	<jarbundler dir="" name="Evoker" mainclass="Genoplot" jar="Evoker.jar" vmoptions="-Xmx1024m" />
   </target>
 	
   <target name="clean" depends="init">
