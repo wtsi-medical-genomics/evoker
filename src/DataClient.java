@@ -154,11 +154,19 @@ public class DataClient{
             long start = System.currentTimeMillis();
                        
             while((System.currentTimeMillis() - start)/1000 < 120) {
-            	read = in.read(buffer);
-            	String outstr = new String(buffer, 0, read);
-                if (outstr.contains(snp)){
-                    break;
+            	try{
+                	read = in.read(buffer);
+                	String outstr = new String(buffer, 0, read);
+                    if (outstr.contains(snp)){
+                        break;
+                    } else if (outstr.contains("write_error")) {
+                    	throw new IOException("user does not have write privileges");
+                    }
+                }catch (IOException ioe){
+                    ssh.disconnect();
+                    throw new IOException("Problem with remote directory permissions:\n"+ioe.getMessage());
                 }
+                
             }
             
             if ((System.currentTimeMillis() - start)/1000 >= 120) {
