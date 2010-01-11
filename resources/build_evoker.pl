@@ -13,7 +13,7 @@ use File::Path;
 my $release;
 my $user;
 
-if (@ARGV == 1) {
+if (@ARGV == 2) {
 	$user    = $ARGV[0];
 	$release = $ARGV[1];
 		
@@ -21,8 +21,12 @@ if (@ARGV == 1) {
 	die "Script requires a sourcforge user name and new release name/number\n";
 }
 
-## create a release directory
+## create a release directory and platform sub directories
 mkdir("evoker_$release");
+mkdir("evoker_$release/win");
+mkdir("evoker_$release/mac");
+mkdir("evoker_$release/other");
+mkdir("evoker_$release/all");
 
 ## checkout the .java files from cvs
 system("cvs -z3 -d:ext:$user\@evoker.cvs.sourceforge.net:/cvsroot/evoker checkout src");
@@ -39,17 +43,6 @@ system("ant windows");
 system("ant mac");
 system("ant clean");
 
-## copy the .jar, .exe and mac app
-system("cp -R Evoker* evoker_$release/");
-
-## copy the perl scripts into the bundle directory 
-system("cp resources/evoker-helper.pl evoker_$release/");
-system("cp resources/int2bnt.pl evoker_$release/");
-system("cp resources/illumina_parser.pl evoker_$release/");
-
-## copy the example files
-system("cp resources/sample* evoker_$release/");
-
 ## checkout the documentation from cvs
 system("cvs -z3 -d:ext:$user\@evoker.cvs.sourceforge.net:/cvsroot/evoker checkout docs");
 
@@ -58,14 +51,33 @@ system("cp docs/evoker-documentation.tex ./");
 system("latex evoker-documentation.tex");
 system("dvips evoker-documentation.dvi");
 system("ps2pdf evoker-documentation.ps");
-system("cp evoker-documentation.pdf evoker_$release/");
-system("mv evoker_$release/evoker-documentation.pdf evoker_$release/EvokerHelp.pdf");
 
-## tar up the diectory
-system("tar -cvf evoker_$release.tar evoker_$release");
+## copy the .jar, .exe and mac app
+system("cp -R Evoker* evoker_$release/all/");
+system("cp -R Evoker.exe evoker_$release/win/");
+system("cp -R Evoker.app evoker_$release/mac/");
+system("cp -R Evoker.jar evoker_$release/other/");
 
-## zip up the tar
-system("gzip evoker_$release.tar");
+ for my $platform ('all','win','mac','other') {
+	## copy the perl scripts into the bundle directory	
+	system("cp resources/evoker-helper.pl evoker_$release/$platform/");
+	system("cp resources/int2bnt.pl evoker_$release/$platform/");
+	system("cp resources/illumina_parser.pl evoker_$release/$platform/");
+
+	## copy the example files
+	system("cp resources/sample* evoker_$release/$platform/");
+	
+	## copy the documentation
+	system("cp evoker-documentation.pdf evoker_$release/$platform/");
+	system("mv evoker_$release/$platform/evoker-documentation.pdf evoker_$release/$platform/EvokerHelp.pdf");
+	
+	## tar up the diectory
+	system("tar -cvf evoker_$release/evoker_$release\_$platform.tar evoker_$release/$platform/");
+	
+	## zip up the tar
+	system("gzip evoker_$release/evoker_$release\_$platform.tar");
+			
+}
 
 ## remove all the unwanted files and dirs
 rmtree(['src','resources','docs','Evoker.app']);
