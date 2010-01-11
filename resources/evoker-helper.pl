@@ -17,6 +17,12 @@ my $magic_num;
 my $bytesPerRecord;
 my $buf;
 
+## Check if the script is able to write out 
+unless (-w ".") {
+	print "write_error\n";
+	exit;
+}  
+
 open (BNTOUT, ">$collection.$snp.bnt");
 open (BEDOUT, ">$collection.$snp.bed");
 
