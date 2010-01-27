@@ -30,7 +30,7 @@ public class GenfileDataFile extends BinaryDataFile{
         
     }
 
-	public Vector<Byte> getRecord(int snpIndex) throws IOException{
+	public Vector<Byte> getRecord(long snpIndex) throws IOException{
         //have index, now load gen file
 		BufferedInputStream genIS;
 		Vector<Byte> genos = new Vector<Byte>();
@@ -47,7 +47,7 @@ public class GenfileDataFile extends BinaryDataFile{
                 
         //skip to SNP of interest
         //sometimes the skip() method doesn't skip as far as you ask, so you have to keep flogging it
-        //java sux.
+        //java sux. 
         long remaining = (snpIndex * bytesPerRecord)+bedHeaderOffset;
         while ((remaining = remaining - genIS.skip(remaining)) > 0){
         }
@@ -66,7 +66,7 @@ public class GenfileDataFile extends BinaryDataFile{
             
         // loop through each set of three values and then decide on the genotype
         for (int loop = 0; loop < floatSnpData.length; loop = loop + 3) {
-
+        	
         	float aa = floatSnpData[loop];
         	float ab = floatSnpData[loop+1];
         	float bb = floatSnpData[loop+2];
