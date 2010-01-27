@@ -91,6 +91,6 @@ public abstract class BinaryDataFile extends BinaryData{
 		return compressed;
     }
 
-    abstract Vector getRecord(int index) throws IOException;
+    abstract Vector getRecord(long index) throws IOException;
     
 }
