@@ -47,7 +47,7 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         return super.getRecord(name);
     }
 
-    Vector<float[]> getRecord(int snpIndex) throws IOException{
+    Vector<float[]> getRecord(long snpIndex) throws IOException{
         BufferedInputStream intIS;
         
         if (this.isCompressed()){	
