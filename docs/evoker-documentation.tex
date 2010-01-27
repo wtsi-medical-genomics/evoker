@@ -15,7 +15,12 @@ Evoker is a tool designed for visualizing genotype cluster plots as part of qual
 
 \section{Getting started with Evoker}
 
-Using Evoker requires two important parts: the data, formatted and named in a specific way, can be stored either locally or on a remote server to which you have SSH access and the main Evoker program, which is run locally on your PC and is used for displaying cluster plots and assigning them a Pass/Fail verdict. You will need Java 5.0 (also known as version 1.5) or newer on your local machine to run Evoker. The Evoker installation bundle comes with three versions of the Evoker program \texttt{Evoker.jar} for Unix operating systems \texttt{Evoker.exe} for Windows and \texttt{Evoker.app} for OS X, simply double click on the appropriate icon to launch the program. Details about preparing your data and using the program are presented below.
+Using Evoker requires two important parts: the data, formatted and named in a specific way, can be stored either locally or on a remote server to which you have SSH access and the main Evoker program, which is run locally on your PC and is used for displaying cluster plots and assigning them a Pass/Fail verdict. You will need Java 5.0 (also known as version 1.5) or newer on your local machine to run Evoker. There are three platform specific Evoker installation bundles for Mac, Windows and Linux and an additional package which combines all three. All the different packages contain the same perl scripts and example files but simply differ in the type of file used to start the Evoker program. The Mac bundle contains an application called Evoker, the Windows bundle contains the executable file \texttt{Evoker.exe} and the Linux bundle contains a jar file called \texttt{Evoker.jar}. On all platforms to start Evoker simply requires double clicking on the relevant Evoker icon, in the case of Mac and Windows launching Evoker in this way starts the program with additional memory enabling the loading of larger studies. Launching Evoker by double clicking the \texttt{Evoker.jar} file starts the program with the default amount of memory which may be insufficient for larger data sets. To avoid issues with memory Evoker can be launched with extra memory from the command line by issuing the following command:
+\begin{verbatim}
+java -jar Evoker.jar -Xmx 1024m 
+\end{verbatim}
+This will increase the amount of memory available to  Evoker up to 1Gb, to increase this amount further simply change the value passed to the \texttt{-Xmx} argument, this approach also works on Mac and Windows.
+
 
 \subsection{File formats and conventions}
 
@@ -81,8 +86,10 @@ Open the data directory by selecting \texttt{Open directory} from the \texttt{Fi
 
 \subsubsection{Viewing SNPs}
 You can plot a SNP by typing its name in the box and clicking \texttt{Go}. Try ``snp0'', one of the SNPs in the sample dataset. Genotypes are coloured red, green and blue for the three genotype classes and grey for uncalled, or missing data. Beneath the plot are some summary statistics: minor allele frequency (MAF), genotyping percentage (GPC), and Hardy-Weinberg equilibrium \emph{p}-value (HWE pval).
+ 
+You can zoom in and out of the plot by right clicking on the plot and using the menu or by clicking and dragging (down and to the right creates a ``zoom in box'', while up and to the left zooms back out again). Holding the pointer over a single point will show which sample corresponds to that point.
 
-Right clicking on the plot brings up a set of menu options, including saving the plot as a PNG image. You can zoom in and out of the plot either using this menu or by clicking and dragging (down and to the right creates a ``zoom in box'', while up and to the left zooms back out again). Holding the pointer over a single point will show which sample corresponds to that point.
+To save an individual plot as a PNG image right click on the plot and select \texttt{Save as...} from the menu, but if you wish to save all the currently displayed plots as one single PNG image select \texttt{Save SNP Plots} from the \texttt{File} menu.
 
 You can type in more SNP names or use the \texttt{Random} button to view more cluster plots. After you've viewed a few SNPs you can see which you've viewed recently in the \texttt{History} menu. You can click on previous SNPs to show those cluster plots again.
 
