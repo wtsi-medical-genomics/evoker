@@ -27,7 +27,7 @@ public class BedfileDataFile extends BinaryDataFile{
         return super.getRecord(name);
     }
 
-    public Vector<Byte> getRecord(int snpIndex) throws IOException{
+    public Vector<Byte> getRecord(long snpIndex) throws IOException{
         //have index, now load bed file
         BufferedInputStream bedIS = new BufferedInputStream(new FileInputStream(file),8192);
 
