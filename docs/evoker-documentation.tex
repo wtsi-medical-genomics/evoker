@@ -48,7 +48,7 @@ control.22.bed control.22.bim control.22.bnt
 \end{verbatim}
 
 \subsubsection{Oxford format}
-The Oxford file format works with files formatted in the style of \texttt{WTCCC2} project files. Using the Oxford format Evoker requires \texttt{.gen.bin, .int.bin, .sample, .snp} files, the \texttt{.gen.bin} and the \texttt{.int.bin} files may be compressed such as \texttt{gen.bin.gz, int.bin.gz}. Like the default format the Oxford format files must be named according to a particular convention, your project should have one \texttt{.sample} file per collection (named \texttt{collection\_platform.sample}) and one set of \texttt{.gen.bin/.snp/.int.bin} files per collection--chromosome combination (named \texttt{collection\_chromosome\_platform.snp} etc.).
+The Oxford file format works with files formatted in the style of \texttt{WTCCC2} project files. Using the Oxford format Evoker requires \texttt{.gen.bin, .int.bin, .sample, .snp} files, the \texttt{.gen.bin} and the \texttt{.int.bin} files may be compressed such as \texttt{gen.bin.gz, int.bin.gz}. Like the default format the Oxford format files must be named according to a particular convention, your project should have one \texttt{.sample} file per collection (named \texttt{collection\_platform.sample}) and one set of \texttt{.gen.bin/.snp/.int.bin} files per collection--chromosome combination (named \texttt{collection\_chromosome\_platform.snp} etc.). 
 
 If, for instance, you had a case collection and a control collection in the Oxford format, each genotyped using an Illumina platofrm on SNPs from chromosomes 20-22, you would have files as follows:
 
@@ -63,6 +63,8 @@ control_20_illumina.gen.bin control_20_illumina.snp control_20_illumina.int.bin
 control_21_illumina.gen.bin control_21_illumina.snp control_21_illumina.int.bin 
 control_22_illumina.gen.bin control_22_illumina.snp control_22_illumina.int.bin
 \end{verbatim}
+
+It is worth noting that the use the compressed files (\texttt{gen.bin.gz, int.bin.gz}) in combination with large data sets greatly increase the time taken to retrieve data for a given SNP, resulting in a significant performance lag in the Evoker program. Therefore where at all possible it is recommended that you decompress all \texttt{gen.bin.gz, int.bin.gz} files, this will enable the Evoker program to be far more responsive.
 
 \subsection{Trying Evoker with the sample dataset}
 
