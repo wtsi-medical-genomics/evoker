@@ -1,5 +1,9 @@
 \documentclass{article}
 
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{float}
+
 \title{Evoker: a genotype visualization tool}
 \author{Jeffrey Barrett (\texttt{barrett@sanger.ac.uk})\\
 James Morris (\texttt{jm20@sanger.ac.uk})}
@@ -150,6 +154,45 @@ Enter your login details, and select either the `Default' or `Oxford' format as 
 
 If you load a SNP list while using a remote data source, Evoker will download the data for all SNPs in the list in the background. This means that, unless you make very rapid Approval decisions, the program should be able to `keep up' with you and appear more responsive.
 
+\section{Scoring intensity plots}
+The following section provides a few cluster plot examples to help users interpret their data. Generally, SNPs can be either hard or easy to call, depending on the properties of the clusters. Hard to call SNPs never produce accurate genotypes, but easy to call SNPs can contain errors introduced by the calling algorithm. Depending on what analysis is being performed, one might be interested in any or all of these categories.
+
+\subsection{Easy to call SNPs which are called well}
+A good intensity cluster plot should have well separated and tightly bunched clusters for each genotype such as the plots in figure \ref{good}. Note that the shapes of the clusters can vary substantially, and users will have to get a feel for data from their particular platform and samples.
+\begin{figure}[H]
+	\centering
+	\begin{tabular}{cc}
+		\epsfig{file=good4_cropped.png,width=0.5\linewidth,clip=} &
+		\epsfig{file=good5_cropped.png,width=0.5\linewidth,clip=} \\
+	\end{tabular}
+	\caption{An example of two good intensity cluster plots.}
+	\label{good}
+\end{figure}
+
+\subsection{Easy to call SNPs which are called poorly}
+In these examples, the clouds are clear, but the genotyping algorithm has made obvious mistakes in assigning genotypes (figure \ref{bad1}).
+\begin{figure}[H]
+	\centering
+	\begin{tabular}{cc}
+		\epsfig{file=bad5_cropped.png,width=0.5\linewidth,clip=} &
+		\epsfig{file=bad_cropped.png,width=0.5\linewidth,clip=} 
+	\end{tabular}
+	\caption{Two examples of intensity cluster plots showing good clusters that have been poorly called.}
+	\label{bad1}
+\end{figure}
+
+\subsection{Hard to call SNPs}
+Some SNPs simply don't have well defined clusters, or have $>$ 3 clusters, making them difficult to call even with a perfect genotyping algorithm. Examples of such SNPs are shown in figure \ref{bad2}, but it is important to remember that different platforms can produce a wide variety of bad clusters.
+\begin{figure}[H]
+	\centering
+	\begin{tabular}{cc}
+		\epsfig{file=bad4_cropped.png,width=0.5\linewidth,clip=} &
+		\epsfig{file=bad7_cropped.png,width=0.5\linewidth,clip=}
+	\end{tabular}
+	\caption{Two examples of intensity clusters plots with poorly defined clusters.}
+	\label{bad2}
+\end{figure}
+ 
 \section{Additional Resources and tips}
 
 \subsection{The binary intensity format}
@@ -173,7 +216,7 @@ chmod +x evoker-helper.pl
 
 \noindent An easy way to get the correct string to enter in the data connection dialog for the remote directory is to login to that machine, change to that directory and run the \texttt{pwd} command, which will print the absolute path to that directory, which you can then cut and paste into the Evoker window.
 
-\noindent While Evoker will handle Oxford format data which is compressed (\texttt{.gz}), the program will be more responsive if you unzip everything in the remote directory.
+\noindent While Evoker will handle Oxford format data which is compressed (files ending \texttt{.gz}), the program will be far more responsive if you unzip all compressed files.
 
 \noindent In order to achieve consistent coloring of clusters across collections requires that for each SNP the alleles in each collection \texttt{.bim} file are in the same order.
 
