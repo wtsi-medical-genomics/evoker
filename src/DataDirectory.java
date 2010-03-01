@@ -343,12 +343,19 @@ public class DataDirectory {
         }**/
         String chrom = md.getChrom(snp);
         if (chrom != null){
-        	return new PlotData(
+        	
+        	// time how long this takes to get a benchmark for improving compressed file response
+        	long start = System.currentTimeMillis();
+        	PlotData pd = new PlotData(
                     genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
                     intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
                     samplesByCollection.get(collection),
                     qcList(),
                     md.getAlleles(snp));
+        	double time = ((double)(System.currentTimeMillis() - start))/1000;
+            Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");
+            return pd;
+        	
         }else{
             return new PlotData(null,null,null,null,null);
         }
