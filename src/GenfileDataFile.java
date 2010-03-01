@@ -55,7 +55,8 @@ public class GenfileDataFile extends BinaryDataFile{
         //read raw snp data
         byte[] binSnpData = new byte[bytesPerRecord];
         genIS.read(binSnpData, 0, bytesPerRecord);
-            
+        // close the input stream
+        genIS.close();
         // convert the binary data array into a float array
         float[] floatSnpData = new float[numInds*3];
         int count = 0;

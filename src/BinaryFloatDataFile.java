@@ -66,6 +66,8 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         //read raw snp data
         byte[] rawData = new byte[bytesPerRecord];
         intIS.read(rawData, 0, bytesPerRecord);
+        // close the input stream
+        intIS.close();
         ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawData);
         rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
