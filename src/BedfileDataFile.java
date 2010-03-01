@@ -42,7 +42,8 @@ public class BedfileDataFile extends BinaryDataFile{
         //read raw snp data
         byte[] rawSnpData = new byte[bytesPerRecord];
         bedIS.read(rawSnpData, 0, bytesPerRecord);
-
+        // close the input stream
+        bedIS.close();
         //convert into array of genotypes
         //genotype code is:
         //0 == homo 1
