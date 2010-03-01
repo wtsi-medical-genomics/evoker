@@ -25,7 +25,8 @@ public class Genoplot extends JFrame implements ActionListener {
 
     JFileChooser jfc;
     DataConnectionDialog dcd;
-
+    
+    private JPanel scorePanel;
     private JButton yesButton;
     private JButton maybeButton;
     private JButton noButton;
@@ -149,7 +150,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
         controlsPanel.add(Box.createRigidArea(new Dimension(50,1)));
 
-        JPanel scorePanel = new JPanel();
+        scorePanel = new JPanel();
         scorePanel.add(new JLabel("Approve?"));
 
         yesButton = new JButton("Yes");
@@ -362,16 +363,19 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (snpGroup.getSelection().getActionCommand().equals("PLOTSNP "+currentSNPinList)){
                     yesButton.setEnabled(true);
                     noButton.setEnabled(true);
-                    maybeButton.setEnabled(true);
+                    maybeButton.setEnabled(true);                    
+                    scorePanel.setEnabled(true);
+                    
                 }else{
                     //we're viewing a SNP from the history, so we can't allow
                     //the user to take any action on a SNP list (if one exists) because
                     //we're not viewing the "active" SNP from the list
-
-                    yesButton.setEnabled(false);
+                	// disable the score panel to also stop key stroke events
+                	yesButton.setEnabled(false);
                     noButton.setEnabled(false);
                     maybeButton.setEnabled(false);
-
+                    scorePanel.setEnabled(false);
+                    
                     //TODO: actually allow you to go back and change your mind?
                 }
             }
