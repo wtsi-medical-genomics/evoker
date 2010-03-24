@@ -11,7 +11,8 @@ import java.util.LinkedList;
 public class Genoplot extends JFrame implements ActionListener {
 
     private DataDirectory db;
-
+    private DataClient dc;
+    
     String plottedSNP = null;
     
     private JTextField snpField;
@@ -25,12 +26,14 @@ public class Genoplot extends JFrame implements ActionListener {
 
     JFileChooser jfc;
     DataConnectionDialog dcd;
+    DataConnectionDialog dcdnew;
     
     private JPanel scorePanel;
     private JButton yesButton;
     private JButton maybeButton;
     private JButton noButton;
     private JMenu fileMenu;
+    private JMenuItem addDir;
     private JMenuItem loadList;
     private JMenuItem loadExclude;
     private JCheckBoxMenuItem filterData;
@@ -51,41 +54,54 @@ public class Genoplot extends JFrame implements ActionListener {
     Genoplot(){
         super("Evoke...");
 
-        jfc = new JFileChooser("user.dir");
-        dcd = new DataConnectionDialog(this);
+        jfc    = new JFileChooser("user.dir");
+        dcd    = new DataConnectionDialog(this);
+        dcdnew = new DataConnectionDialog(this, true);
 
         JMenuBar mb = new JMenuBar();
 
         int menumask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
         fileMenu = new JMenu("File");
+        
         JMenuItem openDirectory = new JMenuItem("Open directory");
         openDirectory.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, menumask));
         openDirectory.addActionListener(this);
         fileMenu.add(openDirectory);
+        
         JMenuItem openRemote = new JMenuItem("Connect to remote server");
         openRemote.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, menumask));
         openRemote.addActionListener(this);
         fileMenu.add(openRemote);
+        
+        addDir = new JMenuItem("Load another directory");
+        addDir.addActionListener(this);
+        addDir.setEnabled(false);
+        fileMenu.add(addDir);
+        
         loadList = new JMenuItem("Load marker list");
         loadList.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, menumask));
         loadList.addActionListener(this);
         loadList.setEnabled(false);
         fileMenu.add(loadList);
+        
         loadExclude = new JMenuItem("Load exclude list");
         loadExclude.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, menumask));
         loadExclude.addActionListener(this);
         loadExclude.setEnabled(false);
         fileMenu.add(loadExclude);
+        
         filterData = new JCheckBoxMenuItem("Filter data");
         filterData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, menumask));
         filterData.addActionListener(this);
         filterData.setEnabled(false);
         fileMenu.add(filterData);
+        
         saveAll = new JMenuItem("Save SNP Plots");
         saveAll.addActionListener(this);
         saveAll.setEnabled(false);
         fileMenu.add(saveAll);
+        
         /*JMenuItem dumpImages = new JMenuItem("Dump PNGs of all SNPs in list");
         dumpImages.addActionListener(this);
         fileMenu.add(dumpImages);*/
@@ -242,7 +258,7 @@ public class Genoplot extends JFrame implements ActionListener {
             }else if (command.equals("Connect to remote server")){
                 dcd.pack();
                 dcd.setVisible(true);
-                DataClient dc = new DataClient(dcd);
+                dc = new DataClient(dcd);
                 if (dc.getConnectionStatus()){
                     try{
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -252,7 +268,13 @@ public class Genoplot extends JFrame implements ActionListener {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     }
                 }
-            }else if (command.equals("Load marker list")){
+            } else if (command.equals("Load another directory")) {
+            	dcdnew.pack();
+                dcdnew.setVisible(true);
+                dc.setNewRemoteDir(dcdnew);
+                db.loadNewDir(dc);  
+                //finishLoadingDataSource();
+            } else if (command.equals("Load marker list")){
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                     loadList(jfc.getSelectedFile().getAbsolutePath());
@@ -409,6 +431,8 @@ public class Genoplot extends JFrame implements ActionListener {
             loadList.setEnabled(true);
             loadExclude.setEnabled(true);
             saveAll.setEnabled(true);
+            addDir.setEnabled(true);
+            
             while(historyMenu.getMenuComponentCount() > 2){
                 historyMenu.remove(2);
             }
