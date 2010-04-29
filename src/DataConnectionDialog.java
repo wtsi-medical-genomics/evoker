@@ -9,10 +9,12 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     private String remoteDir;
     private String localDir;
     private String host;
+    private int port;
     private JTextField userField;
     private JTextField remdirField;
     private JTextField locdirField;
     private JTextField hostField;
+    private JTextField portField;
     private JCheckBox emptyIt;
     private JRadioButton defaultFormatButton;
     private JRadioButton oxfordFormatButton;
@@ -27,6 +29,10 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         hostPanel.add(new JLabel("Host: "));
         hostField = new JTextField(20);
         hostPanel.add(hostField);
+               
+        hostPanel.add(new JLabel("Port: "));
+        portField = new JTextField("22", 3);
+        hostPanel.add(portField);
         contents.add(hostPanel);
 
         JPanel remdirPanel = new JPanel();
@@ -102,6 +108,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
             remoteDir = remdirField.getText();
             localDir = locdirField.getText();
             host = hostField.getText();
+            port = Integer.parseInt(portField.getText());
             this.dispose();
         }else if (e.getActionCommand().equals("Browse")){
             JFileChooser jfc = new JFileChooser("user.dir");
@@ -133,7 +140,10 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     public String getHost() {
         return host;
     }
-
+    
+    public int getPort() {
+    	return port;
+    }
 
     public boolean isOxformat() {
         return oxfordFormatButton.isSelected();
