@@ -19,6 +19,7 @@ import java.text.FieldPosition;
 import java.util.Locale;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public class PlotPanel extends JPanel {
 
