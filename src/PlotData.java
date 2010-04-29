@@ -11,6 +11,7 @@ public class PlotData {
     private double maf, genopc, hwpval, maxDim, minDim;
     private SampleData samples;
     private QCFilterData exclude;
+    private int sampleNum;
     Vector<Vector<String>> indsInClasses;
     private char[] alleles;
 
@@ -48,7 +49,9 @@ public class PlotData {
         for (int i = 0; i <4; i++){
             indsInClasses.add(new Vector<String>());
         }
-
+        
+        sampleNum = 0;
+        
         for (int i = 0; i < intensities.size(); i++){
             float[] intens = intensities.get(i);
 
@@ -57,6 +60,7 @@ public class PlotData {
             	// check if the sample should be excluded before adding points
                 if (!exclude.isExcluded(samples.getInd(i))) {
                 	if (calledGenotypes.get(i) != null){
+                		sampleNum++;
                         switch(calledGenotypes.get(i)) {
                             case 0:
                                 intensityDataSeriesHomo1.add(intens[0],intens[1]);
@@ -82,6 +86,7 @@ public class PlotData {
                 }
             } else {
             	if (calledGenotypes.get(i) != null){
+            		sampleNum++;
                     switch(calledGenotypes.get(i)) {
                         case 0:
                             intensityDataSeriesHomo1.add(intens[0],intens[1]);
@@ -273,4 +278,8 @@ public class PlotData {
             return new char[]{' ',' '};
         }
     }
+    
+	public int getSampleNum() {
+		return sampleNum;
+	}
 }
