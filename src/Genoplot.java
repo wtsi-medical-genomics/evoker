@@ -1,6 +1,9 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+
+import com.itextpdf.text.DocumentException;
+
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.*;
@@ -25,6 +28,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
     JFileChooser jfc;
     DataConnectionDialog dcd;
+    MarkerListDialog mld;
     
     private JPanel scorePanel;
     private JButton yesButton;
@@ -38,10 +42,15 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
-
+   
     public static LoggingDialog ld;
     private JButton randomSNPButton;
 
+	private PDFFile allPDF = null;
+	private PDFFile yesPDF = null;
+	private PDFFile maybePDF = null;
+	private PDFFile noPDF = null;
+	
     public static void main(String[] args){
 
         new Genoplot();
@@ -53,6 +62,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
         jfc = new JFileChooser("user.dir");
         dcd = new DataConnectionDialog(this);
+        mld = new MarkerListDialog(this);
 
         JMenuBar mb = new JMenuBar();
 
@@ -72,12 +82,12 @@ public class Genoplot extends JFrame implements ActionListener {
         loadList.addActionListener(this);
         loadList.setEnabled(false);
         fileMenu.add(loadList);
-        loadExclude = new JMenuItem("Load exclude list");
+        loadExclude = new JMenuItem("Load sample exclude list");
         loadExclude.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, menumask));
         loadExclude.addActionListener(this);
         loadExclude.setEnabled(false);
         fileMenu.add(loadExclude);
-        filterData = new JCheckBoxMenuItem("Filter data");
+        filterData = new JCheckBoxMenuItem("Filter samples");
         filterData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, menumask));
         filterData.addActionListener(this);
         filterData.setEnabled(false);
@@ -99,7 +109,6 @@ public class Genoplot extends JFrame implements ActionListener {
 
         mb.add(fileMenu);
 
-
         historyMenu = new JMenu("History");
         returnToListPosition = new JMenuItem("Return to current list position");
         snpGroup = new ButtonGroup();
@@ -114,7 +123,7 @@ public class Genoplot extends JFrame implements ActionListener {
         showLogItem.addActionListener(this);
         logMenu.add(showLogItem);
         mb.add(logMenu);
-
+               
         setJMenuBar(mb);
 
         JPanel controlsPanel = new JPanel();
@@ -253,13 +262,24 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
                 }
             }else if (command.equals("Load marker list")){
-                jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
-                    loadList(jfc.getSelectedFile().getAbsolutePath());
-                }
-                FileOutputStream fos = new FileOutputStream(jfc.getSelectedFile().getAbsolutePath()+".scores");
-                output = new PrintStream(fos);
-            }else if (command.equals("Load exclude list")) {
+                mld.pack();
+            	mld.setVisible(true);
+            	if(mld.success()){
+            		try{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        loadList(mld.getMarkerList());
+                    	File outfile = checkOverwriteFile(new File(mld.getMarkerList()+".scores"));				
+                        FileOutputStream fos = new FileOutputStream(outfile);
+                        output = new PrintStream(fos);
+                        if (mld.savePlots()) {
+                    		openPDFs();
+                    	}
+                    }finally{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    }
+            	}
+            	
+            }else if (command.equals("Load sample exclude list")) {
             	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             	if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
             		// TODO: before setting as the new list check it is a valid not empty exclude file
@@ -272,7 +292,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 		plotIntensitas(currentSNP);
                 	}
                 }
-            }else if (command.equals("Filter data")){
+            }else if (command.equals("Filter samples")){
             	// turn filtering on/off
             	if (filterData.isSelected()) {
             		db.setFilterState(true);
@@ -313,10 +333,32 @@ public class Genoplot extends JFrame implements ActionListener {
         }catch (IOException ioe){
             JOptionPane.showMessageDialog(this,ioe.getMessage(),"File error",
                     JOptionPane.ERROR_MESSAGE);
-        }
+        } catch (DocumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
-    private void dumpAll() throws IOException{
+    private File checkOverwriteFile(File file) {
+ 
+    	if (file.exists()) {
+        	int n = JOptionPane.showConfirmDialog(
+        			null, 
+        			"The file " + file.getName() + " already exists\n would you like to overwrite this file?",
+        			"Overwrite file?",
+        			JOptionPane.YES_NO_OPTION,
+        			JOptionPane.QUESTION_MESSAGE );
+        	// n 0 = yes 1 = no
+        	if (n == 1) {		
+        		if (jfc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION){
+        			file = new File(jfc.getSelectedFile().getAbsolutePath());
+                }
+        	}
+        }
+    	return file;
+	}
+    
+	private void dumpAll() throws IOException{
         for (String snp : snpList){
             //TODO: borken!
             /*for (int i = 0; i < collectionDropdown.getItemCount(); i++){
@@ -327,12 +369,28 @@ public class Genoplot extends JFrame implements ActionListener {
         }
     }
 
-    private void recordVerdict(int v){
+    private void recordVerdict(int v) throws DocumentException{
         if (currentSNPinList != null){
             output.println(currentSNPinList + "\t" + v);
+            
+            if (mld.savePlots()) {
+            	if (mld.allPlots()) {
+                	allPDF.writePanel2PDF(plotArea);
+                }
+                if (v == 1 && mld.yesPlots()) {
+                    yesPDF.writePanel2PDF(plotArea);
+                }
+                if (v == 0 && mld.maybePlots()) {
+                	maybePDF.writePanel2PDF(plotArea);
+                }
+                if (v == -1 && mld.noPlots()) {
+                	noPDF.writePanel2PDF(plotArea);
+                }
+            }
+            
             if (!snpList.isEmpty()){
                 currentSNPinList = snpList.removeFirst();
-                plotIntensitas(currentSNPinList);
+                plotIntensitas(currentSNPinList);   
             }else{
                 plotIntensitas("ENDLIST");
                 currentSNPinList = null;
@@ -340,12 +398,50 @@ public class Genoplot extends JFrame implements ActionListener {
                 yesButton.setEnabled(false);
                 noButton.setEnabled(false);
                 maybeButton.setEnabled(false);
-                returnToListPosition.setEnabled(false);
+                returnToListPosition.setEnabled(false);                
+                if (mld.savePlots()) {
+                	closeOpenPDFs();
+                }
+                
             }
         }
     }
+    
+    private void openPDFs() throws DocumentException, IOException {
+		
+    	if (mld.allPlots()) {
+			allPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/all.pdf")));
+    	}
+    	if (mld.yesPlots()) {
+    		yesPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/yes.pdf")));
+    	}
+    	if (mld.maybePlots()) {
+    		maybePDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/maybe.pdf")));
+    	}
+    	if (mld.noPlots()) {
+    		noPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/no.pdf")));
+    	}
+	}
+    
+    private void closeOpenPDFs() {
+    	if (mld.allPlots() && allPDF.isFileOpen()) {
+        	allPDF.getDocument().close();
+        }
+        
+    	if (mld.yesPlots() && yesPDF.isFileOpen()) {
+        	yesPDF.getDocument().close();
+        }
+    	
+    	if (mld.maybePlots() && maybePDF.isFileOpen()) {
+        	maybePDF.getDocument().close();
+        }
+    	
+    	if (mld.noPlots() && noPDF.isFileOpen()) {
+        	noPDF.getDocument().close();
+        }	
+	}
 
-    private void viewedSNP(String name){
+	private void viewedSNP(String name){
 
         boolean alreadyHere = false;
         for (Component i : historyMenu.getMenuComponents()){
