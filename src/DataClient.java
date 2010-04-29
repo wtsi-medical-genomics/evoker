@@ -4,6 +4,7 @@ import com.sshtools.j2ssh.sftp.SftpFile;
 import com.sshtools.j2ssh.session.SessionChannelClient;
 import com.sshtools.j2ssh.authentication.PasswordAuthenticationClient;
 import com.sshtools.j2ssh.authentication.AuthenticationProtocolState;
+import com.sshtools.j2ssh.configuration.SshConnectionProperties;
 import com.sshtools.j2ssh.transport.IgnoreHostKeyVerification;
 
 import javax.swing.*;
@@ -53,7 +54,7 @@ public class DataClient{
             pwd.setPassword(new String(dcd.getPassword()));
             ssh = new SshClient();
             try{
-                ssh.connect(dcd.getHost(),new IgnoreHostKeyVerification());
+                ssh.connect(dcd.getHost(), dcd.getPort(), new IgnoreHostKeyVerification());
                 remoteDir = dcd.getRemoteDirectory();
             }finally{
                 dcd.clearPassword();
