@@ -6,6 +6,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 
@@ -75,16 +76,15 @@ public class PlotPanel extends JPanel {
     }
 
     private ChartPanel generatePlot(XYSeriesCollection xysc) {
-
+    	
         jfc = ChartFactory.createScatterPlot(title, xlab, ylab, xysc,
                 PlotOrientation.VERTICAL, false, false, false);
-
+        jfc.addSubtitle(new TextTitle("(n="+ data.getSampleNum()+")"));
+          
         XYPlot thePlot = jfc.getXYPlot();
         thePlot.setBackgroundPaint(Color.white);
         thePlot.setOutlineVisible(false);
         
-        
-
         XYItemRenderer xyd = thePlot.getRenderer();
         Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
         xyd.setSeriesShape(0, dot);
