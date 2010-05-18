@@ -25,7 +25,7 @@ public class PlotData {
         this.maxDim = -100000;
         this.minDim = 100000;
         this.alleles = alleles;
-        this.coordSystem = coordSystem;
+        this.setCoordSystem(coordSystem);
     }
 
 
@@ -57,7 +57,7 @@ public class PlotData {
         for (int i = 0; i < intensities.size(); i++){
             float[] intens = intensities.get(i);
             
-            if (coordSystem.matches("POLAR")) {
+            if (getCoordSystem().matches("POLAR")) {
             	float x = intens[0];
             	float y = intens[1];
             	
@@ -295,5 +295,15 @@ public class PlotData {
     
 	public int getSampleNum() {
 		return sampleNum;
+	}
+
+
+	public void setCoordSystem(String coordSystem) {
+		this.coordSystem = coordSystem;
+	}
+
+
+	public String getCoordSystem() {
+		return coordSystem;
 	}
 }
