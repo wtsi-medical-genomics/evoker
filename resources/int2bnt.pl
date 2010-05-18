@@ -13,7 +13,7 @@
 ##Ê	Tab-delimited plain text, one line per SNP, consisting of AffyID, RSID, position, alleleA, alleleB and one pair of intensities per sample for each of the two alleles
 ## affy birdsuite format: 
 ##	Birdsuite allele_summary file, which has the intensities of each allele of each SNP in matrix format. (two lines per SNP, one for each allele)
-## illuminus format: 
+## illuminus and beagle format: 
 ##	Tab-delimited plain text, one line per SNP, consisting of ID, position, alleles and one pair of intensities per sample for each of the two alleles
 ## 
 ##ÊTODO: deal with NA values in chiamo and affy files
@@ -92,7 +92,7 @@ if ($filetype =~ /chiamo/i) {
 			}
 		}
 	}
-} elsif ($filetype =~ /illuminus/i) {
+} elsif ($filetype =~ /illuminus/i || $filetype =~ /beagle/i) {
   	my $header = <IN>;
 	while (my $line = <IN>){
   		chomp($line);
@@ -105,8 +105,8 @@ if ($filetype =~ /chiamo/i) {
    	 			print OUT pack('f*', $int);	
    	 		}
   		}  		
-	}				
-} else {
+	}						
+}else {
 	<IN>;
 	while (<IN>){
   		my @fields = split; 		
