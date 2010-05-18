@@ -36,9 +36,16 @@ public class PlotPanel extends JPanel {
 
     PlotPanel(String title, PlotData pd){
         this.title = title;
-        this.xlab = String.valueOf("X");
-        this.ylab = String.valueOf("Y");
         this.data = pd;
+        if(pd.getCoordSystem().matches("POLAR")) {
+        	this.xlab = String.valueOf("\u03F4");
+            this.ylab = String.valueOf("r");
+        } else {
+        	this.xlab = String.valueOf("X");
+            this.ylab = String.valueOf("Y");
+        }
+        
+        
 
         this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
         this.setPreferredSize(new Dimension(300,300));
