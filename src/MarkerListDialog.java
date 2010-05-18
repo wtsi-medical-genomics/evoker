@@ -19,10 +19,10 @@ public class MarkerListDialog extends JDialog implements ActionListener {
     private JButton pdfBrowseButton;
     private JLabel pdfDirLabel;
     private JRadioButton savePlotsButton;
-    private JRadioButton allPlotsButton;
-    private JRadioButton yesPlotsButton;
-    private JRadioButton maybePlotsButton;
-    private JRadioButton noPlotsButton;
+    private JCheckBox allPlotsButton;
+    private JCheckBox yesPlotsButton;
+    private JCheckBox maybePlotsButton;
+    private JCheckBox noPlotsButton;
     
     private JFileChooser jfc;
 
@@ -51,19 +51,19 @@ public class MarkerListDialog extends JDialog implements ActionListener {
         savePlotsButton.setSelected(false);
         savePlotsButton.addActionListener(this);
         savePlotsPanel.add(savePlotsButton);
-        allPlotsButton = new JRadioButton("Save all plots");
+        allPlotsButton = new JCheckBox("Save all plots");
         allPlotsButton.setSelected(false);
         allPlotsButton.setEnabled(false);
         savePlotsPanel.add(allPlotsButton);
-        yesPlotsButton = new JRadioButton("Save all Yes plots");
+        yesPlotsButton = new JCheckBox("Save all Yes plots");
         yesPlotsButton.setSelected(false);
         yesPlotsButton.setEnabled(false);
         savePlotsPanel.add(yesPlotsButton);
-        maybePlotsButton = new JRadioButton("Save all Maybe plots");
+        maybePlotsButton = new JCheckBox("Save all Maybe plots");
         maybePlotsButton.setSelected(false);
         maybePlotsButton.setEnabled(false);
         savePlotsPanel.add(maybePlotsButton);
-        noPlotsButton = new JRadioButton("Save all No plots");
+        noPlotsButton = new JCheckBox("Save all No plots");
         noPlotsButton.setSelected(false);
         noPlotsButton.setEnabled(false);
         savePlotsPanel.add(noPlotsButton);
