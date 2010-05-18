@@ -164,6 +164,9 @@ If you are using the Birdsuite collection of programs the \texttt{study.allele\_
 \subsubsection{BeadStudio}
 The Evoker package also contains a script called \texttt{parse\_illumina.pl} for parsing the text output files from the illumina BeadStudio software. The \texttt{parse\_illumina.pl} script will create the properly formatted \texttt{.bnt/} and \texttt{.bed/} files required by Evoker. 
 
+\subsubsection{BEAGLECALL}
+If you use the BEAGLECALL genotype calling program, the \texttt{int2bnt.pl} script is able to generate a \texttt{.bnt} file from the standard BEAGLECALL input file. To use this file format just supply the following option when you run the \texttt{int2bnt.pl} script \texttt{--filetype "beagle"}.
+
 \section{Remote data access}
 
 Even files in the compressed binary formats used by Evoker can be extremely large (many gigabytes) for datasets with thousands of samples and over one million SNPs. Since it is often unfeasible to have the complete dataset available on your PC, Evoker can access a data directory on any computer to which you have SSH access.
