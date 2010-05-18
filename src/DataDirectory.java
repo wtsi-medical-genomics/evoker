@@ -336,8 +336,8 @@ public class DataDirectory {
             return string.endsWith(extension);
         }
     }
-
-    public PlotData getRecord(String snp, String collection) throws IOException{
+    
+    public PlotData getRecord(String snp, String collection, String coordSystem) throws IOException{
         /**if (collection.equals("ALL")){
             return getRecord(snp);
         }**/
@@ -351,13 +351,14 @@ public class DataDirectory {
                     intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
                     samplesByCollection.get(collection),
                     qcList(),
-                    md.getAlleles(snp));
+                    md.getAlleles(snp),
+                    coordSystem);
         	double time = ((double)(System.currentTimeMillis() - start))/1000;
             Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");
             return pd;
         	
         }else{
-            return new PlotData(null,null,null,null,null);
+            return new PlotData(null,null,null,null,null,null);
         }
     }
 
