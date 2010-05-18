@@ -44,13 +44,41 @@ The collection groupings can be any subset of your data which you wish to plot s
      \toprule[1.5pt]
       Data format & Sample file type & SNP file type & Genotype file type & Intensity file type \\
       \midrule
-      Default & .fam & .bim & .bed & .bnt \\
-      Oxford & .sample & .snp & .geno.bin(.gz) &.int.bim(.gz) \\
+      Default & .fam & .bim & .bed & .bnt\\
+      & & & & (see Table 2 for files\\
+      & & & & which can be converted\\
+      & & & & to .bnt using \texttt{int2bnt.pl})\\
+      Oxford & & & &\\
+      - Illumina & illumina.sample & illumina.snp & illumina.geno.bin(.gz) & illumina.int.bim(.gz) \\
+      Oxford & & & &\\
+      - Affymetrix & affymetrix.sample & affymetrix.snp & affymetrix.geno.bin(.gz) & affymetrix.int.bim(.gz) \\
       \addlinespace      
       \bottomrule[0.5pt]
     \end{tabular}
   \end{center}
 \end{table}
+
+% intensity format table
+\begin{table}
+  \begin{center}
+    \caption[Intensity file formats]{Intensity file formats}
+    \vspace{0.2cm}
+    \label{FileFormats}
+    \begin{tabular}[p]{ l l l}
+     \toprule[1.5pt]
+      Data format & Input file & int2bnt.pl command line argument \\
+      \midrule
+		Default format & input intensity file & \texttt{int2bnt.pl}\\
+		Illuminus & input intensity file & \texttt{int2bnt.pl --filetype illuminus}\\
+		Chiamo & input intensity file & \texttt{int2bnt.pl --filetype chiamo}\\
+		BeagleCall & allele signals file (.signals) & \texttt{int2bnt.pl --filetype beagle}\\
+		Birdsuite & allele\_summary file & \texttt{int2bnt.pl --filetype affy}\\
+      \addlinespace      
+      \bottomrule[0.5pt]
+    \end{tabular}
+  \end{center}
+\end{table}
+
 
 \subsubsection{Default format}
 The default file format works with files formatted in the binary style of the widely-used \texttt{PLINK} program, along with one extension. Information about this format can be found at the \texttt{PLINK} website (see below). In the default format Evoker requires all of the \texttt{PLINK} style files (\texttt{.bed, .bim, .fam}), plus an additional binary intensity (\texttt{.bnt}) file, named according to a particular convention. Using the default file format your project should have one \texttt{.fam} file per collection (named \texttt{collection.fam}) and one set of \texttt{.bed/.bim/.bnt} files per collection--chromosome combination (named \texttt{collection.chromosome.bed} etc.).
