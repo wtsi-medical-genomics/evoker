@@ -3,6 +3,7 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
 
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -57,7 +58,11 @@ public class Genoplot extends JFrame implements ActionListener {
 	private PDFFile yesPDF = null;
 	private PDFFile maybePDF = null;
 	private PDFFile noPDF = null;
-
+	private int yesPlotNum;
+	private int maybePlotNum;
+	private int noPlotNum;
+	
+	
 	private String coordSystem = "CART";
 	
 	// for back button
@@ -65,6 +70,8 @@ public class Genoplot extends JFrame implements ActionListener {
 	private int cachedSNPscore;
 	private JPanel cachedSNPpp;
 	private boolean isBackSNP;
+	
+	private int SNPsInList;
 	
     public static void main(String[] args){
 
@@ -428,12 +435,15 @@ public class Genoplot extends JFrame implements ActionListener {
         			}
         			if (v == 1 && mld.yesPlots()) {
         				yesPDF.writePanel2PDF(plotArea);
+        				yesPlotNum++;
         			}
         			if (v == 0 && mld.maybePlots()) {
         				maybePDF.writePanel2PDF(plotArea);
+        				maybePlotNum++;
         			}
         			if (v == -1 && mld.noPlots()) {
         				noPDF.writePanel2PDF(plotArea);
+        				noPlotNum++;
         			}
         		}        		
         		cachedSNPname = "";
@@ -449,12 +459,15 @@ public class Genoplot extends JFrame implements ActionListener {
                     	}
                     	if (v == 1 && mld.yesPlots()) {
                     		yesPDF.writePanel2PDF(cachedSNPpp);
+                    		yesPlotNum++;
                     	}
                     	if (v == 0 && mld.maybePlots()) {
                     		maybePDF.writePanel2PDF(cachedSNPpp);
+                    		maybePlotNum++;
                     	}
                     	if (v == -1 && mld.noPlots()) {
                     		noPDF.writePanel2PDF(cachedSNPpp);
+                    		noPlotNum++;
                     	}
                     }        		
         		}
@@ -477,12 +490,15 @@ public class Genoplot extends JFrame implements ActionListener {
                     	}
                     	if (v == 1 && mld.yesPlots()) {
                     		yesPDF.writePanel2PDF(cachedSNPpp);
+                    		yesPlotNum++;
                     	}
                     	if (v == 0 && mld.maybePlots()) {
                     		maybePDF.writePanel2PDF(cachedSNPpp);
+                    		maybePlotNum++;
                     	}
                     	if (v == -1 && mld.noPlots()) {
                     		noPDF.writePanel2PDF(cachedSNPpp);
+                    		noPlotNum++;
                     	}
                     }  
             		output.close();
@@ -518,27 +534,44 @@ public class Genoplot extends JFrame implements ActionListener {
     	}
     	if (mld.yesPlots()) {
     		yesPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/yes.pdf")));
+    		yesPlotNum = 0;
+    		
     	}
     	if (mld.maybePlots()) {
     		maybePDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/maybe.pdf")));
+    		maybePlotNum = 0;
+    	
     	}
     	if (mld.noPlots()) {
     		noPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/no.pdf")));
+    		noPlotNum = 0;
     	}
 	}
     
-    private void closeOpenPDFs() {
+    private void closeOpenPDFs() throws DocumentException {
     	if (mld.allPlots() && allPDF.isFileOpen()) {
-        	allPDF.getDocument().close();
+    		allPDF.getDocument().close();
         }
         if (mld.yesPlots() && yesPDF.isFileOpen()) {
+        	
+        	if (yesPlotNum == 0) {
+        		yesPDF.getDocument().add(new Paragraph("No Yes plots recorded"));
+        	}
         	yesPDF.getDocument().close();
         }
     	if (mld.maybePlots() && maybePDF.isFileOpen()) {
-        	maybePDF.getDocument().close();
+    		
+    		if (maybePlotNum == 0) {
+        		maybePDF.getDocument().add(new Paragraph("No Maybe plots recorded"));
+        	}
+    		maybePDF.getDocument().close();
         }
     	if (mld.noPlots() && noPDF.isFileOpen()) {
-        	noPDF.getDocument().close();
+    		
+    		if (noPlotNum == 0) {
+        		noPDF.getDocument().add(new Paragraph("No No plots recorded"));
+        	}
+    		noPDF.getDocument().close();
         }	
 	}
 
@@ -665,6 +698,12 @@ public class Genoplot extends JFrame implements ActionListener {
             snpList.add(bits[0]);
         }
         listReader.close();
+        
+//        SNPsInList = snpList.size();
+//        JLabel test = new JLabel("Test");
+//        test.setAlignmentX(RIGHT_ALIGNMENT);
+//        test.setAlignmentY(BOTTOM_ALIGNMENT);
+//        plotArea.add(test);
 
         try{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
