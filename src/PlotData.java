@@ -12,11 +12,12 @@ public class PlotData {
     private SampleData samples;
     private QCFilterData exclude;
     private int sampleNum;
+    private String coordSystem;
     Vector<Vector<String>> indsInClasses;
     private char[] alleles;
 
 
-    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles){
+    PlotData(Vector<Byte>calledGenotypes, Vector<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, String coordSystem){
         this.calledGenotypes = calledGenotypes;
         this.intensities = intensities;
         this.samples = samples;
@@ -24,6 +25,7 @@ public class PlotData {
         this.maxDim = -100000;
         this.minDim = 100000;
         this.alleles = alleles;
+        this.coordSystem = coordSystem;
     }
 
 
@@ -54,6 +56,18 @@ public class PlotData {
         
         for (int i = 0; i < intensities.size(); i++){
             float[] intens = intensities.get(i);
+            
+            if (coordSystem.matches("POLAR")) {
+            	float x = intens[0];
+            	float y = intens[1];
+            	
+            	float r = (float) Math.sqrt(Math.pow(y, 2) + Math.pow(x, 2));
+            	float theta = (float) Math.asin(y / r);
+            	
+            	intens[0] = theta;
+            	intens[1] = r;
+            }
+            
 
             // check if there is a valid exclude file loaded
             if (exclude != null) {
