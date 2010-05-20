@@ -9,6 +9,8 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 import java.util.LinkedList;
 
@@ -26,10 +28,16 @@ public class Genoplot extends JFrame implements ActionListener {
     private LinkedList<String> snpList;
     private String currentSNPinList;
     private String currentSNP = null;
+    private int currentSNPindex;
+    private int displaySNPindex;
+    private boolean backSNP    = false;
+    private boolean historySNP = false;
+    private boolean markerList = false;
+    private Hashtable<String,Integer> listScores = new Hashtable<String,Integer>();
 
     JFileChooser jfc;
     DataConnectionDialog dcd;
-    MarkerListDialog mld;
+    PDFDialog pdfd;
     
     private JPanel scorePanel;
     private JPanel messagePanel;
@@ -44,6 +52,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenu toolsMenu;
     private JCheckBoxMenuItem filterData;
     private JMenuItem saveAll;
+    private JMenuItem exportPDF;
     private JMenu viewMenu;
     private JMenuItem viewPolar;
     private JMenuItem viewCart;
@@ -62,16 +71,9 @@ public class Genoplot extends JFrame implements ActionListener {
 	private int maybePlotNum;
 	private int noPlotNum;
 	
-	
+	// default
 	private String coordSystem = "CART";
 	
-	// for back button
-	private String cachedSNPname = "";
-	private int cachedSNPscore;
-	private JPanel cachedSNPpp;
-	private boolean isBackSNP;
-	
-	private int SNPsInList;
 	
     public static void main(String[] args){
 
@@ -82,9 +84,9 @@ public class Genoplot extends JFrame implements ActionListener {
     Genoplot(){
         super("Evoke...");
 
-        jfc = new JFileChooser("user.dir");
-        dcd = new DataConnectionDialog(this);
-        mld = new MarkerListDialog(this);
+        jfc  = new JFileChooser("user.dir");
+        dcd  = new DataConnectionDialog(this);
+        pdfd = new PDFDialog(this);
 
         JMenuBar mb = new JMenuBar();
 
@@ -122,6 +124,10 @@ public class Genoplot extends JFrame implements ActionListener {
         saveAll.addActionListener(this);
         saveAll.setEnabled(false);
         toolsMenu.add(saveAll);
+//        exportPDF = new JMenuItem("Generate PDF from scores");
+//        exportPDF.addActionListener(this);
+//        exportPDF.setEnabled(false);
+//        toolsMenu.add(exportPDF);
         
         if (!(System.getProperty("os.name").toLowerCase().contains("mac"))){
             JMenuItem quitItem = new JMenuItem("Quit");
@@ -272,10 +278,20 @@ public class Genoplot extends JFrame implements ActionListener {
                 yesButton.requestFocusInWindow();
                 recordVerdict(1);
             }else if (command.equals("Back")){
-            	setIsBackSNP(true);
-            	backButton.requestFocusInWindow();
-            	backButton.setEnabled(false);
-            	plotIntensitas(cachedSNPname);
+            	setBackSNP(true);
+            	displaySNPindex--;
+            	if (displaySNPindex == 0) {
+            		backButton.setEnabled(false);
+            	}
+            	int lastCall = listScores.get(snpList.get(displaySNPindex));
+            	if (lastCall == 1){
+            		yesButton.requestFocusInWindow();
+            	} else if (lastCall == 0) {
+            		maybeButton.requestFocusInWindow();
+            	} else {
+            		noButton.requestFocusInWindow();
+            	}            	
+            	plotIntensitas(snpList.get(displaySNPindex));
             }else if (command.equals("Return to current list position")){
                 plotIntensitas(currentSNPinList);
             }else if (command.equals("Random")){
@@ -308,23 +324,16 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
                 }
             }else if (command.equals("Load marker list")){
-                mld.pack();
-            	mld.setVisible(true);
-            	if(mld.success()){
-            		try{
-                        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        loadList(mld.getMarkerList());
-                    	File outfile = checkOverwriteFile(new File(mld.getMarkerList()+".scores"));				
-                        FileOutputStream fos = new FileOutputStream(outfile);
-                        output = new PrintStream(fos);
-                        if (mld.savePlots()) {
-                    		openPDFs();
-                    	}
-                    }finally{
-                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
-            	}
-            	
+            	currentSNPindex = 0;
+                displaySNPindex = currentSNPindex;
+            	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
+                    loadList(jfc.getSelectedFile().getAbsolutePath());
+                }
+                File outfile = checkOverwriteFile(new File(jfc.getSelectedFile().getAbsolutePath()+".scores"));
+                FileOutputStream fos = new FileOutputStream(outfile);
+                output = new PrintStream(fos);
+                
             }else if (command.equals("Load sample exclude list")) {
             	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             	if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
@@ -369,7 +378,19 @@ public class Genoplot extends JFrame implements ActionListener {
                     	System.out.println(ioe.getMessage());
                     }
             	}                
-            }else if (command.equals("Cartesian coordinates")) {
+            }else if (command.equals("Generate PDF from scores")){
+            	pdfd.pack();
+            	pdfd.setVisible(true);
+            	if(pdfd.success()){
+            		try{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        generatePDFs();
+                    }finally{
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    }
+            	}
+            }
+            else if (command.equals("Cartesian coordinates")) {
             	setCoordSystem("CART");
             	if (currentSNP != null){
             		plotIntensitas(currentSNP);
@@ -393,10 +414,102 @@ public class Genoplot extends JFrame implements ActionListener {
 		}
     }
 
-    private void setIsBackSNP(boolean b) {
-		isBackSNP = b;
+	private void generatePDFs() throws DocumentException, IOException {
+		try{
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            openPDFs();
+        	//TODO: progress bar?    	
+        	BufferedReader listReader = new BufferedReader(new FileReader(pdfd.getscoresFile()));
+            String currentLine;
+            while ((currentLine = listReader.readLine()) != null){
+                String[] bits = currentLine.split("\t");
+                String snp = bits[0];
+                String score  = bits[1];
+                
+                //TODO make sure the snp is in the current data set      
+                System.out.println(snp + "  " + score);
+                // create plot panel
+                plotIntensitas(snp);
+                JFrame test = new JFrame();
+                test.add(plotArea);
+                test.setVisible(true);
+                
+                // print plot panel to pdf
+                if (pdfd.allPlots()) {
+        			allPDF.writePanel2PDF(plotArea);
+        		}
+        		if (score.contains("1") && pdfd.yesPlots()) {
+        			yesPDF.writePanel2PDF(plotArea);
+        			yesPlotNum++;
+        		}
+        		if (score.contains("0") && pdfd.maybePlots()) {
+        			maybePDF.writePanel2PDF(plotArea);
+        			maybePlotNum++;
+        		}
+        		if (score.contains("-1") && pdfd.noPlots()) {
+        			noPDF.writePanel2PDF(plotArea);
+        			noPlotNum++;
+        		}
+            }
+            System.out.println(yesPlotNum + "  " + maybePlotNum + "  " + noPlotNum);
+            listReader.close();
+        	closePDFs();
+        }finally{
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+	}
+	
+	private void printScores() {
+    	Enumeration<String> snps = listScores.keys();
+        while (snps.hasMoreElements()){
+          String snp = (String) snps.nextElement();
+          output.println(snp + "\t" + listScores.get(snp));
+        }
+        output.close();
+        // now you can convert these scores into a pdf
+        //exportPDF.setEnabled(true);
+    }
+	
+	private void setMarkerList(boolean marker) {
+    	markerList = marker;
+    }
+    
+    private boolean markerListLoaded() {
+		return markerList;
+	}
+	
+	private void activeScorePanel(boolean score) {
+		if (score) {
+			yesButton.setEnabled(true);
+            noButton.setEnabled(true);
+            maybeButton.setEnabled(true);
+            backButton.setEnabled(true);
+            scorePanel.setEnabled(true);
+		} else {
+			yesButton.setEnabled(false);
+            noButton.setEnabled(false);
+            maybeButton.setEnabled(false);
+            backButton.setEnabled(false);
+            scorePanel.setEnabled(false);
+		}
+	}
+	
+	private void setBackSNP(boolean back) {
+		backSNP = back;
+	}
+    
+    private boolean isBackSNP() {
+    	return backSNP;
+    }
+
+	private void setHistorySNP(boolean history) {
+		historySNP = history;
 	}
 
+	private boolean isHistorySNP() {
+		return historySNP;
+	}
+	
 	private void setCoordSystem(String s) {
 		coordSystem = s;
 	}
@@ -425,101 +538,49 @@ public class Genoplot extends JFrame implements ActionListener {
 	}
    
     private void recordVerdict(int v) throws DocumentException{
-        if (currentSNPinList != null){        	
-        	
-        	if (isBackSNP) {
-        		output.println(cachedSNPname + "\t" + v);        		
-        		if (mld.savePlots()) {
-        			if (mld.allPlots()) {
-        				allPDF.writePanel2PDF(plotArea);
-        			}
-        			if (v == 1 && mld.yesPlots()) {
-        				yesPDF.writePanel2PDF(plotArea);
-        				yesPlotNum++;
-        			}
-        			if (v == 0 && mld.maybePlots()) {
-        				maybePDF.writePanel2PDF(plotArea);
-        				maybePlotNum++;
-        			}
-        			if (v == -1 && mld.noPlots()) {
-        				noPDF.writePanel2PDF(plotArea);
-        				noPlotNum++;
-        			}
-        		}        		
-        		cachedSNPname = "";
-        		setIsBackSNP(false);
-        		backButton.setEnabled(false);
-        		plotIntensitas(currentSNPinList); 
-        	}else {
-        		if (!cachedSNPname.isEmpty()){
-            		output.println(cachedSNPname + "\t" + cachedSNPscore);
-                    if (mld.savePlots()) {
-                    	if (mld.allPlots()) {
-                    		allPDF.writePanel2PDF(cachedSNPpp);
-                    	}
-                    	if (v == 1 && mld.yesPlots()) {
-                    		yesPDF.writePanel2PDF(cachedSNPpp);
-                    		yesPlotNum++;
-                    	}
-                    	if (v == 0 && mld.maybePlots()) {
-                    		maybePDF.writePanel2PDF(cachedSNPpp);
-                    		maybePlotNum++;
-                    	}
-                    	if (v == -1 && mld.noPlots()) {
-                    		noPDF.writePanel2PDF(cachedSNPpp);
-                    		noPlotNum++;
-                    	}
-                    }        		
-        		}
-        		
-            	cachedSNPname  = currentSNPinList;
-            	cachedSNPscore = v;
-            	cachedSNPpp    = plotArea;
-            	backButton.setEnabled(true);
-        	
-            	if (!snpList.isEmpty()){
-            		currentSNPinList = snpList.removeFirst();
-            		plotIntensitas(currentSNPinList);   
-            	}else{
-            		plotIntensitas("ENDLIST");
-            		currentSNPinList = null;
-            		output.println(cachedSNPname + "\t" + cachedSNPscore);
-                    if (mld.savePlots()) {
-                    	if (mld.allPlots()) {
-                    		allPDF.writePanel2PDF(cachedSNPpp);
-                    	}
-                    	if (v == 1 && mld.yesPlots()) {
-                    		yesPDF.writePanel2PDF(cachedSNPpp);
-                    		yesPlotNum++;
-                    	}
-                    	if (v == 0 && mld.maybePlots()) {
-                    		maybePDF.writePanel2PDF(cachedSNPpp);
-                    		maybePlotNum++;
-                    	}
-                    	if (v == -1 && mld.noPlots()) {
-                    		noPDF.writePanel2PDF(cachedSNPpp);
-                    		noPlotNum++;
-                    	}
-                    }  
-            		output.close();
-            		if (mld.savePlots()) {
-            			closeOpenPDFs();
-            		}
-            		yesButton.setEnabled(false);
-            		noButton.setEnabled(false);
-            		maybeButton.setEnabled(false);
-            		backButton.setEnabled(false);
-            		returnToListPosition.setEnabled(false);
-            		printMessage("No marker list loaded");
-            		
-            		cachedSNPname = "";
-            	
-            		// at the end of the list confirm with the user that list should be finished 
-            		// to give them a chance to go back on the final snp score
-            	
-            	}
+    	if (isBackSNP()) {
+       		listScores.put(snpList.get(displaySNPindex), v);
+       		setBackSNP(false);
+       		if (displaySNPindex == 0) {
+        		backButton.setEnabled(true);
         	}
-        }
+       		displaySNPindex = currentSNPindex;
+       		plotIntensitas(snpList.get(currentSNPindex));
+       	} else if (isHistorySNP()) {
+       		listScores.put(snpList.get(displaySNPindex), v);
+       		setHistorySNP(false);
+       		if (displaySNPindex == 0) {
+        		backButton.setEnabled(true);
+        	}
+       		displaySNPindex = currentSNPindex;
+       		plotIntensitas(snpList.get(currentSNPindex));
+       	} else {	
+       		listScores.put(snpList.get(currentSNPindex), v);
+       		if (currentSNPindex < (snpList.size()-1)){
+       			currentSNPindex++;
+       			displaySNPindex = currentSNPindex;
+       			backButton.setEnabled(true);
+       			plotIntensitas(snpList.get(currentSNPindex));
+           	}else{
+           		plotIntensitas("ENDLIST");
+           		activeScorePanel(false);
+           		returnToListPosition.setEnabled(false);
+           		int n = JOptionPane.showConfirmDialog(
+            			null, 
+            			"Would you like to save the scores you have generated?",
+            			"Finish scoring list?",
+            			JOptionPane.YES_NO_OPTION,
+            			JOptionPane.QUESTION_MESSAGE );
+            	// n 0 = yes 1 = no
+            	if (n == 0) {
+            		printScores();
+            		setMarkerList(false);
+            	} else {
+            		activeScorePanel(true);
+            		plotIntensitas(snpList.get(currentSNPindex));
+            	}
+           	}
+       	}
     }
     
     private void printMessage(String string) {
@@ -529,44 +590,44 @@ public class Genoplot extends JFrame implements ActionListener {
 
 	private void openPDFs() throws DocumentException, IOException {
 		
-    	if (mld.allPlots()) {
-			allPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/all.pdf")));
+    	if (pdfd.allPlots()) {
+			allPDF = new PDFFile(checkOverwriteFile(new File(pdfd.getPdfDir() + "/all.pdf")));
     	}
-    	if (mld.yesPlots()) {
-    		yesPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/yes.pdf")));
+    	if (pdfd.yesPlots()) {
+    		yesPDF = new PDFFile(checkOverwriteFile(new File(pdfd.getPdfDir() + "/yes.pdf")));
     		yesPlotNum = 0;
     		
     	}
-    	if (mld.maybePlots()) {
-    		maybePDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/maybe.pdf")));
+    	if (pdfd.maybePlots()) {
+    		maybePDF = new PDFFile(checkOverwriteFile(new File(pdfd.getPdfDir() + "/maybe.pdf")));
     		maybePlotNum = 0;
     	
     	}
-    	if (mld.noPlots()) {
-    		noPDF = new PDFFile(checkOverwriteFile(new File(mld.getPdfDir() + "/no.pdf")));
+    	if (pdfd.noPlots()) {
+    		noPDF = new PDFFile(checkOverwriteFile(new File(pdfd.getPdfDir() + "/no.pdf")));
     		noPlotNum = 0;
     	}
 	}
     
-    private void closeOpenPDFs() throws DocumentException {
-    	if (mld.allPlots() && allPDF.isFileOpen()) {
+    private void closePDFs() throws DocumentException {
+    	if (pdfd.allPlots() && allPDF.isFileOpen()) {
     		allPDF.getDocument().close();
         }
-        if (mld.yesPlots() && yesPDF.isFileOpen()) {
+        if (pdfd.yesPlots() && yesPDF.isFileOpen()) {
         	
         	if (yesPlotNum == 0) {
         		yesPDF.getDocument().add(new Paragraph("No Yes plots recorded"));
         	}
         	yesPDF.getDocument().close();
         }
-    	if (mld.maybePlots() && maybePDF.isFileOpen()) {
+    	if (pdfd.maybePlots() && maybePDF.isFileOpen()) {
     		
     		if (maybePlotNum == 0) {
         		maybePDF.getDocument().add(new Paragraph("No Maybe plots recorded"));
         	}
     		maybePDF.getDocument().close();
         }
-    	if (mld.noPlots() && noPDF.isFileOpen()) {
+    	if (pdfd.noPlots() && noPDF.isFileOpen()) {
     		
     		if (noPlotNum == 0) {
         		noPDF.getDocument().add(new Paragraph("No No plots recorded"));
@@ -574,48 +635,21 @@ public class Genoplot extends JFrame implements ActionListener {
     		noPDF.getDocument().close();
         }	
 	}
+    
+    private void viewedSNP(String name){
 
-	private void viewedSNP(String name){
-
-        boolean alreadyHere = false;
+        boolean inHistory = false;
         for (Component i : historyMenu.getMenuComponents()){
             if (i instanceof  JMenuItem){
                 if (((JMenuItem)i).getText().equals(name)){
                     ((JRadioButtonMenuItem)i).setSelected(true);
-                    alreadyHere = true;
+                    inHistory = true;
                     break;
                 }
             }
         }
-
-        if (alreadyHere){
-            if (currentSNPinList != null){
-                if (snpGroup.getSelection().getActionCommand().equals("PLOTSNP "+currentSNPinList)){
-                    yesButton.setEnabled(true);
-                    noButton.setEnabled(true);
-                    maybeButton.setEnabled(true);                    
-                    scorePanel.setEnabled(true);
-                    message.setVisible(false);
-                }else if (isBackSNP){
-                	yesButton.setEnabled(true);
-                    noButton.setEnabled(true);
-                    maybeButton.setEnabled(true);                    
-                    scorePanel.setEnabled(true);
-                    message.setVisible(false);
-                }else{
-                    //we're viewing a SNP from the history, so we can't allow
-                    //the user to take any action on a SNP list (if one exists) because
-                    //we're not viewing the "active" SNP from the list
-                	// disable the score panel to also stop key stroke events
-                	yesButton.setEnabled(false);
-                    noButton.setEnabled(false);
-                    maybeButton.setEnabled(false);
-                    scorePanel.setEnabled(false);
-                    printMessage("SNP already scored");
-                    //TODO: actually allow you to go back and change your mind?
-                }
-            }
-        }else{
+        
+        if (!inHistory){
             //new guy
             JRadioButtonMenuItem snpItem = new JRadioButtonMenuItem(name);
             snpItem.setActionCommand("PLOTSNP "+name);
@@ -629,8 +663,64 @@ public class Genoplot extends JFrame implements ActionListener {
                 historyMenu.remove(12);
             }
         }
-
     }
+    
+//	private void viewedSNP(String name){
+//
+//        boolean alreadyHere = false;
+//        for (Component i : historyMenu.getMenuComponents()){
+//            if (i instanceof  JMenuItem){
+//                if (((JMenuItem)i).getText().equals(name)){
+//                    ((JRadioButtonMenuItem)i).setSelected(true);
+//                    alreadyHere = true;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (alreadyHere){
+//            if (currentSNPinList != null){
+//                if (snpGroup.getSelection().getActionCommand().equals("PLOTSNP "+currentSNPinList)){
+//                    yesButton.setEnabled(true);
+//                    noButton.setEnabled(true);
+//                    maybeButton.setEnabled(true);                    
+//                    scorePanel.setEnabled(true);
+//                    message.setVisible(false);
+//                }else if (isBackSNP){
+//                	yesButton.setEnabled(true);
+//                    noButton.setEnabled(true);
+//                    maybeButton.setEnabled(true);                    
+//                    scorePanel.setEnabled(true);
+//                    message.setVisible(false);
+//                }else{
+//                    //we're viewing a SNP from the history, so we can't allow
+//                    //the user to take any action on a SNP list (if one exists) because
+//                    //we're not viewing the "active" SNP from the list
+//                	// disable the score panel to also stop key stroke events
+//                	yesButton.setEnabled(false);
+//                    noButton.setEnabled(false);
+//                    maybeButton.setEnabled(false);
+//                    scorePanel.setEnabled(false);
+//                    printMessage("SNP already scored");
+//                    //TODO: actually allow you to go back and change your mind?
+//                }
+//            }
+//        }else{
+//            //new guy
+//            JRadioButtonMenuItem snpItem = new JRadioButtonMenuItem(name);
+//            snpItem.setActionCommand("PLOTSNP "+name);
+//            snpItem.addActionListener(this);
+//            snpGroup.add(snpItem);
+//            snpItem.setSelected(true);
+//            historyMenu.add(snpItem,2);
+//
+//            //only track last ten
+//            if (historyMenu.getMenuComponentCount() > 12){
+//                historyMenu.remove(12);
+//            }
+//        }
+//
+//    }
 
 	private void finishLoadingDataSource(){
         if (db != null){
@@ -690,7 +780,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void loadList(String filename)throws IOException{
-        snpList = new LinkedList<String>();
+    	snpList = new LinkedList<String>();
         BufferedReader listReader = new BufferedReader(new FileReader(filename));
         String currentLine;
         while ((currentLine = listReader.readLine()) != null){
@@ -699,28 +789,21 @@ public class Genoplot extends JFrame implements ActionListener {
         }
         listReader.close();
         
-//        SNPsInList = snpList.size();
-//        JLabel test = new JLabel("Test");
-//        test.setAlignmentX(RIGHT_ALIGNMENT);
-//        test.setAlignmentY(BOTTOM_ALIGNMENT);
-//        plotArea.add(test);
+        setMarkerList(true);
 
         try{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             db.listNotify((LinkedList)snpList.clone());
-            currentSNPinList = snpList.removeFirst();
-            plotIntensitas(currentSNPinList);
+            displaySNPindex = currentSNPindex;
+            plotIntensitas(snpList.get(currentSNPindex));
             returnToListPosition.setEnabled(true);
             yesButton.setEnabled(true);
             noButton.setEnabled(true);
             maybeButton.setEnabled(true);
             yesButton.requestFocusInWindow();
-            message.setVisible(false);
         }finally{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
-
-
     }
 
     private void fetchRecord(String name){
