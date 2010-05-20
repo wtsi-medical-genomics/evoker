@@ -34,30 +34,6 @@ In both cases the data for your project (whether stored locally or remotely) sho
 
 The collection groupings can be any subset of your data which you wish to plot separately, such as case and control samples, or samples genotyped in different laboratories. Furthermore, `chromosomes' can really be any grouping of SNPs, as this designation is used mostly for bookkeeping by the program. Indeed, you could organise your data with only a single `genome' chromosome, requiring only one set of files per collection, but this will result in a performance loss when using Evoker.
 
-% file format table
-\begin{table}
-  \begin{center}
-    \caption[Evoker file formats]{Evoker file formats}
-    \vspace{0.2cm}
-    \label{FileFormats}
-    \begin{tabular}[p]{ l l l l l}
-     \toprule[1.5pt]
-      Data format & Sample file type & SNP file type & Genotype file type & Intensity file type \\
-      \midrule
-      Default & .fam & .bim & .bed & .bnt\\
-      & & & & (see Table 2 for files\\
-      & & & & which can be converted\\
-      & & & & to .bnt using \texttt{int2bnt.pl})\\
-      Oxford & & & &\\
-      - Illumina & illumina.sample & illumina.snp & illumina.geno.bin(.gz) & illumina.int.bim(.gz) \\
-      Oxford & & & &\\
-      - Affymetrix & affymetrix.sample & affymetrix.snp & affymetrix.geno.bin(.gz) & affymetrix.int.bim(.gz) \\
-      \addlinespace      
-      \bottomrule[0.5pt]
-    \end{tabular}
-  \end{center}
-\end{table}
-
 % intensity format table
 \begin{table}
   \begin{center}
@@ -149,11 +125,11 @@ You can type in more SNP names or use the \texttt{Random} button to view more cl
 
 \subsubsection{Scoring SNPs from a list}
 
-One of the ways in which Evoker can be used is to load a list of SNPs (say, those showing evidence of association) to verify that they have good clusters. You can do this by selecting \texttt{Load marker list} from the \texttt{File} menu. Select the \texttt{sample.list} file included in the sample dataset by entering the path to the file in the Marker list box or by using the \texttt{Browse} button. You can elect to have Evoker record the viewed cluster plots of marker list in PDF files, to do this simply select the 'Save viewed plots to PDF' button. Once this button is selected you are able to select which cluster plots to record, you can select all plots, all plots with a yes verdict, all plots with a no verdict and all plots with a maybe verdict. To record to PDF you also need to specify a location where the PDF files should be saved, a path can be entered directly into the 'Destination directory for PDF plots' box or by using the \texttt{Save to} button. Once all the required information has been entered click \texttt{Ok} to load the marker list.
+One of the ways in which Evoker can be used is to load a list of SNPs (say, those showing evidence of association) to verify that they have good clusters. You can do this by selecting \texttt{Load marker list} from the \texttt{File} menu.
 
 The first SNP on the list, ``snp0'' should be plotted. Choose from the three approval options: \texttt{Yes, Maybe, No}. As you make a decision on each SNP the next SNP in the list is plotted. In addition to the buttons, you can also press \texttt{Y,M,N} to render a verdict. Each time you select an approval option, it is recorded in a file in the same place where the list file came from, with \texttt{.scores} appended (it is important, therefore, that you have write permission in this directory). If you now look at \texttt{sample.list.scores} you'll see a line for each SNP with a score of 1, 0 or -1 corresponding to \texttt{Yes}, \texttt{Maybe} or \texttt{No}. 
 
-If you make a mistake and select the wrong verdict for a SNP you can select the back button if it is available to return to the previously plotted SNP in the list and re-score the SNP. Because you must render a verdict in order, if you jump back further than one SNP to another SNP in the history, or type a SNP name in the box and click \texttt{Go} the Approval controls will be disabled until you've returned to the current list position, which can be done via a link in the \texttt{History} menu.
+If you make a mistake and select the wrong verdict for a SNP you can select the back button to return to any previously plotted SNPs in the list and re-score the SNP. If you view a SNP not in the list the approval controls will be disabled until you've returned to the current list position, which can be done via a link in the \texttt{History} menu.
 
 \subsubsection{Excluding samples by list}
 Using Evoker you can view the impact that excluding certain samples (for example samples with a poor quality control score) has on clusters. To achieve this Evoker is able to read in a \texttt{.qc} file, this file is simply a list of the sample identifiers corresponding to the \texttt{.fam} file. Once this file is loaded the selected samples are excluded from all following plots while filtering remains turned on.
