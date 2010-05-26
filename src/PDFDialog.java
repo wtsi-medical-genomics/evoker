@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 
 public class PDFDialog extends JDialog implements ActionListener {
 	
-	private boolean success = false;
+	private boolean success;
     private String scoresFile;
     private String pdfDir;
     private JTextField scoresFileField;
@@ -20,8 +20,8 @@ public class PDFDialog extends JDialog implements ActionListener {
     private JFileChooser jfc;
 
     public PDFDialog(JFrame parent){
-        super(parent,"Generate PDF from Scores",true);
-        
+    	super(parent,"Generate PDF from Scores",true);
+    	
         jfc = new JFileChooser("user.dir");
         
         JPanel contents = new JPanel();
@@ -84,7 +84,7 @@ public class PDFDialog extends JDialog implements ActionListener {
         if (e.getActionCommand().equals("OK")){
         	scoresFile = scoresFileField.getText();
             pdfDir     = pdfDirField.getText();
-            success    = true;
+            setSuccess(true);
             this.dispose();
         }else if (e.getActionCommand().equals("Browse")){
         	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -97,7 +97,8 @@ public class PDFDialog extends JDialog implements ActionListener {
     			pdfDirField.setText(jfc.getSelectedFile().getAbsolutePath());
             }
         }else if (e.getActionCommand().equals("Cancel")){
-            this.dispose();
+        	setSuccess(false);
+        	this.dispose();
         }
     }
 
@@ -128,4 +129,9 @@ public class PDFDialog extends JDialog implements ActionListener {
     public boolean noPlots() {
         return noPlotsButton.isSelected();
     }
+
+	public void setSuccess(boolean b) {
+		success = b;
+		
+	}
 }
