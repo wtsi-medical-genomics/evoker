@@ -2,15 +2,28 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.Paragraph;
 
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.Vector;
 import java.util.LinkedList;
 
@@ -124,10 +137,10 @@ public class Genoplot extends JFrame implements ActionListener {
         saveAll.addActionListener(this);
         saveAll.setEnabled(false);
         toolsMenu.add(saveAll);
-//        exportPDF = new JMenuItem("Generate PDF from scores");
-//        exportPDF.addActionListener(this);
-//        exportPDF.setEnabled(false);
-//        toolsMenu.add(exportPDF);
+        exportPDF = new JMenuItem("Generate PDF from scores");
+        exportPDF.addActionListener(this);
+        exportPDF.setEnabled(false);
+        toolsMenu.add(exportPDF);
         
         if (!(System.getProperty("os.name").toLowerCase().contains("mac"))){
             JMenuItem quitItem = new JMenuItem("Quit");
@@ -382,12 +395,7 @@ public class Genoplot extends JFrame implements ActionListener {
             	pdfd.pack();
             	pdfd.setVisible(true);
             	if(pdfd.success()){
-            		try{
-                        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        generatePDFs();
-                    }finally{
-                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
+            		generatePDFs();
             	}
             }
             else if (command.equals("Cartesian coordinates")) {
@@ -415,49 +423,145 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
 	private void generatePDFs() throws DocumentException, IOException {
-		try{
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            openPDFs();
-        	//TODO: progress bar?    	
-        	BufferedReader listReader = new BufferedReader(new FileReader(pdfd.getscoresFile()));
-            String currentLine;
-            while ((currentLine = listReader.readLine()) != null){
-                String[] bits = currentLine.split("\t");
-                String snp = bits[0];
-                String score  = bits[1];
+		NumberFormat nf = NumberFormat.getInstance(Locale.US);
+		
+		BufferedReader listReader = new BufferedReader(new FileReader(pdfd.getscoresFile()));
+		
+		Hashtable<String,String> scoreList = new Hashtable<String,String>();  
+		
+		String currentLine;
+		while ((currentLine = listReader.readLine()) != null){
+			String[] bits = currentLine.split("\t");
+			scoreList.put(bits[0],bits[1]);
+		}
+				
+		//TODO: progress bar in pdf dialog
+		ProgressMonitor pm = new ProgressMonitor(this,"Exporting plots to PDF","", 0, scoreList.size());
+		// if the wait is > 5 seconds open dialog
+		pm.setMillisToDecideToPopup(5000); 
+		
+		openPDFs();
+		
+		File temp = File.createTempFile("temp", "png");
+		temp.deleteOnExit();
+		
+		Enumeration keys = scoreList.keys();
+		int progressCounter = 1;
+		
+		while(keys.hasMoreElements()) {
+			String snp = (String)keys.nextElement();
+			String score = (String)scoreList.get( snp );
+
+			//TODO make sure the snp is in the current data set      
+			System.out.println(snp + "  " + score);
+			
+			if (pdfd.allPlots()) {
+				allPDF.getDocument().add(new Paragraph(snp));
+			}
+			if (score.contains("1") && pdfd.yesPlots()) {
+				yesPDF.getDocument().add(new Paragraph(snp));
+			}
+			if (score.contains("0") && pdfd.maybePlots()) {
+				maybePDF.getDocument().add(new Paragraph(snp));
+			}
+			if (score.contains("-1") && pdfd.noPlots()) {
+				noPDF.getDocument().add(new Paragraph(snp));
+			}
+                                
+			for (String collection : db.getCollections()){
+				PlotData pd = db.getRecord(snp, collection, getCoordSystem());
+				XYSeriesCollection xysc = pd.generatePoints();
+				String xlab;
+				String ylab;
+                    
+				if(pd.getCoordSystem().matches("POLAR")) {
+					xlab = String.valueOf("\u03F4");
+					ylab = String.valueOf("r");
+				} else {
+					xlab = String.valueOf("X");
+					ylab = String.valueOf("Y");
+				}
+                    
+				JFreeChart chart = ChartFactory.createScatterPlot(collection, xlab, ylab, xysc, PlotOrientation.VERTICAL, false, false, false);
+				chart.addSubtitle(new TextTitle("(n="+ pd.getSampleNum()+")"));
+                      
+				XYPlot thePlot = chart.getXYPlot();
+				thePlot.setBackgroundPaint(Color.white);
+				thePlot.setOutlineVisible(false);
+                    
+				XYItemRenderer xyd = thePlot.getRenderer();
+				Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
+				xyd.setSeriesShape(0, dot);
+				xyd.setSeriesShape(1, dot);
+				xyd.setSeriesShape(2, dot);
+				xyd.setSeriesShape(3, dot);
+				xyd.setSeriesPaint(0, Color.BLUE);
+				xyd.setSeriesPaint(1, new Color(180,180,180));
+				xyd.setSeriesPaint(2, Color.GREEN);
+				xyd.setSeriesPaint(3, Color.RED);
+                    
+				ChartUtilities.saveChartAsPNG(temp, chart, 350, 200);
+                    
+				Image image = Image.getInstance(temp.getAbsolutePath());
+				
+				
+				
+				Paragraph stats = new Paragraph();
+				stats.add("MAF: " + nf.format(pd.getMaf()));
+				stats.add("\tGPC: " + nf.format(pd.getGenopc()));
+				stats.add("\tHWE pval: " + nf.format(pd.getHwpval()));
+				
+				if (pdfd.allPlots()) {
+					allPDF.getDocument().add(image);
+					allPDF.getDocument().add(stats);
+				}
+				if (score.contains("1") && pdfd.yesPlots()) {
+					yesPDF.getDocument().add(image);
+					yesPDF.getDocument().add(stats);
+					yesPlotNum++;
+				}
+				if (score.contains("0") && pdfd.maybePlots()) {
+					maybePDF.getDocument().add(image);
+					maybePDF.getDocument().add(stats);
+					maybePlotNum++;
+				}
+				if (score.contains("-1") && pdfd.noPlots()) {
+					noPDF.getDocument().add(image);
+					noPDF.getDocument().add(stats);
+					noPlotNum++;
+				}
+
+			}
                 
-                //TODO make sure the snp is in the current data set      
-                System.out.println(snp + "  " + score);
-                // create plot panel
-                plotIntensitas(snp);
-                JFrame test = new JFrame();
-                test.add(plotArea);
-                test.setVisible(true);
-                
-                // print plot panel to pdf
-                if (pdfd.allPlots()) {
-        			allPDF.writePanel2PDF(plotArea);
-        		}
-        		if (score.contains("1") && pdfd.yesPlots()) {
-        			yesPDF.writePanel2PDF(plotArea);
-        			yesPlotNum++;
-        		}
-        		if (score.contains("0") && pdfd.maybePlots()) {
-        			maybePDF.writePanel2PDF(plotArea);
-        			maybePlotNum++;
-        		}
-        		if (score.contains("-1") && pdfd.noPlots()) {
-        			noPDF.writePanel2PDF(plotArea);
-        			noPlotNum++;
-        		}
-            }
-            System.out.println(yesPlotNum + "  " + maybePlotNum + "  " + noPlotNum);
-            listReader.close();
-        	closePDFs();
-        }finally{
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        }
-	}
+			if (pdfd.allPlots()) {
+				allPDF.getDocument().newPage();
+			}
+			if (score.contains("1") && pdfd.yesPlots()) {
+				yesPDF.getDocument().newPage();
+			}
+			if (score.contains("0") && pdfd.maybePlots()) {
+				maybePDF.getDocument().newPage();
+			}
+			if (score.contains("-1") && pdfd.noPlots()) {
+				noPDF.getDocument().newPage();
+			}
+			
+			String message = String.format("Completed %d%%.\n", progressCounter/scoreList.size());
+			pm.setNote(message);
+			pm.setProgress(progressCounter);
+			progressCounter++;
+			
+			if (pm.isCanceled()) {
+			    pm.close();
+			    listReader.close();
+				closePDFs();
+			}                
+		}
+		System.out.println(yesPlotNum + "  " + maybePlotNum + "  " + noPlotNum);
+                       
+		listReader.close();
+		closePDFs();
+    }
 	
 	private void printScores() {
     	Enumeration<String> snps = listScores.keys();
@@ -467,7 +571,7 @@ public class Genoplot extends JFrame implements ActionListener {
         }
         output.close();
         // now you can convert these scores into a pdf
-        //exportPDF.setEnabled(true);
+        exportPDF.setEnabled(true);
     }
 	
 	private void setMarkerList(boolean marker) {
@@ -790,6 +894,7 @@ public class Genoplot extends JFrame implements ActionListener {
         listReader.close();
         
         setMarkerList(true);
+        listScores.clear();
 
         try{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -821,6 +926,7 @@ public class Genoplot extends JFrame implements ActionListener {
             Vector<PlotPanel> plots = new Vector<PlotPanel>();
             double maxdim=-100000;
             double mindim=100000;
+                        
             for (String c : v){
                 PlotPanel pp = new PlotPanel(c,db.getRecord(name, c, getCoordSystem()));
 
