@@ -37,7 +37,7 @@ public class PlotPanel extends JPanel {
     PlotPanel(String title, PlotData pd){
         this.title = title;
         this.data = pd;
-        if(pd.getCoordSystem().matches("POLAR")) {
+        if(data.getCoordSystem().matches("POLAR")) {
         	this.xlab = String.valueOf("\u03F4");
             this.ylab = String.valueOf("r");
         } else {
@@ -127,9 +127,15 @@ public class PlotPanel extends JPanel {
     public void setDimensions(double min, double max){
         if (jfc != null){
             jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab,min,max));
-            jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab,min,max));
-            jfc.getXYPlot().getDomainAxis().setRange(min,max);
-            jfc.getXYPlot().getRangeAxis().setRange(min,max);
+            jfc.getXYPlot().getRangeAxis().setRange(min,max);            
+            if(data.getCoordSystem().matches("POLAR")) {
+            	jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab,0,2));
+            	jfc.getXYPlot().getDomainAxis().setRange(0,2);
+            }else{
+            	jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab,min,max));
+            	jfc.getXYPlot().getDomainAxis().setRange(min,max);
+            }
+            
         }
     }
 
