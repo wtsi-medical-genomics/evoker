@@ -341,12 +341,20 @@ public class Genoplot extends JFrame implements ActionListener {
                 displaySNPindex = currentSNPindex;
             	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
-                    loadList(jfc.getSelectedFile().getAbsolutePath());
+                    String markerList = jfc.getSelectedFile().getAbsolutePath();
+                	File outfile = checkOverwriteFile(new File(jfc.getSelectedFile().getAbsolutePath()+".scores"));
+                    try{
+                    	if(outfile != null){
+                    		loadList(markerList);
+                    		FileOutputStream fos = new FileOutputStream(outfile);
+                            output = new PrintStream(fos);
+                    	}else {
+                    		throw new IOException();
+                    	}	
+                    }catch (IOException ioe){
+                        throw new IOException("No score file selected");
+                    }
                 }
-                File outfile = checkOverwriteFile(new File(jfc.getSelectedFile().getAbsolutePath()+".scores"));
-                FileOutputStream fos = new FileOutputStream(outfile);
-                output = new PrintStream(fos);
-                
             }else if (command.equals("Load sample exclude list")) {
             	jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
             	if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
@@ -438,12 +446,12 @@ public class Genoplot extends JFrame implements ActionListener {
 		//TODO: progress bar in pdf dialog
 		ProgressMonitor pm = new ProgressMonitor(this,"Exporting plots to PDF","", 0, scoreList.size());
 		// if the wait is > 5 seconds open dialog
-		pm.setMillisToDecideToPopup(5000); 
+		//pm.setMillisToDecideToPopup(5000); 
 		
 		openPDFs();
 		
-		File temp = File.createTempFile("temp", "png");
-		temp.deleteOnExit();
+		File tempFile = File.createTempFile("temp", "png");
+		tempFile.deleteOnExit();
 		
 		Enumeration keys = scoreList.keys();
 		int progressCounter = 1;
@@ -471,9 +479,9 @@ public class Genoplot extends JFrame implements ActionListener {
 			for (String collection : db.getCollections()){
 				PlotData pd = db.getRecord(snp, collection, getCoordSystem());
 				XYSeriesCollection xysc = pd.generatePoints();
+				
 				String xlab;
 				String ylab;
-                    
 				if(pd.getCoordSystem().matches("POLAR")) {
 					xlab = String.valueOf("\u03F4");
 					ylab = String.valueOf("r");
@@ -488,7 +496,7 @@ public class Genoplot extends JFrame implements ActionListener {
 				XYPlot thePlot = chart.getXYPlot();
 				thePlot.setBackgroundPaint(Color.white);
 				thePlot.setOutlineVisible(false);
-                    
+                
 				XYItemRenderer xyd = thePlot.getRenderer();
 				Shape dot = new Ellipse2D.Double(-1.5,-1.5,3,3);
 				xyd.setSeriesShape(0, dot);
@@ -500,11 +508,9 @@ public class Genoplot extends JFrame implements ActionListener {
 				xyd.setSeriesPaint(2, Color.GREEN);
 				xyd.setSeriesPaint(3, Color.RED);
                     
-				ChartUtilities.saveChartAsPNG(temp, chart, 350, 200);
+				ChartUtilities.saveChartAsPNG(tempFile, chart, 350, 200);
                     
-				Image image = Image.getInstance(temp.getAbsolutePath());
-				
-				
+				Image image = Image.getInstance(tempFile.getAbsolutePath());
 				
 				Paragraph stats = new Paragraph();
 				stats.add("MAF: " + nf.format(pd.getMaf()));
@@ -546,8 +552,8 @@ public class Genoplot extends JFrame implements ActionListener {
 				noPDF.getDocument().newPage();
 			}
 			
-			String message = String.format("Completed %d%%.\n", progressCounter/scoreList.size());
-			pm.setNote(message);
+			//String message = String.format("Completed %d%%.\n", progressCounter/scoreList.size());
+			//pm.setNote(message);
 			pm.setProgress(progressCounter);
 			progressCounter++;
 			
@@ -635,6 +641,8 @@ public class Genoplot extends JFrame implements ActionListener {
         	if (n == 1) {		
         		if (jfc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION){
         			file = new File(jfc.getSelectedFile().getAbsolutePath());
+                } else {
+                	file = null;
                 }
         	}
         }
