@@ -358,7 +358,7 @@ public class DataDirectory {
             return pd;
         	
         }else{
-            return new PlotData(null,null,null,null,null,null);
+            return new PlotData(null,null,null,null,null,"null");
         }
     }
 
