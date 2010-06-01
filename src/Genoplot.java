@@ -451,8 +451,8 @@ public class Genoplot extends JFrame implements ActionListener {
 			scoreList.put(bits[0],bits[1]);
 		}
 		Enumeration<String> keys = scoreList.keys();
-		ProgressMonitor pm       = new ProgressMonitor(Genoplot.this,"Exporting plots to PDF","", 0, scoreList.size());
-		int progressCounter      = 1;
+		ProgressMonitor pm       = new ProgressMonitor(null,"Exporting plots to PDF","", 0, scoreList.size());
+		int progressCounter      = 0;
 		
 		openPDFs();
 		
@@ -463,9 +463,8 @@ public class Genoplot extends JFrame implements ActionListener {
 			String snp   = (String)keys.nextElement();
 			String score = (String)scoreList.get(snp);
 
-			//TODO make sure the snp is in the current data set      
-			System.out.println(snp + "  " + score);
-			
+			//TODO check the user has loaded a valid score file for the currently loaded data      
+						
 			Vector<Image> images = new Vector<Image>();
 			Vector<String> stats = new Vector<String>();
 			
@@ -521,21 +520,11 @@ public class Genoplot extends JFrame implements ActionListener {
 				noPlotNum++;
 			}
 			
-			//String message = String.format("Completed %d%%.\n", progressCounter/scoreList.size());
-			//pm.setNote(message);
-			pm.setProgress(progressCounter);
 			progressCounter++;
-			
-			if (pm.isCanceled()) {
-				System.out.println("here");	
-				pm.close();
-			    listReader.close();
-				closePDFs();
-			}                
+			System.out.println(progressCounter);
+			pm.setProgress(progressCounter);
 		}
-		System.out.println(yesPlotNum + "  " + maybePlotNum + "  " + noPlotNum);
-                       
-		listReader.close();
+        listReader.close();
 		closePDFs();
     }
 	
@@ -547,8 +536,6 @@ public class Genoplot extends JFrame implements ActionListener {
           output.println(snp + "\t" + listScores.get(snp));
         }
         output.close();
-        // now you can convert these scores into a pdf
-        exportPDF.setEnabled(true);
     }
 	
 	private void setMarkerList(boolean marker) {
@@ -764,6 +751,7 @@ public class Genoplot extends JFrame implements ActionListener {
             saveAll.setEnabled(true);
             viewCart.setEnabled(true);
             viewPolar.setEnabled(true);
+            exportPDF.setEnabled(true);
             while(historyMenu.getMenuComponentCount() > 2){
                 historyMenu.remove(2);
             }
