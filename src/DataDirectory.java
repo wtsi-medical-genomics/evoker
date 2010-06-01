@@ -366,6 +366,10 @@ public class DataDirectory {
         Vector<String> r = new Vector<String>(samplesByCollection.keySet());
         return r;
     }
+    
+    public int getNumCollections() {
+    	return samplesByCollection.size();
+    }
 
     public void listNotify(final LinkedList<String> list) throws IOException{
         if (dc != null){
