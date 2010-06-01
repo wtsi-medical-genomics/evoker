@@ -37,7 +37,8 @@ public class PlotPanel extends JPanel {
     PlotPanel(String title, PlotData pd){
         this.title = title;
         this.data = pd;
-        if(data.getCoordSystem().matches("POLAR")) {
+        
+        if(pd.getCoordSystem().matches("POLAR")) {
         	this.xlab = String.valueOf("\u03F4");
             this.ylab = String.valueOf("r");
         } else {
@@ -72,7 +73,7 @@ public class PlotPanel extends JPanel {
         ChartUtilities.saveChartAsPNG(f, jfc,400,400);
     }
 
-    private JPanel generateInfo(){
+    public JPanel generateInfo(){
         JPanel foo = new JPanel();
         foo.setBackground(Color.white);
         foo.add(new JLabel("MAF: " + nf.format(data.getMaf())));
@@ -81,7 +82,12 @@ public class PlotPanel extends JPanel {
 
         return foo;
     }
-
+    
+    public String generateInfoStr(){
+    	return "MAF: " + nf.format(data.getMaf()) + "\tGPC: " + nf.format(data.getGenopc()) + "\tHWE pval: " + formatPValue(data.getHwpval());
+    }
+    
+    
     private ChartPanel generatePlot(XYSeriesCollection xysc) {
     	
         jfc = ChartFactory.createScatterPlot(title, xlab, ylab, xysc,
@@ -161,4 +167,8 @@ public class PlotPanel extends JPanel {
             return data.getIndInClass(series,item);
         }
     }
+
+	public JFreeChart getChart() {
+		return jfc;
+	}
 }
