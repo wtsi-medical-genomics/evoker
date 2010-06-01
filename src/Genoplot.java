@@ -24,9 +24,11 @@ import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
 import java.text.NumberFormat;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Vector;
 import java.util.LinkedList;
@@ -284,7 +286,13 @@ public class Genoplot extends JFrame implements ActionListener {
         try{
             String command = actionEvent.getActionCommand();
             if (command.equals("Go")){
-                plotIntensitas(snpField.getText().trim());
+            	if (markerListLoaded()) {
+            		if(snpList.contains(snpField.getText().trim())){
+                		setHistorySNP(true);
+                		displaySNPindex = snpList.indexOf(snpField.getText().trim());	
+                	}
+            	}
+            	plotIntensitas(snpField.getText().trim());
             }else if (command.equals("No")){
                 noButton.requestFocusInWindow();
                 recordVerdict(-1);
@@ -310,7 +318,7 @@ public class Genoplot extends JFrame implements ActionListener {
             	}            	
             	plotIntensitas(snpList.get(displaySNPindex));
             }else if (command.equals("Return to current list position")){
-                plotIntensitas(currentSNPinList);
+                plotIntensitas(snpList.get(currentSNPindex));
             }else if (command.equals("Random")){
                 plotIntensitas(db.getRandomSNP());
             }else if (command.startsWith("PLOTSNP")){
@@ -497,17 +505,17 @@ public class Genoplot extends JFrame implements ActionListener {
 				allPDF.getDocument().add(table);
 				allPDF.getDocument().newPage();
 			}
-			if (score.contains("1") && pdfd.yesPlots()) {			
+			if (score.matches("1") && pdfd.yesPlots()) {			
 				yesPDF.getDocument().add(table);
 				yesPDF.getDocument().newPage();
 				yesPlotNum++;
 			}
-			if (score.contains("0") && pdfd.maybePlots()) {			
+			if (score.matches("0") && pdfd.maybePlots()) {			
 				maybePDF.getDocument().add(table);
 				maybePDF.getDocument().newPage();
 				maybePlotNum++;
 			}
-			if (score.contains("-1") && pdfd.noPlots()) {
+			if (score.matches("-1") && pdfd.noPlots()) {
 				noPDF.getDocument().add(table);
 				noPDF.getDocument().newPage();
 				noPlotNum++;
@@ -532,9 +540,10 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 	
 	private void printScores() {
-    	Enumeration<String> snps = listScores.keys();
-        while (snps.hasMoreElements()){
-          String snp = (String) snps.nextElement();
+		ListIterator<String> snpi = snpList.listIterator();
+    	
+        while (snpi.hasNext()){
+          String snp = (String) snpi.next();
           output.println(snp + "\t" + listScores.get(snp));
         }
         output.close();
@@ -555,8 +564,12 @@ public class Genoplot extends JFrame implements ActionListener {
 			yesButton.setEnabled(true);
             noButton.setEnabled(true);
             maybeButton.setEnabled(true);
-            backButton.setEnabled(true);
             scorePanel.setEnabled(true);
+            if (currentSNPindex == 0 || displaySNPindex == 0) {
+            	backButton.setEnabled(false);
+            }else{
+            	backButton.setEnabled(true);
+            }
 		} else {
 			yesButton.setEnabled(false);
             noButton.setEnabled(false);
@@ -649,6 +662,8 @@ public class Genoplot extends JFrame implements ActionListener {
             	if (n == 0) {
             		printScores();
             		setMarkerList(false);
+            		randomSNPButton.setEnabled(true);
+            		snpList.clear();
             	} else {
             		activeScorePanel(true);
             		plotIntensitas(snpList.get(currentSNPindex));
@@ -707,7 +722,7 @@ public class Genoplot extends JFrame implements ActionListener {
     
     private void viewedSNP(String name){
 
-        boolean inHistory = false;
+    	boolean inHistory = false;
         for (Component i : historyMenu.getMenuComponents()){
             if (i instanceof  JMenuItem){
                 if (((JMenuItem)i).getText().equals(name)){
@@ -717,7 +732,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 }
             }
         }
-        
+       
         if (!inHistory){
             //new guy
             JRadioButtonMenuItem snpItem = new JRadioButtonMenuItem(name);
@@ -775,6 +790,15 @@ public class Genoplot extends JFrame implements ActionListener {
             	plotArea.add(new JLabel(name));
                 fetchRecord(name);
                 viewedSNP(name);
+                if (markerListLoaded()) {
+                	if (snpList.contains((String) name)) {
+                    	activeScorePanel(true);
+                    	plotArea.add(new JLabel((currentSNPindex + 1) + "/" + snpList.size()));
+                	}
+                }else {
+                	activeScorePanel(false);
+                }
+                
             }else{
                 //I tried very hard to get the label right in the middle and failed because java layouts blow
                 plotArea.add(Box.createVerticalGlue());
@@ -783,6 +807,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 p.setBackground(Color.WHITE);
                 plotArea.add(p);
                 plotArea.add(Box.createVerticalGlue());
+                activeScorePanel(false);
             }
         }
 
@@ -808,11 +833,9 @@ public class Genoplot extends JFrame implements ActionListener {
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             db.listNotify((LinkedList)snpList.clone());
             displaySNPindex = currentSNPindex;
+            randomSNPButton.setEnabled(false);
             plotIntensitas(snpList.get(currentSNPindex));
             returnToListPosition.setEnabled(true);
-            yesButton.setEnabled(true);
-            noButton.setEnabled(true);
-            maybeButton.setEnabled(true);
             yesButton.requestFocusInWindow();
         }finally{
             this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -828,7 +851,6 @@ public class Genoplot extends JFrame implements ActionListener {
             JPanel plotHolder = new JPanel();
             plotHolder.setBackground(Color.WHITE);
             plotArea.add(plotHolder);
-
 
             Vector<String> v = db.getCollections();
             Vector<PlotPanel> plots = new Vector<PlotPanel>();
