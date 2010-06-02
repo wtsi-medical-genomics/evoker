@@ -323,7 +323,13 @@ public class Genoplot extends JFrame implements ActionListener {
                 plotIntensitas(db.getRandomSNP());
             }else if (command.startsWith("PLOTSNP")){
                 String[] bits = command.split("\\s");
-                plotIntensitas(bits[1]);
+                if (markerListLoaded()) {
+            		if(snpList.contains(bits[1])){
+                		setHistorySNP(true);
+                		displaySNPindex = snpList.indexOf(bits[1]);	
+                	}
+            	}
+            	plotIntensitas(bits[1]);
             }else if (command.equals("Open directory")){
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
@@ -443,15 +449,21 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
 	private void generatePDFs() throws DocumentException, IOException {
+		//TODO check the user has loaded a valid score file for the currently loaded data
+		
 		BufferedReader listReader          = new BufferedReader(new FileReader(pdfd.getscoresFile()));
 		Hashtable<String,String> scoreList = new Hashtable<String,String>();  
+		
 		String currentLine;
 		while ((currentLine = listReader.readLine()) != null){
 			String[] bits = currentLine.split("\t");
 			scoreList.put(bits[0],bits[1]);
 		}
+		
 		Enumeration<String> keys = scoreList.keys();
-		ProgressMonitor pm       = new ProgressMonitor(null,"Exporting plots to PDF","", 0, scoreList.size());
+		
+		//TODO: get progress monitor to work
+		ProgressMonitor pm       = new ProgressMonitor(null,"Exporting plots to PDF",null,0,scoreList.size());
 		int progressCounter      = 0;
 		
 		openPDFs();
@@ -463,18 +475,27 @@ public class Genoplot extends JFrame implements ActionListener {
 			String snp   = (String)keys.nextElement();
 			String score = (String)scoreList.get(snp);
 
-			//TODO check the user has loaded a valid score file for the currently loaded data      
-						
 			Vector<Image> images = new Vector<Image>();
 			Vector<String> stats = new Vector<String>();
 			
 			for (String collection : db.getCollections()){
 				PlotPanel pp = new PlotPanel(collection,db.getRecord(snp,collection,getCoordSystem()));
 				pp.refresh();
-				pp.setDimensions(pp.getMinDim(),pp.getMaxDim());
-				ChartUtilities.saveChartAsPNG(tempFile, pp.getChart(), 400, 400);
-				images.add(Image.getInstance(tempFile.getAbsolutePath()));
-				stats.add(pp.generateInfoStr());
+				if (pp.hasData()){
+					pp.setDimensions(pp.getMinDim(),pp.getMaxDim());
+					ChartUtilities.saveChartAsPNG(tempFile, pp.getChart(), 400, 400);
+					images.add(Image.getInstance(tempFile.getAbsolutePath()));
+					stats.add(pp.generateInfoStr());
+				} else {
+					// print the jpanel displaying the no data message
+					BufferedImage noSNP = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
+            		Graphics2D g2 = noSNP.createGraphics();
+                	pp.paint(g2);
+                    g2.dispose();
+                    ImageIO.write(noSNP, "png", tempFile);
+                    images.add(Image.getInstance(tempFile.getAbsolutePath()));
+					stats.add("");
+				}
 			}
 			
 			PdfPTable table = new PdfPTable(images.size());
@@ -521,8 +542,8 @@ public class Genoplot extends JFrame implements ActionListener {
 			}
 			
 			progressCounter++;
-			System.out.println(progressCounter);
 			pm.setProgress(progressCounter);
+				
 		}
         listReader.close();
 		closePDFs();
