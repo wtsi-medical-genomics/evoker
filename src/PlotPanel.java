@@ -27,6 +27,7 @@ public class PlotPanel extends JPanel {
     private JFreeChart jfc;
     private PlotData data;
     private String title, xlab, ylab;
+    private boolean foundData;
     static NumberFormat nf = NumberFormat.getInstance(Locale.US);
     static {
         nf.setMaximumFractionDigits(2);
@@ -57,10 +58,12 @@ public class PlotPanel extends JPanel {
         this.removeAll();
         XYSeriesCollection xysc = data.generatePoints();
         if (xysc != null){
-            add(generatePlot(xysc));
+        	setFoundData(true);
+        	add(generatePlot(xysc));
             add(generateInfo());
         }else{
-            this.setBackground(Color.WHITE);
+            setFoundData(false);
+        	this.setBackground(Color.WHITE);
             add(Box.createVerticalGlue());
             JLabel l = new JLabel("No data found for "+title);
             l.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -69,7 +72,11 @@ public class PlotPanel extends JPanel {
         }
     }
 
-    void saveToFile(File f) throws IOException {
+    private void setFoundData(boolean b) {
+		foundData = b;
+	}
+
+	void saveToFile(File f) throws IOException {
         ChartUtilities.saveChartAsPNG(f, jfc,400,400);
     }
 
@@ -170,5 +177,9 @@ public class PlotPanel extends JPanel {
 
 	public JFreeChart getChart() {
 		return jfc;
+	}
+
+	public boolean hasData() {
+		return foundData;
 	}
 }
