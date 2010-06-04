@@ -18,9 +18,9 @@ public class LoggingDialog extends JDialog {
         ta.setLineWrap(true);
         ta.setWrapStyleWord(true);
 
-        ta.append("********************\n");
-        ta.append("Evoker...pre-release\n");
-        ta.append("********************\n\n");        
+        ta.append("*********\n");
+        ta.append("Evoker...\n");
+        ta.append("*********\n\n");        
     }
 
     public void log(String text){
