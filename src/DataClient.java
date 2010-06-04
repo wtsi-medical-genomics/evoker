@@ -29,6 +29,8 @@ public class DataClient{
     private List files;
     private boolean oxFormat;
     private String oxPlatform;
+    private Genoplot gp;
+    ProgressMonitor pm;
 
     public String getLocalDir() {
         return localDir;
@@ -41,10 +43,9 @@ public class DataClient{
     private String localDir;
 
 
-    public DataClient(DataConnectionDialog dcd) throws IOException{
+    public DataClient(DataConnectionDialog dcd, Genoplot genoplot) throws IOException{
         Logger.getLogger("com.sshtools").setLevel(Level.WARNING);
-
-
+        this.gp = genoplot;
         // Create a password authentication instance
         if (dcd.getUsername() != null){
             localDir = dcd.getLocalDirectory();
@@ -84,7 +85,7 @@ public class DataClient{
                 	Genoplot.ld.log("Files in the local directory");
                 	// ask the user if they wants it emptied
                 	int n = JOptionPane.showConfirmDialog(
-                			null, 
+                			genoplot.getContentPane(), 
                 			"The local directory selected is not empty.\n Would you like to clear all files in this directory?",
                 			"Clear the local directory?",
                 			JOptionPane.YES_NO_OPTION,
@@ -196,48 +197,66 @@ public class DataClient{
         return oxFormat;
     }
 
-    public File prepMetaFiles() throws IOException{
-        files = ftp.ls();
+	public File prepMetaFiles() throws IOException {
+		files = ftp.ls();
 
-        String famending = ".fam";
-        String bimending = ".bim";        
-        if (oxFormat){
-            famending = ".sample";
-            bimending = ".snp";
-        }
+		String famending = ".fam";
+		String bimending = ".bim";
+		if (oxFormat) {
+			famending = ".sample";
+			bimending = ".snp";
+		}
 
-        Iterator i = files.iterator();
-        while (i.hasNext()){
-            String filename = ((SftpFile)i.next()).getFilename();
-            if (filename.endsWith(famending)){
-                if (!new File(localDir+File.separator+filename).exists()){
-                    ftp.get(filename);
-                }
-            }
-        }
+		Iterator i = files.iterator();
+		while (i.hasNext()) {
+			String filename = ((SftpFile) i.next()).getFilename();
+			if (filename.endsWith(famending)) {
+				if (!new File(localDir + File.separator + filename).exists()) {
+					try {
+						ftp.get(filename);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
 
-        i = files.iterator();
-        while (i.hasNext()){
-            String filename = ((SftpFile)i.next()).getFilename();
-            if (filename.endsWith(bimending)){
-                if (!new File(localDir+File.separator+filename).exists()){
-                    ftp.get(filename);
-                }
-            }
-        }
-        
-        i = files.iterator();
-        while (i.hasNext()){
-            String filename = ((SftpFile)i.next()).getFilename();
-            if (filename.endsWith(".qc")){
-                if (!new File(localDir+File.separator+filename).exists()){
-                    ftp.get(filename);
-                }
-            }
-        }
-        
-        return new File(localDir);
-    }
+		}
+
+		i = files.iterator();
+		while (i.hasNext()) {
+			String filename = ((SftpFile) i.next()).getFilename();
+			if (filename.endsWith(bimending)) {
+				if (!new File(localDir + File.separator + filename).exists()) {
+					try {
+						ftp.get(filename);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
+		}
+
+		i = files.iterator();
+		while (i.hasNext()) {
+			String filename = ((SftpFile) i.next()).getFilename();
+			if (filename.endsWith(".qc")) {
+				if (!new File(localDir + File.separator + filename).exists()) {
+					try {
+						ftp.get(filename);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
+		}
+
+		return new File(localDir);
+	}
 
 	public void setOxPlatform(String oxPlatform) {
 		this.oxPlatform = oxPlatform;
