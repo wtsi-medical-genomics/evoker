@@ -103,7 +103,7 @@ public class DataClient{
                 }
                 displayName = dcd.getHost()+":"+remoteDir;
             }else{
-                 throw new IOException("Authentication to host "+dcd.getHost()+" failed.");
+                 throw new IOException("Authentication to host '"+dcd.getHost()+"' failed.");
             }
         }
     }
