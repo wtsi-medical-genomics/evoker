@@ -360,8 +360,7 @@ public class Genoplot extends JFrame implements ActionListener {
 			} else if (command.equals("Connect to remote server")) {
 				
 				final Genoplot gp = this;
-				
-				disableAllActions();
+						
 				// when loading only allow the user to view the log
 				showLogItem.setEnabled(true);
 				
@@ -375,6 +374,7 @@ public class Genoplot extends JFrame implements ActionListener {
 						DataClient dc = new DataClient(dcd,gp);
 												
 						if (dc.getConnectionStatus()) {
+							disableAllActions();
 							db = new DataDirectory(dc);
 							finishLoadingDataSource();	
 						}
@@ -530,7 +530,7 @@ public class Genoplot extends JFrame implements ActionListener {
 		loadScores(pdfd.getscoresFile());
 		
 		pm = new ProgressMonitor(this.getContentPane(),"Exporting plots to PDF", null, 0, pdfScores.size());
-
+				
 		SwingWorker pdfWorker = new SwingWorker() {
 
 			public Object doInBackground() {
@@ -634,7 +634,8 @@ public class Genoplot extends JFrame implements ActionListener {
 							noPDF.getDocument().newPage();
 							noPlotNum++;
 						}
-						pm.setProgress(progressCounter++);
+						progressCounter++;
+						pm.setProgress(progressCounter);
 					}
 					closePDFs();
 				} catch (Exception e) {
