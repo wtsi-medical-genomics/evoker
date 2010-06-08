@@ -131,6 +131,10 @@ The first SNP on the list, ``snp0'' should be plotted. Choose from the three app
 
 If you make a mistake and select the wrong verdict for a SNP you can select the back button to return to any previously plotted SNPs in the list and re-score the SNP. If you view a SNP not in the list the approval controls will be disabled until you've returned to the current list position, which can be done via a link in the \texttt{History} menu.
 
+\subsubsection{Export plots to PDF}
+
+It is possible to export intensity plots to PDF for every SNP in a scores file in Evoker. Using the command \texttt{Generate PDF from scores} in the \texttt{Tools} menu you are provided with a dialog for entering the path to the chosen scores file, the path to the output directory and which PDF files are to be generated. Users are able to generate up to four PDF files at a time; all SNPs in the scores file, only SNPs with a score of yes, only SNPs with a score of no and only SNPs with a score of maybe.  
+
 \subsubsection{Excluding samples by list}
 Using Evoker you can view the impact that excluding certain samples (for example samples with a poor quality control score) has on clusters. To achieve this Evoker is able to read in a \texttt{.qc} file, this file is simply a list of the sample identifiers corresponding to the \texttt{.fam} file. Once this file is loaded the selected samples are excluded from all following plots while filtering remains turned on.
 
