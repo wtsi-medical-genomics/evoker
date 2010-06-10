@@ -360,40 +360,38 @@ public class Genoplot extends JFrame implements ActionListener {
 			} else if (command.equals("Connect to remote server")) {
 				
 				final Genoplot gp = this;
-						
-				// when loading only allow the user to view the log
-				showLogItem.setEnabled(true);
-				
-				// put loading data into a swing worker so that evoker does not hang when loading lots of data
-				SwingWorker dataclientWorker = new SwingWorker() {
 
+				// put loading data into a swing worker so that evoker does not hang when loading lots of data
+				new SwingWorker() {
+					
+					Exception pendingException = null;
+					
 					public Object doInBackground() throws Exception{
-						dcd.pack();
-						dcd.setVisible(true);
-						
-						DataClient dc = new DataClient(dcd,gp);
-												
-						if (dc.getConnectionStatus()) {
-							disableAllActions();
-							db = new DataDirectory(dc);
-							finishLoadingDataSource();	
+						try {
+							dcd.pack();
+							dcd.setVisible(true);
+																					
+							DataClient dc = new DataClient(dcd,gp);
+													
+							if (dc.getConnectionStatus()) {
+								// when loading only allow the user to view the log
+								disableAllActions();
+								showLogItem.setEnabled(true);
+								db = new DataDirectory(dc);
+								finishLoadingDataSource();	
+							}
+						} catch(Exception e) {
+							pendingException = e;
 						}
 						return null;
 					}
 					
 					protected void done() {
-				      
-				          try {
-				            get();
-				          } catch (Exception e) {
-				        	  openDirectory.setEnabled(true);
-				        	  openRemote.setEnabled(true);				        	  
-				        	  Genoplot.ld.log(e.getMessage());				        	  
-				          }  
+						if (pendingException != null) {
+							JOptionPane.showMessageDialog(gp,pendingException.getMessage());
+						}
 					}
-				};
-				
-				dataclientWorker.execute();
+				}.execute();
 				
 			} else if (command.equals("Load marker list")) {
 				currentSNPindex = 0;
