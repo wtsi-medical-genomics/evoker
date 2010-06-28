@@ -96,6 +96,11 @@ public class DataDirectory {
         }
 
         Genoplot.ld.log("Using files in " + dc.getDisplayName());
+        
+        double freeMem = Runtime.getRuntime().freeMemory();
+        double totlMem = Runtime.getRuntime().totalMemory(); 
+        Genoplot.ld.log("Memory used:" + ((totlMem - freeMem)/1048576) + "MB");
+        
         displayName = dc.getDisplayName();
     }
 
@@ -198,7 +203,12 @@ public class DataDirectory {
             throw new IOException("Could not find all required files!\nSee log for details.");
         }
 
-        Genoplot.ld.log("Using files in " + filename);        
+        Genoplot.ld.log("Using files in " + filename);   
+        
+        double freeMem = Runtime.getRuntime().freeMemory();
+        double totlMem = Runtime.getRuntime().totalMemory(); 
+        Genoplot.ld.log("Memory used:" + ((totlMem - freeMem)/1048576) + "MB");
+        
         displayName = filename;
 
     }
