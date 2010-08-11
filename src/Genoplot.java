@@ -205,7 +205,7 @@ public class Genoplot extends JFrame implements ActionListener {
 		setJMenuBar(mb);
 		
 		settingsMenu = new JMenu("Settings");
-		plotSize = new JMenuItem("Set plot dimentions");
+		plotSize = new JMenuItem("Plot settings");
 		plotSize.addActionListener(this);
 		plotSize.setEnabled(true);
 		settingsMenu.add(plotSize);
@@ -488,7 +488,7 @@ public class Genoplot extends JFrame implements ActionListener {
 			} else if (command.equals("Polar coordinates")) {
 				setCoordSystem("POLAR");
 				refreshPlot();
-			} else if (command.equals("Set plot dimentions")) {
+			} else if (command.equals("Plot settings")) {
 				sd.pack();
 				sd.setVisible(true);
 				
