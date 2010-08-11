@@ -59,6 +59,7 @@ public class Genoplot extends JFrame implements ActionListener {
 	DataConnectionDialog dcd;
 	PDFDialog pdfd;
 	ProgressMonitor pm;
+	SettingsDialog sd;
 
 	private JPanel scorePanel;
 	private JPanel messagePanel;
@@ -83,6 +84,8 @@ public class Genoplot extends JFrame implements ActionListener {
 	private ButtonGroup snpGroup;
 	private JMenuItem returnToListPosition;
 	private JMenuItem showLogItem;
+	private JMenu settingsMenu;
+	private JMenuItem plotSize;
 
 	public static LoggingDialog ld;
 	private JButton randomSNPButton;
@@ -95,9 +98,11 @@ public class Genoplot extends JFrame implements ActionListener {
 	private int maybePlotNum;
 	private int noPlotNum;
 
-	// default
+	// default values
 	private String coordSystem = "CART";
-
+	private int plotHeight = 300;
+	private int plotWidth  = 300;
+	
 	public static void main(String[] args) {
 
 		new Genoplot();
@@ -110,7 +115,7 @@ public class Genoplot extends JFrame implements ActionListener {
 		jfc = new JFileChooser("user.dir");
 		dcd = new DataConnectionDialog(this);
 		pdfd = new PDFDialog(this);
-
+		sd = new SettingsDialog(this);
 		JMenuBar mb = new JMenuBar();
 
 		int menumask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
@@ -198,6 +203,13 @@ public class Genoplot extends JFrame implements ActionListener {
 		mb.add(logMenu);
 
 		setJMenuBar(mb);
+		
+		settingsMenu = new JMenu("Settings");
+		plotSize = new JMenuItem("Set plot dimentions");
+		plotSize.addActionListener(this);
+		plotSize.setEnabled(true);
+		settingsMenu.add(plotSize);
+		mb.add(settingsMenu);
 
 		JPanel controlsPanel = new JPanel();
 
@@ -272,6 +284,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
 		plotArea = new JPanel();
 		plotArea.setPreferredSize(new Dimension(700, 350));
+		
 		plotArea.setBorder(new LineBorder(Color.BLACK));
 		plotArea.setBackground(Color.WHITE);
 
@@ -471,14 +484,14 @@ public class Genoplot extends JFrame implements ActionListener {
 				}
 			} else if (command.equals("Cartesian coordinates")) {
 				setCoordSystem("CART");
-				if (currentSNP != null) {
-					plotIntensitas(currentSNP);
-				}
+				refreshPlot();
 			} else if (command.equals("Polar coordinates")) {
 				setCoordSystem("POLAR");
-				if (currentSNP != null) {
-					plotIntensitas(currentSNP);
-				}
+				refreshPlot();
+			} else if (command.equals("Set plot dimentions")) {
+				sd.pack();
+				sd.setVisible(true);
+				
 			} else if (command.equals("Show Evoker log")) {
 				ld.setVisible(true);
 			} else if (command.equals("Quit")) {
@@ -564,9 +577,7 @@ public class Genoplot extends JFrame implements ActionListener {
 						Vector<String> stats = new Vector<String>();
 
 						for (String collection : db.getCollections()) {
-							PlotPanel pp = new PlotPanel(collection, db
-									.getRecord(snp, collection,
-											getCoordSystem()));
+							PlotPanel pp = new PlotPanel(collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight);
 							pp.refresh();
 							if (pp.hasData()) {
 								pp.setDimensions(pp.getMinDim(), pp.getMaxDim());
@@ -576,8 +587,7 @@ public class Genoplot extends JFrame implements ActionListener {
 							} else {
 								// print the jpanel displaying the no data
 								// message
-								BufferedImage noSNP = new BufferedImage(400,
-										400, BufferedImage.TYPE_INT_RGB);
+								BufferedImage noSNP = new BufferedImage(400,400, BufferedImage.TYPE_INT_RGB);
 								Graphics2D g2 = noSNP.createGraphics();
 								pp.paint(g2);
 								g2.dispose();
@@ -865,11 +875,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
 	private void finishLoadingDataSource() {
 		if (db != null) {
-			if (db.getCollections().size() == 3) {
-				this.setSize(new Dimension(1000, 420));
-			} else if (db.getCollections().size() == 4) {
-				this.setSize(new Dimension(700, 750));
-			}
+			setPlotAreaSize();
 			goButton.setEnabled(true);
 			randomSNPButton.setEnabled(true);
 			snpField.setEnabled(true);
@@ -988,9 +994,8 @@ public class Genoplot extends JFrame implements ActionListener {
 			double mindim = 100000;
 
 			for (String c : v) {
-				PlotPanel pp = new PlotPanel(c, db.getRecord(name, c,
-						getCoordSystem()));
-
+				PlotPanel pp = new PlotPanel(c, db.getRecord(name, c,getCoordSystem()), plotWidth, plotHeight);
+				
 				pp.refresh();
 				if (pp.getMaxDim() > maxdim) {
 					maxdim = pp.getMaxDim();
@@ -1012,4 +1017,42 @@ public class Genoplot extends JFrame implements ActionListener {
 			this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 	}
+
+	public void setPlotHeight(int ph) {
+		plotHeight = ph;
+	}
+
+	public void setPlotWidth(int pw) {
+		plotWidth = pw;
+		
+	}
+
+	public void setPlotAreaSize() { 
+		int windowWidth = 0;
+		int windowHeight = 0;
+		
+		if (db != null){
+			if (db.getCollections().size() == 3) {
+				windowWidth = (plotWidth * 3) + 2500;
+				windowHeight = plotHeight + 150;
+			} else if (db.getCollections().size() == 4) {
+				windowWidth = (plotWidth * 2) + 250;
+				windowHeight = (plotHeight * 2) + 150;
+			} else {
+				windowWidth = (plotWidth * 2) + 250;
+				windowHeight = plotHeight + 150;
+			} 
+		} else {
+			windowWidth = (plotWidth * 2) + 250;
+			windowHeight = plotHeight + 150;
+		}
+		this.setSize(new Dimension(windowWidth, windowHeight));
+	}
+	
+	public void refreshPlot() {
+		if (currentSNP != null) {
+			plotIntensitas(currentSNP);
+		}
+	}
+
 }
