@@ -40,8 +40,7 @@
   <!-- Compile the application -->
 
   <target name="compile-evoker" depends="prepare-compile">
-    <javac srcdir="${evoker.src}" destdir="${evoker.classes}"
-	   includes="**" debug="on" source="1.5" target="1.5">
+    <javac srcdir="${evoker.src}" destdir="${evoker.classes}" includes="**" debug="on" source="1.6" target="1.6">
       <classpath refid="library.classpath"/>
     </javac>
   </target>
