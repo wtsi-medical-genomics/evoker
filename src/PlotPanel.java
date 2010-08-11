@@ -35,7 +35,7 @@ public class PlotPanel extends JPanel {
     }
 
 
-    PlotPanel(String title, PlotData pd){
+    PlotPanel(String title, PlotData pd, int plotHeight, int plotWidth){
         this.title = title;
         this.data = pd;
         
@@ -47,11 +47,9 @@ public class PlotPanel extends JPanel {
             this.ylab = String.valueOf("Y");
         }
         
-        
-
         this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
-        this.setPreferredSize(new Dimension(300,300));
-        this.setMaximumSize(new Dimension(300,300));
+        this.setPreferredSize(new Dimension(plotHeight,plotWidth));
+        this.setMaximumSize(new Dimension(plotHeight,plotWidth));
     }
 
     void refresh(){
