@@ -161,26 +161,50 @@ public class PlotData {
 
     private void computeSummary(Vector<Byte> genos){
         double hom1 = 0, het = 0, hom2 = 0, missing = 0;
-        for (byte geno : genos){
-            if (geno == 0){
-                hom1++;
-            }else if (geno == 2){
-                het++;
-            }else if (geno == 3){
-                hom2++;
+        for (int i = 0; i < genos.size(); i++){
+        	byte geno = genos.get(i);	
+        	// check if there is a valid exclude file loaded
+            if (exclude != null) {
+            	// check if the sample should be excluded before adding points
+                if (!exclude.isExcluded(samples.getInd(i))) {
+                	if (geno == 0){
+                        hom1++;
+                    }else if (geno == 2){
+                        het++;
+                    }else if (geno == 3){
+                        hom2++;
+                    }else{
+                        missing++;
+                    }
+                    genopc = 1 - (missing / (missing+hom1+het+hom2));
+                    double tmpmaf = ((2*hom1) + het) / ((2*het) + (2*hom1) + (2*hom2));
+                    if (tmpmaf < 0.5){
+                        maf = tmpmaf;
+                    }else{
+                        maf = 1 - tmpmaf;
+                    }
+                    hwpval = hwCalculate((int)hom1,(int)het,(int)hom2);
+                }
             }else{
-                missing++;
-            }
+            	if (geno == 0){
+                    hom1++;
+                }else if (geno == 2){
+                    het++;
+                }else if (geno == 3){
+                    hom2++;
+                }else{
+                    missing++;
+                }
+                genopc = 1 - (missing / (missing+hom1+het+hom2));
+                double tmpmaf = ((2*hom1) + het) / ((2*het) + (2*hom1) + (2*hom2));
+                if (tmpmaf < 0.5){
+                    maf = tmpmaf;
+                }else{
+                    maf = 1 - tmpmaf;
+                }
+                hwpval = hwCalculate((int)hom1,(int)het,(int)hom2);
+            }            	
         }
-        genopc = 1 - (missing / (missing+hom1+het+hom2));
-        double tmpmaf = ((2*hom1) + het) / ((2*het) + (2*hom1) + (2*hom2));
-        if (tmpmaf < 0.5){
-            maf = tmpmaf;
-        }else{
-            maf = 1 - tmpmaf;
-        }
-
-        hwpval = hwCalculate((int)hom1,(int)het,(int)hom2);
     }
 
     private double hwCalculate(int obsAA, int obsAB, int obsBB){
