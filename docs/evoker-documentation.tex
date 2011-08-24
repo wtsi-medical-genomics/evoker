@@ -189,6 +189,14 @@ If you load a SNP list while using a remote data source, Evoker will download th
 
 Users behind proxies should use an SSH tunnel to forward port 22 to another port (e.g. 2222). They can then connect to the remote machine by entering "localhost" in the host textbox and the new port in the port textbox. For further information on port forwarding see:\\\texttt{http://www.ssh.com/support/documentation/online/ssh/adminguide/32/Port\_Forwarding.html}
 
+\section{Manually genotype calling}
+
+In case you wish to conduct, respectively change, the genotype of individuals manually, you can lasso-select the data on the graph which is to be changed.  The target genotype can be specified afterwards in a menu prompt.\\
+To get into lasso-mode, right-klick on the concerned diagram and choose "Lasso Mode".  Switching back to the default zoom mode works the same way, by choosing "Zoom Mode".
+
+\subsection{Save changed BED Files}
+To then save the changes, go to "File\textgreater  Save BED..." and select the collection you wish to save.  To the filename you specified "[chromosome].bed" will be appended.  Only chromosomes in which you changed something will be saved.
+
 \section{Scoring intensity plots}
 The following section provides a few cluster plot examples to help users interpret their data. Generally, SNPs can be either hard or easy to call, depending on the properties of the clusters. Hard to call SNPs never produce accurate genotypes, but easy to call SNPs can contain errors introduced by the calling algorithm. Depending on what analysis is being performed, one might be interested in any or all of these categories.
 
