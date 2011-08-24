@@ -558,9 +558,12 @@ public class Genoplot extends JFrame implements ActionListener {
                 Enumeration<String> keys = pdfScores.keys();
                 try {
                     openPDFs();
-                } catch (DocumentException|IOException ex) {
+                } catch (DocumentException/*|IOException ex*/) {
                     ex.printStackTrace();
                     throw new IOException("Could not write PDF");
+                } catch (IOException ex){
+            	    ex.printStackTrace();
+            	    throw new IOException("Could not write PDF");
                 }
 
                 File tempFile = null;
