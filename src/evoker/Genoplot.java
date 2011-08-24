@@ -345,7 +345,6 @@ public class Genoplot extends JFrame implements ActionListener {
                 plotIntensitas(snpList.get(currentSNPindex));
             } else if (command.equals("Random")) {
                 plotIntensitas(db.getRandomSNP());
-                System.out.println();
             } else if (command.startsWith("PLOTSNP")) {
                 String[] bits = command.split("\\s");
                 if (markerListLoaded()) {
@@ -364,6 +363,7 @@ public class Genoplot extends JFrame implements ActionListener {
                             throw new IOException("Directory does not exist!");
                         }
                         db = new DataDirectory(jfc.getSelectedFile().getAbsolutePath());
+                        plottedSNP = null;
                         finishLoadingDataSource();
                         refreshSaveMenu();
                     } finally {
@@ -986,7 +986,6 @@ public class Genoplot extends JFrame implements ActionListener {
 
     private void dumpChanges() {
         if (plottedSNP != null) {
-            try{
             JPanel jp = (JPanel) plotArea.getComponent(1);
             
             Vector<String> collections = db.getCollections();
@@ -996,9 +995,6 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (plotData.changed) {
                     db.commitGenotypeChange(collections.get(i), plottedSNP, plotData.getGenotypeChanges());
                 }
-            }
-            }catch(Exception ex){
-                
             }
         }
     }
@@ -1035,7 +1031,6 @@ public class Genoplot extends JFrame implements ActionListener {
                 pp.setDimensions(mindim, maxdim);
                 plotHolder.add(pp);
             }
-            System.out.println();
         } catch (IOException ioe) {
             JOptionPane.showMessageDialog(this, ioe.getMessage(), "File error",
                     JOptionPane.ERROR_MESSAGE);
