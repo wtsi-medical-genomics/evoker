@@ -59,7 +59,7 @@
      <zipfileset src="resources/j2ssh-common.jar"/>
      <zipfileset src="resources/j2ssh-core.jar"/>
      <zipfileset src="resources/jcommon-1.0.15.jar"/>
-     <zipfileset src="resources/jfreechart-1.0.12.jar"/>
+     <zipfileset src="resources/jfreechart-1.0.13_lasso_select.jar"/>
    	 <zipfileset src="resources/iText-5.0.1.jar"/>
    </jar>
   </target>
