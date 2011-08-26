@@ -1,7 +1,7 @@
 package evoker;
 
 import java.io.*;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class BedfileDataFile extends BinaryDataFile{
 
@@ -24,12 +24,12 @@ public class BedfileDataFile extends BinaryDataFile{
         checkFile(bedMagic);
     }
 
-    public Vector<Byte> getRecord(String name){
-        //we subclass this so we can force the type of data in the Vector
+    public ArrayList<Byte> getRecord(String name){
+        //we subclass this so we can force the type of data in the ArrayList
         return super.getRecord(name);
     }
 
-    public Vector<Byte> getRecord(long snpIndex) throws IOException{
+    public ArrayList<Byte> getRecord(long snpIndex) throws IOException{
         //have index, now load bed file
         BufferedInputStream bedIS = new BufferedInputStream(new FileInputStream(file),8192);
 
@@ -63,7 +63,7 @@ public class BedfileDataFile extends BinaryDataFile{
         }
 
 
-        Vector<Byte> genos = new Vector<Byte>();
+        ArrayList<Byte> genos = new ArrayList<Byte>();
         for (int i = 0; i < numInds; i++){
             genos.add(snpData[i]);
         }

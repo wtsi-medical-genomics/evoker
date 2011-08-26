@@ -1,29 +1,23 @@
 package evoker;
 
-import evoker.PlotData;
 import javax.swing.*;
 
 //import com.sun.tools.javac.util.List;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
  * Manages all file information
  */
 public class DataDirectory {
-
-    Hashtable<String,Hashtable<String,? extends BinaryData>> intensityDataByCollectionChrom;  // fileName -> [chromosome -> BinaryFloatDataFile]
-    Hashtable<String,Hashtable<String, ? extends BinaryData>> genotypeDataByCollectionChrom;  // fileName -> [chromosome -> Bed/GenfileDataFile]
-    Hashtable<String,SampleData> samplesByCollection; // fileName -> SampleData
+    HashMap<String,HashMap<String,? extends BinaryData>> intensityDataByCollectionChrom;  // fileName -> [chromosome -> BinaryFloatDataFile]
+    HashMap<String,HashMap<String, ? extends BinaryData>> genotypeDataByCollectionChrom;  // fileName -> [chromosome -> Bed/GenfileDataFile]
+    HashMap<String,SampleData> samplesByCollection; // fileName -> SampleData
     
     /** Holds the changes being made to die data at Runtime */
     HashMap<String, HashMap<String, HashMap<String, HashMap<String, Byte>>>> changesByCollection = new HashMap<String, HashMap<String, HashMap<String, HashMap<String, Byte>>>>();   // collection -> chromosome -> snp -> [ind -> internal notation of genotype change]
@@ -41,7 +35,7 @@ public class DataDirectory {
 
         this.dc = dc;
         File directory = dc.prepMetaFiles();
-        Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
+        HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
 
         if (dc.isOxFormat()){
             int i = 0,a = 0;
@@ -67,8 +61,8 @@ public class DataDirectory {
         }
 
         for(String collection : samplesByCollection.keySet()){
-            Hashtable<String, RemoteBinaryFloatData> tmpIntensity = new Hashtable<String, RemoteBinaryFloatData>();
-            Hashtable<String, RemoteBedfileData> tmpGenotypes = new Hashtable<String, RemoteBedfileData>();
+            HashMap<String, RemoteBinaryFloatData> tmpIntensity = new HashMap<String, RemoteBinaryFloatData>();
+            HashMap<String, RemoteBedfileData> tmpGenotypes = new HashMap<String, RemoteBedfileData>();
             for (String chrom : knownChroms.keySet()){
             	String name;
             	if (dc.isOxFormat()){
@@ -127,7 +121,7 @@ public class DataDirectory {
         }
         
         //markerId
-        Hashtable<String,Boolean> knownChroms = parseMetaFiles(directory);
+        HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
         
         if (oxFiles){
             int i = 0,a = 0;
@@ -152,8 +146,8 @@ public class DataDirectory {
         }
         
         for(String collection : samplesByCollection.keySet()){
-            Hashtable<String, BinaryFloatDataFile> tmpIntensity = new Hashtable<String, BinaryFloatDataFile>();
-            Hashtable<String, BinaryDataFile> tmpGenotypes = new Hashtable<String, BinaryDataFile>();       
+            HashMap<String, BinaryFloatDataFile> tmpIntensity = new HashMap<String, BinaryFloatDataFile>();
+            HashMap<String, BinaryDataFile> tmpGenotypes = new HashMap<String, BinaryDataFile>();       
             for (String chrom : knownChroms.keySet()){
             	String name;
             	if (oxFiles){
@@ -251,20 +245,20 @@ public class DataDirectory {
      * @return  knownChromosomes   Chromosomes being contained
      * @throws IOException
      */
-    private Hashtable<String,Boolean> parseMetaFiles(File directory) throws IOException{
+    private HashMap<String,Boolean> parseMetaFiles(File directory) throws IOException{
 
         if (!directory.exists()){
             throw new IOException(directory.getName() + " does not exist!");
         }
 
-        intensityDataByCollectionChrom = new Hashtable<String, Hashtable<String, ? extends BinaryData>>();
-        genotypeDataByCollectionChrom = new Hashtable<String, Hashtable<String, ? extends BinaryData>>();
+        intensityDataByCollectionChrom = new HashMap<String, HashMap<String, ? extends BinaryData>>();
+        genotypeDataByCollectionChrom = new HashMap<String, HashMap<String, ? extends BinaryData>>();
 
-        samplesByCollection = new Hashtable<String,SampleData>();
+        samplesByCollection = new HashMap<String,SampleData>();
         int numberofCollections=0;
         File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
         for (File famFile : fams){
-            //stash all sample data in Hashtable keyed on collection name.
+            //stash all sample data in HashMap keyed on collection name.
             String name = famFile.getName().substring(0,famFile.getName().length()-4);
             samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(),false));
             numberofCollections++;
@@ -292,7 +286,7 @@ public class DataDirectory {
         	// for now just take the first qc file found, later load all qc files and list in the menu with the ability to select which file to use
         	File qcFile = qcfiles[0];
         	String name = qcFile.getName();
-        	// parse the qc file and store all the samples to exclude in a vector
+        	// parse the qc file and store all the samples to exclude in a ArrayList
         	this.setExcludeList(new QCFilterData(qcFile.getAbsolutePath()));
         	// turn filtering on
         	this.setFilterState(true);
@@ -301,7 +295,7 @@ public class DataDirectory {
 
         //what chromosomes do we have here?
         File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
-        Hashtable<String,Boolean> knownChroms  = new Hashtable<String,Boolean>();
+        HashMap<String,Boolean> knownChroms  = new HashMap<String,Boolean>();
         byte counter = 0;
         for (File bimFile : bims){
             String[] chunks = bimFile.getName().split("\\.");
@@ -405,7 +399,7 @@ public class DataDirectory {
         	long start = System.currentTimeMillis();
                 
                 // get the previously made changes and apply them.
-                Vector record = genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+                ArrayList record = genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
                 SampleData samples = samplesByCollection.get(collection);
                 
                 if(changesByCollection.containsKey(collection)){
@@ -435,8 +429,8 @@ public class DataDirectory {
         }
     }
 
-    public Vector<String> getCollections(){
-        Vector<String> r = new Vector<String>(samplesByCollection.keySet());
+    public ArrayList<String> getCollections(){
+        ArrayList<String> r = new ArrayList<String>(samplesByCollection.keySet());
         return r;
     }
     

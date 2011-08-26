@@ -1,6 +1,6 @@
 package evoker;
 
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -44,12 +44,12 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         checkFile(bntMagic);
     }
 
-    public Vector<float[]> getRecord(String name){
-        //we subclass this so we can force the type of data in the Vector
+    public ArrayList<float[]> getRecord(String name){
+        //we subclass this so we can force the type of data in the ArrayList
         return super.getRecord(name);
     }
 
-    Vector<float[]> getRecord(long snpIndex) throws IOException{
+    ArrayList<float[]> getRecord(long snpIndex) throws IOException{
         BufferedInputStream intIS;
         
         if (this.isCompressed()){	
@@ -73,7 +73,7 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         ByteBuffer rawDataBuffer = ByteBuffer.wrap(rawData);
         rawDataBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        Vector<float[]> record = new Vector<float[]>();
+        ArrayList<float[]> record = new ArrayList<float[]>();
         for (int i = 0; i < numInds; i++){
             float[] send = new float[valuesPerEntry];
             for (int j = 0; j < valuesPerEntry; j++){

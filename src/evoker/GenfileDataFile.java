@@ -3,7 +3,7 @@ package evoker;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
 
@@ -32,10 +32,10 @@ public class GenfileDataFile extends BinaryDataFile{
         
     }
 
-	public Vector<Byte> getRecord(long snpIndex) throws IOException{
+	public ArrayList<Byte> getRecord(long snpIndex) throws IOException{
         //have index, now load gen file
 		BufferedInputStream genIS;
-		Vector<Byte> genos = new Vector<Byte>();
+		ArrayList<Byte> genos = new ArrayList<Byte>();
 		
         if (this.isCompressed()){
         	

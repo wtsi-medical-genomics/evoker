@@ -1,6 +1,6 @@
 package evoker;
 
-import java.util.Vector;
+import java.util.ArrayList;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -20,7 +20,7 @@ public class RemoteBedfileData extends RemoteBinaryData {
     }
 
 
-    public Vector<Byte> getRecord(String name)throws IOException{
+    public ArrayList<Byte> getRecord(String name)throws IOException{
         int snpIndex = md.getIndex(name,md.getSampleCollectionIndex(collection));
 
         if (snpIndex > -1){

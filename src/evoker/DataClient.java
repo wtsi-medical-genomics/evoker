@@ -13,8 +13,6 @@ import com.sshtools.j2ssh.transport.IgnoreHostKeyVerification;
 
 import javax.swing.*;
 
-import sun.util.calendar.BaseCalendar.Date;
-
 import java.io.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;

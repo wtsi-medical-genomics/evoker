@@ -28,11 +28,12 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Locale;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import org.jfree.ui.ExtensionFileFilter;
 
@@ -52,7 +53,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private boolean backSNP = false;
     private boolean historySNP = false;
     private boolean markerList = false;
-    private Hashtable<String, Integer> listScores = new Hashtable<String, Integer>();
+    private HashMap<String, Integer> listScores = new HashMap<String, Integer>();
     private Hashtable<String, String> pdfScores;
     JFileChooser jfc;
     DataConnectionDialog dcd;
@@ -495,7 +496,7 @@ public class Genoplot extends JFrame implements ActionListener {
             } else if (command.equals("Quit")) {
                 System.exit(0);
             } else {
-                Vector<String> collections = db.getCollections();
+                ArrayList<String> collections = db.getCollections();
                 for (String s : collections) {
                     if (command.equals(s)) {
                         dumpChanges();
@@ -582,8 +583,8 @@ public class Genoplot extends JFrame implements ActionListener {
                         String snp = (String) keys.nextElement();
                         String score = (String) pdfScores.get(snp);
 
-                        Vector<Image> images = new Vector<Image>();
-                        Vector<String> stats = new Vector<String>();
+                        ArrayList<Image> images = new ArrayList<Image>();
+                        ArrayList<String> stats = new ArrayList<String>();
 
                         for (String collection : db.getCollections()) {
                             PlotPanel pp = new PlotPanel(collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight);
@@ -991,7 +992,7 @@ public class Genoplot extends JFrame implements ActionListener {
         if (plottedSNP != null) {
             JPanel jp = (JPanel) plotArea.getComponent(1);
             
-            Vector<String> collections = db.getCollections();
+            ArrayList<String> collections = db.getCollections();
             for (int i = 0; i < collections.size(); i++) {
                 PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
                 PlotData plotData = plotPanel.getPlotData();
@@ -1012,8 +1013,8 @@ public class Genoplot extends JFrame implements ActionListener {
             plotHolder.setBackground(Color.WHITE);
             plotArea.add(plotHolder);
 
-            Vector<String> v = db.getCollections();
-            Vector<PlotPanel> plots = new Vector<PlotPanel>();
+            ArrayList<String> v = db.getCollections();
+            ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
             double maxdim = -100000;
             double mindim = 100000;
 
@@ -1044,7 +1045,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
     private void refreshSaveMenu() {
         saveMenu.removeAll();
-        Vector<String> v = db.getCollections();
+        ArrayList<String> v = db.getCollections();
         for (String c : v) {
             JMenuItem collectionEntry = new JMenuItem(c);
             collectionEntry.addActionListener(this);

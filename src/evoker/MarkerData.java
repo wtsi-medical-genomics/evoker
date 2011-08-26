@@ -23,12 +23,12 @@ public class MarkerData {
     //avoid the memory overhead for millions of entries while allowing "chrom" to be anything, rather than
     //just numbers 1..22 etc.
 
-    Hashtable<String,Byte> chromosomeLookup;    // chromosome -> id
-    Hashtable<Byte,String> chromosomeBackLookup;//  id -> chromosome
+    HashMap<String,Byte> chromosomeLookup;    // chromosome -> id
+    HashMap<Byte,String> chromosomeBackLookup;//  id -> chromosome
 
-    Hashtable<String,Marker> markerTable;       // SNP_Name -> Marker
-    Hashtable<String,Integer> collectionIndices;// Collection -> ID (from collectionIndices after first chromosome file)
-    Hashtable<String,Integer> snpsPerCollection;// Collection -> Number of SNPs
+    HashMap<String,Marker> markerTable;       // SNP_Name -> Marker
+    HashMap<String,Integer> collectionIndices;// Collection -> ID (from collectionIndices after first chromosome file)
+    HashMap<String,Integer> snpsPerCollection;// Collection -> Number of SNPs
     private int numCollections;                 // Number of Collections
     private int runningCount;                   // Number of BimFiles so far
     
@@ -36,11 +36,11 @@ public class MarkerData {
 
     public MarkerData(int numCollections){
         this.numCollections = numCollections;
-        markerTable = new Hashtable<String,Marker>();
-        collectionIndices = new Hashtable<String,Integer>();
-        snpsPerCollection = new Hashtable<String,Integer>();
-        chromosomeLookup = new Hashtable<String,Byte>();
-        chromosomeBackLookup = new Hashtable<Byte,String>();
+        markerTable = new HashMap<String,Marker>();
+        collectionIndices = new HashMap<String,Integer>();
+        snpsPerCollection = new HashMap<String,Integer>();
+        chromosomeLookup = new HashMap<String,Byte>();
+        chromosomeBackLookup = new HashMap<Byte,String>();
         runningCount = -1;
     }
 
@@ -143,7 +143,7 @@ public class MarkerData {
         }
     }
     
-    public Hashtable<String, Marker> getMarkerTable(){
+    public HashMap<String, Marker> getMarkerTable(){
         return markerTable;
     }
 

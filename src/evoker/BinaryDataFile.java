@@ -7,7 +7,7 @@ import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public abstract class BinaryDataFile extends BinaryData{
 
@@ -81,7 +81,7 @@ public abstract class BinaryDataFile extends BinaryData{
     	// at the moment we can assume this type of file is Oxford format
     }
     
-    public Vector getRecord(String markerName){
+    public ArrayList getRecord(String markerName){
         //do some checks on getting the data and handle errors centrally
         int snpIndex;
         try {
@@ -99,6 +99,6 @@ public abstract class BinaryDataFile extends BinaryData{
 		return compressed;
     }
 
-    abstract Vector getRecord(long index) throws IOException;
+    abstract ArrayList getRecord(long index) throws IOException;
     
 }

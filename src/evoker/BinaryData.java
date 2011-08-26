@@ -1,7 +1,7 @@
 package evoker;
 
 import java.io.*;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public abstract class BinaryData {
 
@@ -31,7 +31,7 @@ public abstract class BinaryData {
                                                                                                                     
 
 
-    public abstract Vector getRecord(String markerName) throws IOException;
+    public abstract ArrayList getRecord(String markerName) throws IOException;
 
     public abstract void checkFile(byte[] headers) throws IOException;
 

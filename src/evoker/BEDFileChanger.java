@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Vector;
 
 /**
@@ -19,7 +18,7 @@ public class BEDFileChanger {
     /** Holds the changes made to the collection (_not_ in correct order)*/
     HashMap<String, HashMap<String, HashMap<String, Byte>>> changes;  // chromosome -> snp -> [ind -> change]
     /**  */
-    Hashtable<String, Marker> markerTable;
+    HashMap<String, Marker> markerTable;
     /** Name of the collection to save */
     String collection = null;
     /** Path for file to be read */
@@ -47,7 +46,7 @@ public class BEDFileChanger {
      * @throws IOException 
      */
     BEDFileChanger(int collectionID, String collection, String path, Vector<String> inds, int noOfSnps,
-            Hashtable<String, Marker> markerTable, HashMap<String, HashMap<String, HashMap<String, Byte>>> changes,
+            HashMap<String, Marker> markerTable, HashMap<String, HashMap<String, HashMap<String, Byte>>> changes,
             String toWriteTo) throws IOException {
         assert collectionID >= 0 && collection != null && path != null && inds != null && 
                 noOfSnps != 0 && markerTable != null && changes != null &&  !changes.keySet().isEmpty() && 
@@ -151,7 +150,6 @@ public class BEDFileChanger {
                     int indexOfIndInArray = (int) (indexOfInd / 4);
                     int posInTheByteFromBeginning = (int) (3 - (indexOfInd % 4));  // still to be used as index, as it is turned around, big endian >.<
                     rawSnpData[indexOfIndInArray] = changeByte(rawSnpData[indexOfIndInArray], posInTheByteFromBeginning, changes.get(chromosome).get(nextSnpToStopAt).get(ind));
-                    rawSnpData[0] = 0x00;
                 }
                 bfw.write(rawSnpData);
                 snpAt++;
