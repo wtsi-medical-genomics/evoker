@@ -26,6 +26,10 @@ import java.io.OutputStream;
 
 public class PlotPanel extends JPanel {
 
+    /** Mode, determining the way, the Diagram responses to mouse gestures.  
+     * <code>true</code> means lasso select, <code>false</code> means zooming in.*/
+    private boolean MOUSE_MODE = false;
+    
     ChartPanel generatePlot;
     
     private JFreeChart jfc;
@@ -41,9 +45,10 @@ public class PlotPanel extends JPanel {
         nf.setMinimumFractionDigits(2);
     }
 
-    PlotPanel(String title, PlotData pd, int plotHeight, int plotWidth) {
+    PlotPanel(String title, PlotData pd, int plotHeight, int plotWidth, boolean MOUSE_MODE) {
         this.title = title;
         this.data = pd;
+        this.MOUSE_MODE = MOUSE_MODE;
 
         if (pd.getCoordSystem().matches("POLAR")) {
             this.xlab = String.valueOf("\u03F4");
@@ -176,7 +181,7 @@ public class PlotPanel extends JPanel {
 
     class ZitPlotToolTipGenerator extends StandardXYToolTipGenerator {
 
-        public double round5(double n) {
+        public double round3(double n) {
             double result = n * 100000;
             result = Math.round(result);
             result = result / 100000;
@@ -189,10 +194,10 @@ public class PlotPanel extends JPanel {
 
         public String generateToolTip(XYDataset dataset, int series, int item) {
             return data.getIndInClass(series, item) + " ("
-                    + round5(dataset.getXValue(series, item)) + ", "
-                    + round5(dataset.getYValue(series, item)) + ")";
+                    + round3(dataset.getXValue(series, item)) + ", "
+                    + round3(dataset.getYValue(series, item)) + ")";
                   //  + dataset.getXValue(series, item) + ", "
-                   // + dataset.getYValue(series, item) + ")";
+                  //  + dataset.getYValue(series, item) + ")";
         }
     }
 
@@ -202,6 +207,14 @@ public class PlotPanel extends JPanel {
     
     public PlotData getPlotData(){
         return data;
+    }
+    
+    public boolean getMouseMode(){
+        return MOUSE_MODE;
+    }
+    
+    public void setMouseMode(boolean s) {
+        MOUSE_MODE = s;
     }
 
     public boolean hasData() {

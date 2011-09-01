@@ -40,6 +40,9 @@ import org.jfree.ui.ExtensionFileFilter;
 public class Genoplot extends JFrame implements ActionListener {
 
     private DataDirectory db;
+    /** Mode, determining the way, the Diagram responses to mouse gestures.  
+     * <code>true</code> means lasso select, <code>false</code> means zooming in.*/
+    boolean MOUSE_MODE = false;
     String plottedSNP = null;
     private JTextField snpField;
     private JButton goButton;
@@ -393,6 +396,7 @@ public class Genoplot extends JFrame implements ActionListener {
                                 showLogItem.setEnabled(true);
                                 db = new DataDirectory(dc);
                                 finishLoadingDataSource();
+                                refreshSaveMenu();
                             }
                         } catch (Exception e) {
                             pendingException = e;
@@ -587,7 +591,7 @@ public class Genoplot extends JFrame implements ActionListener {
                         ArrayList<String> stats = new ArrayList<String>();
 
                         for (String collection : db.getCollections()) {
-                            PlotPanel pp = new PlotPanel(collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight);
+                            PlotPanel pp = new PlotPanel(collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight, MOUSE_MODE);
                             pp.refresh();
                             if (pp.hasData()) {
                                 pp.setDimensions(pp.getMinDim(), pp.getMaxDim());
@@ -995,6 +999,7 @@ public class Genoplot extends JFrame implements ActionListener {
             ArrayList<String> collections = db.getCollections();
             for (int i = 0; i < collections.size(); i++) {
                 PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
+                MOUSE_MODE = plotPanel.getMouseMode();
                 PlotData plotData = plotPanel.getPlotData();
                 if (plotData.changed) {
                     db.commitGenotypeChange(collections.get(i), plottedSNP, plotData.getGenotypeChanges());
@@ -1019,7 +1024,7 @@ public class Genoplot extends JFrame implements ActionListener {
             double mindim = 100000;
 
             for (String c : v) {
-                PlotPanel pp = new PlotPanel(c, db.getRecord(name, c, getCoordSystem()), plotWidth, plotHeight);
+                PlotPanel pp = new PlotPanel(c, db.getRecord(name, c, getCoordSystem()), plotWidth, plotHeight, MOUSE_MODE);
 
                 pp.refresh();
                 if (pp.getMaxDim() > maxdim) {

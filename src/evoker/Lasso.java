@@ -64,12 +64,12 @@ public class Lasso {
      * @param entityCollection containing all ChartEntity-Objects to be searched through 
      * @return ArrayList containing 
      */
-    public ArrayList<Point2D> getContainedPoints(EntityCollection entityCollection) {
-        ArrayList<Point2D> al_ret = new ArrayList<Point2D>();
+    public ArrayList<EvokerPoint2D> getContainedPoints(EntityCollection entityCollection) {
+        ArrayList<EvokerPoint2D> al_ret = new ArrayList<EvokerPoint2D>();
         getContainedEntitys(entityCollection);
-        Collection entities = entityCollection.getEntities();
+        Collection entities = ec.getEntities();
         for (int i = 0; i < entities.size(); i++) {
-            ChartEntity entity = entityCollection.getEntity(i);
+            ChartEntity entity = ec.getEntity(i);
             al_ret.add(getCoordinatesOfEntity(entity));
         }
         return al_ret;
@@ -81,8 +81,8 @@ public class Lasso {
      * @param entityCollection containing all ChartEntity-Objects to be searched through 
      * @return ArrayList containing 
      */
-    public HashMap<Point2D, String> getContainedPointsInd(EntityCollection entityCollection) {
-        HashMap<Point2D, String> hm_ret = new HashMap<Point2D, String>();
+    public HashMap<EvokerPoint2D, String> getContainedPointsInd(EntityCollection entityCollection) {
+        HashMap<EvokerPoint2D, String> hm_ret = new HashMap<EvokerPoint2D, String>();
         getContainedEntitys(entityCollection);
         Collection entities = ec.getEntities();
         for (int i = 0; i < entities.size(); i++) {
@@ -112,12 +112,12 @@ public class Lasso {
      * @param entity-object
      * @return Point (containing the coordinates)
      */
-    public Point2D getCoordinatesOfEntity(ChartEntity e) {
+    public EvokerPoint2D getCoordinatesOfEntity(ChartEntity e) {
         String tooltip = e.getToolTipText();
         if (tooltip == null) {
             return null;
         }
-        return new Point2D.Double(
+        return new EvokerPoint2D(
                 Double.parseDouble(
                 tooltip.substring(
                 tooltip.indexOf('(') + 1, tooltip.indexOf(','))),

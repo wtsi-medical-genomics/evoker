@@ -15,6 +15,7 @@ public class PlotData {
     private int sampleNum;
     private String coordSystem;
     private ArrayList<ArrayList<String>> indsInClasses;
+    private HashMap<String, Integer> indexInArrayListByInd;
     private char[] alleles;
     private HashMap<String, Byte> genotypeChanges = new HashMap<String, Byte>();
     public boolean changed = false;
@@ -52,6 +53,8 @@ public class PlotData {
         for (int i = 0; i < 4; i++) {
             indsInClasses.add(new ArrayList<String>());
         }
+        
+        indexInArrayListByInd = new HashMap<String, Integer>();
 
         sampleNum = 0;
 
@@ -80,18 +83,22 @@ public class PlotData {
                             case 0:
                                 intensityDataSeriesHomo1.add(intens[0], intens[1]);
                                 indsInClasses.get(0).add(samples.getInd(i));
+                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(0).size() -1);
                                 break;
                             case 1:
                                 intensityDataSeriesMissing.add(intens[0], intens[1]);
                                 indsInClasses.get(1).add(samples.getInd(i));
+                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(1).size() -1);
                                 break;
                             case 2:
                                 intensityDataSeriesHetero.add(intens[0], intens[1]);
                                 indsInClasses.get(2).add(samples.getInd(i));
+                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(2).size() -1);
                                 break;
                             case 3:
                                 intensityDataSeriesHomo2.add(intens[0], intens[1]);
                                 indsInClasses.get(3).add(samples.getInd(i));
+                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(3).size() -1);
                                 break;
                             default:
                                 //TODO: this is very bad
@@ -106,18 +113,22 @@ public class PlotData {
                         case 0:
                             intensityDataSeriesHomo1.add(intens[0], intens[1]);
                             indsInClasses.get(0).add(samples.getInd(i));
+                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(0).size() -1);
                             break;
                         case 1:
                             intensityDataSeriesMissing.add(intens[0], intens[1]);
                             indsInClasses.get(1).add(samples.getInd(i));
+                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(1).size() -1);
                             break;
                         case 2:
                             intensityDataSeriesHetero.add(intens[0], intens[1]);
                             indsInClasses.get(2).add(samples.getInd(i));
+                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(2).size() -1);
                             break;
                         case 3:
                             intensityDataSeriesHomo2.add(intens[0], intens[1]);
                             indsInClasses.get(3).add(samples.getInd(i));
+                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(3).size() -1);
                             break;
                         default:
                             //TODO: this is very bad
@@ -174,7 +185,6 @@ public class PlotData {
 
         int index = samples.getIndex(ind);
         calledGenotypes.set(index, (byte) to);
-
         genotypeChanges.put(ind, (byte) to);
     }
 
@@ -347,8 +357,16 @@ public class PlotData {
     private void setCoordSystem(String coordSystem) {
         this.coordSystem = coordSystem;
     }
-
+    
     public String getCoordSystem() {
         return coordSystem;
+    }
+    
+    public byte getCalledGenotype(String ind){
+        return calledGenotypes.get(samples.getIndex(ind));
+    }
+    
+    public int getIndexInArrayList(String ind){
+        return indexInArrayListByInd.get(ind);
     }
 }
