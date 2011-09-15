@@ -1,4 +1,5 @@
-package evoker;
+
+
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -56,6 +57,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private boolean backSNP = false;
     private boolean historySNP = false;
     private boolean markerList = false;
+    private boolean endOfList;
     private HashMap<String, Integer> listScores = new HashMap<String, Integer>();
     private Hashtable<String, String> pdfScores;
     JFileChooser jfc;
@@ -937,7 +939,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 } else {
                     activeScorePanel(false);
                 }
-
+                endOfList = false;
             } else {
                 // I tried very hard to get the label right in the middle and
                 // failed because java layouts blow
@@ -948,6 +950,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 plotArea.add(p);
                 plotArea.add(Box.createVerticalGlue());
                 activeScorePanel(false);
+                endOfList = true;
             }
         }
 
@@ -996,13 +999,17 @@ public class Genoplot extends JFrame implements ActionListener {
         if (plottedSNP != null) {
             JPanel jp = (JPanel) plotArea.getComponent(1);
             
-            ArrayList<String> collections = db.getCollections();
-            for (int i = 0; i < collections.size(); i++) {
-                PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
-                MOUSE_MODE = plotPanel.getMouseMode();
-                PlotData plotData = plotPanel.getPlotData();
-                if (plotData.changed) {
-                    db.commitGenotypeChange(collections.get(i), plottedSNP, plotData.getGenotypeChanges());
+            //check if this is the end of a marker list
+            // if it is there will be no changes to commit
+            if (!endOfList) {
+            	ArrayList<String> collections = db.getCollections();
+                for (int i = 0; i < collections.size(); i++) {
+                	PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
+                    MOUSE_MODE = plotPanel.getMouseMode();
+                    PlotData plotData = plotPanel.getPlotData();
+                    if (plotData.changed) {
+                        db.commitGenotypeChange(collections.get(i), plottedSNP, plotData.getGenotypeChanges());
+                    }
                 }
             }
         }
