@@ -35,6 +35,10 @@ system("cvs -z3 -d:ext:$user\@evoker.cvs.sourceforge.net:/cvsroot/evoker checkou
 ## move all the xml files for the build
 system("cp resources/*.xml ./");
 
+## !!VERY HACKY!! 
+## Need to remove from repository
+unlink("resources/jfreechart-1.0.12.jar");
+
 ## build the source code
 system("ant evoker");
 system("ant windows");
