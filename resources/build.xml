@@ -23,7 +23,7 @@
     <property name="evoker.root" value="${basedir}"/>
     <property name="evoker.build" value="${evoker.root}/build"/>
     <property name="evoker.classes" value="${evoker.build}/classes"/>
-    <property name="evoker.src" value="${evoker.root}/src/evoker"/>
+    <property name="evoker.src" value="${evoker.root}/src"/>
     <property name="evoker.lib" value="${evoker.root}/resources"/>
     <tstamp>
       <format property="build.number" pattern="yyyyMMddHHmm"/>
@@ -53,7 +53,7 @@
      </fileset>
      <manifest>
        <attribute name="Built-By" value="${user.name}"/>
-       <attribute name="Main-Class" value="Genoplot"/>
+       <attribute name="Main-Class" value="evoker/Genoplot"/>
      </manifest>
      <zipfileset src="resources/commons-logging.jar"/>
      <zipfileset src="resources/j2ssh-common.jar"/>

@@ -27,17 +27,13 @@ mkdir("evoker_$release/other");
 mkdir("evoker_$release/all");
 
 ## checkout the .java files from cvs
-system("cvs -z3 -d:ext:$user\@evoker.cvs.sourceforge.net:/cvsroot/evoker checkout src");
+system("cvs -z3 -d:ext:$user\@evoker.cvs.sourceforge.net:/cvsroot/evoker checkout src/evoker");
 
 ## checkout the resource files from cvs
 system("cvs -z3 -d:ext:$user\@evoker.cvs.sourceforge.net:/cvsroot/evoker checkout resources");
 
 ## move all the xml files for the build
 system("cp resources/*.xml ./");
-
-## !!VERY HACKY!! 
-## Need to remove from repository
-unlink("resources/jfreechart-1.0.12.jar");
 
 ## build the source code
 system("ant evoker");
