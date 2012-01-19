@@ -48,7 +48,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JTextField snpField;
     private JButton goButton;
     private JPanel plotArea;
-    private PrintStream output;
+    private File output;
     private LinkedList<String> snpList;
     private String currentSNPinList;
     private String currentSNP = null;
@@ -91,6 +91,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenuItem showLogItem;
     private JMenu settingsMenu;
     private JMenuItem plotSize;
+    private JMenuItem longStats;
     public static LoggingDialog ld;
     private JButton randomSNPButton;
     private EvokerPDF allPDF = null;
@@ -216,6 +217,12 @@ public class Genoplot extends JFrame implements ActionListener {
         plotSize.addActionListener(this);
         plotSize.setEnabled(true);
         settingsMenu.add(plotSize);
+        longStats = new JCheckBoxMenuItem("Long Stats");
+        longStats.addActionListener(this);
+        longStats.setSelected(true);
+        longStats.setEnabled(true);
+        settingsMenu.add(longStats);
+        
         mb.add(settingsMenu);
 
         JPanel controlsPanel = new JPanel();
@@ -424,8 +431,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     try {
                         if (outfile != null) {
                             loadList(markerList);
-                            FileOutputStream fos = new FileOutputStream(outfile);
-                            output = new PrintStream(fos);
+                            output = outfile;
                         } else {
                             throw new IOException();
                         }
@@ -496,7 +502,8 @@ public class Genoplot extends JFrame implements ActionListener {
             } else if (command.equals("Plot settings")) {
                 sd.pack();
                 sd.setVisible(true);
-
+            } else if (command.equals("Long Stats")) {
+            	refreshPlot();
             } else if (command.equals("Show Evoker log")) {
                 ld.setVisible(true);
             } else if (command.equals("Quit")) {
@@ -592,8 +599,19 @@ public class Genoplot extends JFrame implements ActionListener {
                         ArrayList<Image> images = new ArrayList<Image>();
                         ArrayList<String> stats = new ArrayList<String>();
 
+                        // loop through all the collections to get the average maf
+                        double totalMaf = 0;
+                        int totalSamples = 0;
                         for (String collection : db.getCollections()) {
-                            PlotPanel pp = new PlotPanel(collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight, MOUSE_MODE);
+            				PlotData pd = db.getRecord(snp, collection, getCoordSystem());
+            				pd.computeSummary();
+            				int sampleNum = db.samplesByCollection.get(collection).getNumInds();
+                        	totalMaf += pd.getMaf() * sampleNum;
+                        	totalSamples += sampleNum;
+                        }
+                        
+                        for (String collection : db.getCollections()) {
+                            PlotPanel pp = new PlotPanel(collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight, longStats.isSelected(), MOUSE_MODE, totalMaf, totalSamples);
                             pp.refresh();
                             if (pp.hasData()) {
                                 pp.setDimensions(pp.getMinDim(), pp.getMaxDim());
@@ -671,14 +689,17 @@ public class Genoplot extends JFrame implements ActionListener {
 
     }
 
-    private void printScores() {
+    private void printScores() throws FileNotFoundException {
         ListIterator<String> snpi = snpList.listIterator();
-
+        PrintStream ps = new PrintStream(new FileOutputStream(output));
+        
         while (snpi.hasNext()) {
             String snp = (String) snpi.next();
-            output.println(snp + "\t" + listScores.get(snp));
-        }
-        output.close();
+            if (listScores.get(snp) != null) {            	
+            	ps.println(snp + "\t" + listScores.get(snp));
+            }            
+        }        
+        ps.close();
     }
 
     private void setMarkerList(boolean marker) {
@@ -753,9 +774,10 @@ public class Genoplot extends JFrame implements ActionListener {
         return file;
     }
 
-    private void recordVerdict(int v) throws DocumentException {
+    private void recordVerdict(int v) throws DocumentException, FileNotFoundException {
         if (isBackSNP()) {
             listScores.put(snpList.get(displaySNPindex), v);
+            printScores();
             setBackSNP(false);
             if (displaySNPindex == 0) {
                 backButton.setEnabled(true);
@@ -764,6 +786,7 @@ public class Genoplot extends JFrame implements ActionListener {
             plotIntensitas(snpList.get(currentSNPindex));
         } else if (isHistorySNP()) {
             listScores.put(snpList.get(displaySNPindex), v);
+            printScores();
             setHistorySNP(false);
             if (displaySNPindex == 0) {
                 backButton.setEnabled(true);
@@ -772,6 +795,7 @@ public class Genoplot extends JFrame implements ActionListener {
             plotIntensitas(snpList.get(currentSNPindex));
         } else {
             listScores.put(snpList.get(currentSNPindex), v);
+            printScores();
             if (currentSNPindex < (snpList.size() - 1)) {
                 currentSNPindex++;
                 displaySNPindex = currentSNPindex;
@@ -783,13 +807,12 @@ public class Genoplot extends JFrame implements ActionListener {
                 returnToListPosition.setEnabled(false);
                 int n = JOptionPane.showConfirmDialog(
                         this.getContentPane(),
-                        "Would you like to save the scores you have generated?",
+                        "Would you like to finish scoring the current list?",
                         "Finish scoring list?",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
                 // n 0 = yes 1 = no
-                if (n == 0) {
-                    printScores();
+                if (n == 0) {                    
                     setMarkerList(false);
                     randomSNPButton.setEnabled(true);
                     snpList.clear();
@@ -798,7 +821,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     plotIntensitas(snpList.get(currentSNPindex));
                 }
             }
-        }
+        }        
     }
 
     private void printMessage(String string) {
@@ -1029,9 +1052,22 @@ public class Genoplot extends JFrame implements ActionListener {
             ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
             double maxdim = -100000;
             double mindim = 100000;
+            
+            // loop through all the collections to get the average maf
+            double totalMaf = 0;
+            int totalSamples = 0;
+            for (String collection : v) {
+				PlotData pd = db.getRecord(name, collection, getCoordSystem());				
+				if (pd.generatePoints() != null) {
+					pd.computeSummary();
+					int sampleNum = db.samplesByCollection.get(collection).getNumInds();
+	            	totalMaf += pd.getMaf() * sampleNum;
+	            	totalSamples += sampleNum;
+				}
+            }
 
             for (String c : v) {
-                PlotPanel pp = new PlotPanel(c, db.getRecord(name, c, getCoordSystem()), plotWidth, plotHeight, MOUSE_MODE);
+                PlotPanel pp = new PlotPanel(c, db.getRecord(name, c, getCoordSystem()), plotWidth, plotHeight, longStats.isSelected(), MOUSE_MODE, totalMaf, totalSamples);
 
                 pp.refresh();
                 if (pp.getMaxDim() > maxdim) {

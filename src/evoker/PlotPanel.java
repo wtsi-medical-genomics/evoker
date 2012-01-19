@@ -26,198 +26,267 @@ import java.io.OutputStream;
 
 public class PlotPanel extends JPanel {
 
-    /** Mode, determining the way, the Diagram responses to mouse gestures.  
-     * <code>true</code> means lasso select, <code>false</code> means zooming in.*/
-    private boolean MOUSE_MODE = false;
-    
-    ChartPanel generatePlot;
-    
-    private JFreeChart jfc;
-    private PlotData data;
-    private String title, xlab, ylab;
-    private boolean foundData;
-    static NumberFormat nf = NumberFormat.getInstance(Locale.US);
-    
-    JPanel statistics = null;
+	/**
+	 * Mode, determining the way, the Diagram responses to mouse gestures.
+	 * <code>true</code> means lasso select, <code>false</code> means zooming
+	 * in.
+	 */
+	private boolean MOUSE_MODE = false;
 
-    static {
-        nf.setMaximumFractionDigits(2);
-        nf.setMinimumFractionDigits(2);
-    }
+	ChartPanel generatePlot;
 
-    PlotPanel(String title, PlotData pd, int plotHeight, int plotWidth, boolean MOUSE_MODE) {
-        this.title = title;
-        this.data = pd;
-        this.MOUSE_MODE = MOUSE_MODE;
+	private JFreeChart jfc;
+	private PlotData data;
+	private String title, xlab, ylab;
+	private boolean foundData;
+	static NumberFormat nf = NumberFormat.getInstance(Locale.US);
+	boolean longStats;
+	double totalMaf;
+	int totalSamples;
 
-        if (pd.getCoordSystem().matches("POLAR")) {
-            this.xlab = String.valueOf("\u03F4");
-            this.ylab = String.valueOf("r");
-        } else {
-            this.xlab = String.valueOf("X");
-            this.ylab = String.valueOf("Y");
-        }
+	JPanel statistics = null;
 
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.setPreferredSize(new Dimension(plotHeight, plotWidth));
-        this.setMaximumSize(new Dimension(plotHeight, plotWidth));
-    }
+	static {
+		nf.setMaximumFractionDigits(2);
+		nf.setMinimumFractionDigits(2);
+	}
 
-    protected void refresh() {
-        this.removeAll();
-        XYSeriesCollection xysc = data.generatePoints();
-        if (xysc != null) {
-            setFoundData(true);
-            generatePlot = generatePlot(xysc);
-            add(generatePlot);
-            statistics = new JPanel();
-            add(generateInfo());
-        } else {
-            setFoundData(false);
-            this.setBackground(Color.WHITE);
-            add(Box.createVerticalGlue());
-            JLabel l = new JLabel("No data found for " + title);
-            l.setAlignmentX(Component.CENTER_ALIGNMENT);
-            add(l);
-            add(Box.createVerticalGlue());
-        }
-    }
+	PlotPanel(String title, PlotData pd, int plotHeight, int plotWidth,
+			boolean longStats, boolean MOUSE_MODE, double totalMaf,
+			int totalSamples) {
+		this.title = title;
+		this.data = pd;
+		this.MOUSE_MODE = MOUSE_MODE;
+		this.longStats = longStats;
+		this.totalMaf = totalMaf;
+		this.totalSamples = totalSamples;
 
-    private void setFoundData(boolean b) {
-        foundData = b;
-    }
+		if (pd.getCoordSystem().matches("POLAR")) {
+			this.xlab = String.valueOf("\u03F4");
+			this.ylab = String.valueOf("r");
+		} else {
+			this.xlab = String.valueOf("X");
+			this.ylab = String.valueOf("Y");
+		}
 
-    void saveToFile(File f) throws IOException {
-        ChartUtilities.saveChartAsPNG(f, jfc, 400, 400);
-    }
+		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		this.setPreferredSize(new Dimension(plotHeight, plotWidth));
+		this.setMaximumSize(new Dimension(plotHeight, plotWidth));
+	}
 
-    public JPanel generateInfo() {
-        statistics.setBackground(Color.white);
-        statistics.add(new JLabel("MAF: " + nf.format(data.getMaf())));
-        statistics.add(new JLabel("GPC: " + nf.format(data.getGenopc())));
-        statistics.add(new JLabel("HWE pval: " + formatPValue(data.getHwpval())));
+	protected void refresh() {
+		this.removeAll();
+		XYSeriesCollection xysc = data.generatePoints();
+		if (xysc != null) {
+			setFoundData(true);
+			generatePlot = generatePlot(xysc);
+			add(generatePlot);
+			statistics = new JPanel();
+			add(generateInfo());
+		} else {
+			setFoundData(false);
+			this.setBackground(Color.WHITE);
+			add(Box.createVerticalGlue());
+			JLabel l = new JLabel("No data found for " + title);
+			l.setAlignmentX(Component.CENTER_ALIGNMENT);
+			add(l);
+			add(Box.createVerticalGlue());
+		}
+	}
 
-        return statistics;
-    }
-    
-    public void updateInfo(){
-        statistics.removeAll();
-        generateInfo();
-        statistics.revalidate();
-    }
+	private void setFoundData(boolean b) {
+		foundData = b;
+	}
 
-    public String generateInfoStr() {
-        return "MAF: " + nf.format(data.getMaf()) + "\tGPC: " + nf.format(data.getGenopc()) + "\tHWE pval: " + formatPValue(data.getHwpval());
-    }
+	void saveToFile(File f) throws IOException {
+		ChartUtilities.saveChartAsPNG(f, jfc, 400, 400);
+	}
 
-    private ChartPanel generatePlot(XYSeriesCollection xysc) {
+	public JPanel generateInfo() {
+		statistics.setBackground(Color.white);
 
-        jfc = ChartFactory.createScatterPlot(title, xlab, ylab, xysc,
-                PlotOrientation.VERTICAL, false, false, false);
-        jfc.addSubtitle(new TextTitle("(n=" + data.getSampleNum() + ")"));
+		boolean compressStats = true;
 
-        XYPlot thePlot = jfc.getXYPlot();
-        thePlot.setBackgroundPaint(Color.white);
-        thePlot.setOutlineVisible(false);
+		JLabel mafLabel = new JLabel();
+		JLabel gpcLabel = new JLabel();
+		JLabel hwpLabel = new JLabel();
 
-        XYItemRenderer xyd = thePlot.getRenderer();
-        Shape dot = new Ellipse2D.Double(-1.5, -1.5, 3, 3);
-        xyd.setSeriesShape(0, dot);
-        xyd.setSeriesShape(1, dot);
-        xyd.setSeriesShape(2, dot);
-        xyd.setSeriesShape(3, dot);
-        xyd.setSeriesPaint(0, Color.BLUE);
-        xyd.setSeriesPaint(1, new Color(180, 180, 180));
-        xyd.setSeriesPaint(2, Color.GREEN);
-        xyd.setSeriesPaint(3, Color.RED);
+		double maf = data.getMaf();
+		double mafAvg = totalMaf / totalSamples;
+		
+		
+		double mafScore = (maf - mafAvg) * Math.sqrt(2 * data.getSampleNum()) / Math.sqrt(mafAvg * (1 - mafAvg));
+		
+		if (longStats) {
+			if (mafScore > 3) {
+				mafLabel.setText("<html><b><u>MAF: " + nf.format(data.getMaf())
+						+ "</u></b></html>");
+			} else {
+				mafLabel.setText("MAF: " + nf.format(data.getMaf()));
+			}
 
-        xyd.setBaseToolTipGenerator(new ZitPlotToolTipGenerator());
+			if (1 - data.getGenopc() > 0.02) {
+				gpcLabel.setText("<html><b><u>GPC: " + nf.format(data.getGenopc())
+						+ "</u></b></html>");
+			} else {
+				gpcLabel.setText("GPC: " + nf.format(data.getGenopc()));
+			}
+			if (data.getHwpval() < 10e-5) {
+				hwpLabel.setText("<html><b><u>HWE pval: "
+						+ formatPValue(data.getHwpval()) + "</u></b></html>");
+			} else {
+				hwpLabel.setText("HWE pval: " + formatPValue(data.getHwpval()));
+			}
+		} else {
+			if (mafScore > 3) {
+				mafLabel.setText("<html><b><u>" + nf.format(data.getMaf())
+						+ "</u></b>/</html>");
+			} else {
+				mafLabel.setText(nf.format(data.getMaf()) + "/");
+			}
+			if (1 - data.getGenopc() > 0.02) {
+				gpcLabel.setText("<html><b><u>" + nf.format(data.getGenopc())
+						+ "</u></b>/</html>");
+			} else {
+				gpcLabel.setText(nf.format(data.getGenopc()) + "/");
+			}
+			if (data.getHwpval() < 10e-5) {
+				hwpLabel.setText("<html><b><u>" + formatPValue(data.getHwpval())
+						+ "</u></b></html>");
+			} else {
+				hwpLabel.setText(formatPValue(data.getHwpval()));
+			}
+		}
 
-        EvokerChartPanel cp = new EvokerChartPanel(jfc, data, this);
-        cp.setDisplayToolTips(true);
-        cp.setDismissDelay(10000);
-        cp.setInitialDelay(0);
-        cp.setReshowDelay(0);
+		statistics.add(mafLabel);
+		statistics.add(gpcLabel);
+		statistics.add(hwpLabel);
 
-        return cp;
-    }
+		return statistics;
+	}
 
-    public double getMaxDim() {
-        double range = data.getMaxDim() - data.getMinDim();
-        return data.getMaxDim() + 0.05 * range;
-    }
+	public void updateInfo() {
+		statistics.removeAll();
+		generateInfo();
+		statistics.revalidate();
+	}
 
-    public double getMinDim() {
-        double range = data.getMaxDim() - data.getMinDim();
-        return data.getMinDim() - 0.05 * range;
-    }
+	public String generateInfoStr() {
+		return "MAF: " + nf.format(data.getMaf()) + "\tGPC: "
+				+ nf.format(data.getGenopc()) + "\tHWE pval: "
+				+ formatPValue(data.getHwpval());
+	}
 
-    public void setDimensions(double min, double max) {
-        if (jfc != null) {
-            jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
-            jfc.getXYPlot().getRangeAxis().setRange(min, max);
-            if (data.getCoordSystem().matches("POLAR")) {
-                jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, 0, 2));
-                jfc.getXYPlot().getDomainAxis().setRange(0, 2);
-            } else {
-                jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
-                jfc.getXYPlot().getDomainAxis().setRange(min, max);
-            }
+	private ChartPanel generatePlot(XYSeriesCollection xysc) {
 
-        }
-    }
+		jfc = ChartFactory.createScatterPlot(title, xlab, ylab, xysc,
+				PlotOrientation.VERTICAL, false, false, false);
+		jfc.addSubtitle(new TextTitle("(n=" + data.getSampleNum() + ")"));
 
-    public static String formatPValue(double pval) {
-        DecimalFormat df;
-        //java truly sucks for simply restricting the number of sigfigs but still
-        //using scientific notation when appropriate
-        if (pval < 0.0001) {
-            df = new DecimalFormat("0.0E0", new DecimalFormatSymbols(Locale.US));
-        } else {
-            df = new DecimalFormat("0.000", new DecimalFormatSymbols(Locale.US));
-        }
-        return df.format(pval, new StringBuffer(), new FieldPosition(NumberFormat.INTEGER_FIELD)).toString();
-    }
+		XYPlot thePlot = jfc.getXYPlot();
+		thePlot.setBackgroundPaint(Color.white);
+		thePlot.setOutlineVisible(false);
 
-    class ZitPlotToolTipGenerator extends StandardXYToolTipGenerator {
+		XYItemRenderer xyd = thePlot.getRenderer();
+		Shape dot = new Ellipse2D.Double(-1.5, -1.5, 3, 3);
+		xyd.setSeriesShape(0, dot);
+		xyd.setSeriesShape(1, dot);
+		xyd.setSeriesShape(2, dot);
+		xyd.setSeriesShape(3, dot);
+		xyd.setSeriesPaint(0, Color.BLUE);
+		xyd.setSeriesPaint(1, new Color(180, 180, 180));
+		xyd.setSeriesPaint(2, Color.GREEN);
+		xyd.setSeriesPaint(3, Color.RED);
 
-        public double round3(double n) {
-            double result = n * 100000;
-            result = Math.round(result);
-            result = result / 100000;
-            return result;
-        }
+		xyd.setBaseToolTipGenerator(new ZitPlotToolTipGenerator());
 
-        public ZitPlotToolTipGenerator() {
-            super();
-        }
+		EvokerChartPanel cp = new EvokerChartPanel(jfc, data, this);
+		cp.setDisplayToolTips(true);
+		cp.setDismissDelay(10000);
+		cp.setInitialDelay(0);
+		cp.setReshowDelay(0);
 
-        public String generateToolTip(XYDataset dataset, int series, int item) {
-            return data.getIndInClass(series, item) + " ("
-                    + round3(dataset.getXValue(series, item)) + ", "
-                    + round3(dataset.getYValue(series, item)) + ")";
-                  //  + dataset.getXValue(series, item) + ", "
-                  //  + dataset.getYValue(series, item) + ")";
-        }
-    }
+		return cp;
+	}
 
-    public JFreeChart getChart() {
-        return jfc;
-    }
-    
-    public PlotData getPlotData(){
-        return data;
-    }
-    
-    public boolean getMouseMode(){
-        return MOUSE_MODE;
-    }
-    
-    public void setMouseMode(boolean s) {
-        MOUSE_MODE = s;
-    }
+	public double getMaxDim() {
+		double range = data.getMaxDim() - data.getMinDim();
+		return data.getMaxDim() + 0.05 * range;
+	}
 
-    public boolean hasData() {
-        return foundData;
-    }
+	public double getMinDim() {
+		double range = data.getMaxDim() - data.getMinDim();
+		return data.getMinDim() - 0.05 * range;
+	}
+
+	public void setDimensions(double min, double max) {
+		if (jfc != null) {
+			jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+			jfc.getXYPlot().getRangeAxis().setRange(min, max);
+			if (data.getCoordSystem().matches("POLAR")) {
+				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, 0, 2));
+				jfc.getXYPlot().getDomainAxis().setRange(0, 2);
+			} else {
+				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
+				jfc.getXYPlot().getDomainAxis().setRange(min, max);
+			}
+
+		}
+	}
+
+	public static String formatPValue(double pval) {
+		DecimalFormat df;
+		// java truly sucks for simply restricting the number of sigfigs but
+		// still
+		// using scientific notation when appropriate
+		if (pval < 0.001) {
+			df = new DecimalFormat("0.0E0", new DecimalFormatSymbols(Locale.US));
+		} else {
+			df = new DecimalFormat("0.000", new DecimalFormatSymbols(Locale.US));
+		}
+		return df.format(pval, new StringBuffer(),
+				new FieldPosition(NumberFormat.INTEGER_FIELD)).toString();
+	}
+
+	class ZitPlotToolTipGenerator extends StandardXYToolTipGenerator {
+
+		public double round3(double n) {
+			double result = n * 100000;
+			result = Math.round(result);
+			result = result / 100000;
+			return result;
+		}
+
+		public ZitPlotToolTipGenerator() {
+			super();
+		}
+
+		public String generateToolTip(XYDataset dataset, int series, int item) {
+			return data.getIndInClass(series, item) + " ("
+					+ round3(dataset.getXValue(series, item)) + ", "
+					+ round3(dataset.getYValue(series, item)) + ")";
+			// + dataset.getXValue(series, item) + ", "
+			// + dataset.getYValue(series, item) + ")";
+		}
+	}
+
+	public JFreeChart getChart() {
+		return jfc;
+	}
+
+	public PlotData getPlotData() {
+		return data;
+	}
+
+	public boolean getMouseMode() {
+		return MOUSE_MODE;
+	}
+
+	public void setMouseMode(boolean s) {
+		MOUSE_MODE = s;
+	}
+
+	public boolean hasData() {
+		return foundData;
+	}
 }

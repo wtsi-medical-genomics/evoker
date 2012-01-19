@@ -22,12 +22,12 @@ public class Marker {
     }
 
     public void addSampleCollection(int sampleIndex, int markerIndex, char alleleA, char alleleB, String snp){
-        if ((alleleA == this.alleleA || alleleA == this.alleleB) && (alleleB == this.alleleA || alleleB == this.alleleB) ){
-            
-        } else{
-        	Genoplot.ld.log("Warning, alleles do not match across collections for "+snp);
-            //TODO: if they are just flipped around, should be able to figure that out and swap 'em
-        }
+//        if ((alleleA == this.alleleA || alleleA == this.alleleB) && (alleleB == this.alleleA || alleleB == this.alleleB) ){
+//            
+//        } else{
+//        	Genoplot.ld.log("Warning, alleles do not match across collections for "+snp);
+//            //TODO: if they are just flipped around, should be able to figure that out and swap 'em
+//        }
         indices[sampleIndex] = markerIndex;
     }
 
