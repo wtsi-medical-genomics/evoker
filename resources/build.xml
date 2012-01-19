@@ -23,7 +23,7 @@
     <property name="evoker.root" value="${basedir}"/>
     <property name="evoker.build" value="${evoker.root}/build"/>
     <property name="evoker.classes" value="${evoker.build}/classes"/>
-    <property name="evoker.src" value="${evoker.root}/src"/>
+    <property name="evoker.src" value="${evoker.root}/evoker"/>
     <property name="evoker.lib" value="${evoker.root}/resources"/>
     <tstamp>
       <format property="build.number" pattern="yyyyMMddHHmm"/>
