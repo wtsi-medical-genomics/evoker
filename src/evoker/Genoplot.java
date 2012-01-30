@@ -1116,7 +1116,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
         if (db != null) {
             if (db.getCollections().size() == 3) {
-                windowWidth = (plotWidth * 3) + 2500;
+                windowWidth = (plotWidth * 3) + 250;
                 windowHeight = plotHeight + 150;
             } else if (db.getCollections().size() == 4) {
                 windowWidth = (plotWidth * 2) + 250;
