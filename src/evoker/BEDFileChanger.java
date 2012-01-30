@@ -85,8 +85,9 @@ public class BEDFileChanger {
      */
     private void setGenotypeCoding() {
         genotpeCoding.put((byte) 0, 0x00); //homo1
+        genotpeCoding.put((byte) 1, 0x40); //missing
         genotpeCoding.put((byte) 2, 0x80); //hetero
-        genotpeCoding.put((byte) 3, 0xc0); //homo2
+        genotpeCoding.put((byte) 3, 0xc0); //homo2   
     }
 
     /**
