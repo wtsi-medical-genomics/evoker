@@ -31,10 +31,10 @@ public class PlotPanel extends JPanel {
 	 * <code>true</code> means lasso select, <code>false</code> means zooming
 	 * in.
 	 */
-	private boolean MOUSE_MODE = false;
 
 	ChartPanel generatePlot;
 
+	protected Genoplot theGenoplot;
 	private JFreeChart jfc;
 	private PlotData data;
 	private String title, xlab, ylab;
@@ -51,12 +51,12 @@ public class PlotPanel extends JPanel {
 		nf.setMinimumFractionDigits(2);
 	}
 
-	PlotPanel(String title, PlotData pd, int plotHeight, int plotWidth,
-			boolean longStats, boolean MOUSE_MODE, double totalMaf,
+	PlotPanel(Genoplot gp, String title, PlotData pd, int plotHeight, int plotWidth,
+			boolean longStats, double totalMaf,
 			int totalSamples) {
+		this.theGenoplot = gp;
 		this.title = title;
 		this.data = pd;
-		this.MOUSE_MODE = MOUSE_MODE;
 		this.longStats = longStats;
 		this.totalMaf = totalMaf;
 		this.totalSamples = totalSamples;
@@ -276,14 +276,6 @@ public class PlotPanel extends JPanel {
 
 	public PlotData getPlotData() {
 		return data;
-	}
-
-	public boolean getMouseMode() {
-		return MOUSE_MODE;
-	}
-
-	public void setMouseMode(boolean s) {
-		MOUSE_MODE = s;
 	}
 
 	public boolean hasData() {
