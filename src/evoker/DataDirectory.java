@@ -29,6 +29,7 @@ public class DataDirectory {
     MarkerData md;
     DataClient dc;
     String displayName;
+    String dataPath;
 
     DataDirectory(DataClient dc) throws IOException{
         boolean success = true;
@@ -59,7 +60,7 @@ public class DataDirectory {
             }
             dc.setOxPlatform(oxPlatform);
         }
-
+        
         for(String collection : samplesByCollection.keySet()){
             HashMap<String, RemoteBinaryFloatData> tmpIntensity = new HashMap<String, RemoteBinaryFloatData>();
             HashMap<String, RemoteBedfileData> tmpGenotypes = new HashMap<String, RemoteBedfileData>();
@@ -113,6 +114,7 @@ public class DataDirectory {
         boolean oxFiles = false;
         
         File directory = new File(filename);
+        dataPath = directory.getAbsolutePath()+File.separator;
         String[] filesInDir = directory.list();
         
         // check if the directory contains Oxford format files
@@ -503,5 +505,9 @@ public class DataDirectory {
     public void setExcludeList(QCFilterData qc) {
 		this.filterList = qc; 
 	}	    
+    
+    public String getDataPath(){
+    	return dataPath;
+    }
    
 }
