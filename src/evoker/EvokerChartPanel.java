@@ -31,6 +31,8 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ExtensionFileFilter;
 
+import evoker.Genoplot.MouseMode;
+
 public class EvokerChartPanel extends ChartPanel {
 
     /** Holding the last Point, the mouse was dragged to (for drawing a line while selecting) */
@@ -47,6 +49,9 @@ public class EvokerChartPanel extends ChartPanel {
     private PlotData plotData = null;
     /** The panel calling the ChartPanel*/
     private PlotPanel plotPanel = null;
+    private boolean weAreLassoing = false;
+    private JRadioButtonMenuItem jrbZoom;
+    private JRadioButtonMenuItem jrbLasso;
 
     EvokerChartPanel(JFreeChart jfc, PlotData pdata, PlotPanel ppanel) {
         super(jfc);
@@ -58,6 +63,21 @@ public class EvokerChartPanel extends ChartPanel {
         createPopupMenu_();
     }
 
+    private double rescaleMouseClickX(Point p){
+    	Rectangle2D plotArea = this.getScreenDataArea();
+    	XYPlot plot = (XYPlot) super.getChart().getPlot();
+    	double x = plot.getDomainAxis().java2DToValue(p.getX(), plotArea, plot.getDomainAxisEdge());
+    	return(x);
+    	
+    }
+    
+    private double rescaleMouseClickY(Point p){
+    	Rectangle2D plotArea = this.getScreenDataArea();
+    	XYPlot plot = (XYPlot) super.getChart().getPlot();
+    	double y = plot.getRangeAxis().java2DToValue(p.getY(), plotArea, plot.getRangeAxisEdge());
+    	return(y);
+    }
+    
     /**
      * Handles a 'mouse pressed' event.
      * <P>
@@ -66,20 +86,23 @@ public class EvokerChartPanel extends ChartPanel {
      *
      * @param e  The mouse event.
      */
-    public void mousePressed(MouseEvent e) {
-        if (plotPanel.getMouseMode()) {
-            lastDragPoint = e.getPoint();
-            lasso = new Lasso();
-            lasso.addPoint(e.getX(), e.getY());
-        }
-        else {
-            super.mousePressed(e);
-        }
-        if (e.isPopupTrigger()) {
-            if (popup != null) {
-                displayPopupMenu(e.getX(), e.getY());
-            }
-        }
+    public void mousePressed(MouseEvent e) {    
+    	if(!e.isPopupTrigger()) {
+    		if (plotPanel.theGenoplot.getMouseMode() == MouseMode.LASSO) {
+    			lastDragPoint = e.getPoint();
+    			lasso = new Lasso(rescaleMouseClickX(lastDragPoint),rescaleMouseClickY(lastDragPoint));
+    			weAreLassoing = true;
+    		}
+    		else {
+    			super.mousePressed(e);
+    		}        
+    	}else{
+			if (popup != null) {
+		        if (plotPanel.theGenoplot.getMouseMode() == MouseMode.ZOOM) jrbZoom.setSelected(true);
+		        if (plotPanel.theGenoplot.getMouseMode() == MouseMode.LASSO) jrbLasso.setSelected(true);
+				displayPopupMenu(e.getX(), e.getY());
+			}
+		}
     }
 
     /**
@@ -88,19 +111,18 @@ public class EvokerChartPanel extends ChartPanel {
      * @param e  the mouse event.
      */
     public void mouseDragged(MouseEvent e) {
-        if (plotPanel.getMouseMode()) {
-            // draw line from last Point to the current one
-            if (lastDragPoint != null) {
-                Graphics2D g2 = (Graphics2D) getGraphics();
-                g2.draw(new Line2D.Double(lastDragPoint.getX(), lastDragPoint.getY(), e.getX(), e.getY()));
-            }
-            lastDragPoint = new Point(e.getX(), e.getY());
+    	if(weAreLassoing) {
+    		// draw line from last Point to the current one
+    		if (lastDragPoint != null) {
+    			Graphics2D g2 = (Graphics2D) getGraphics();
+    			g2.draw(new Line2D.Double(lastDragPoint.getX(), lastDragPoint.getY(), e.getX(), e.getY()));
+    		}
+    		lastDragPoint = new Point(e.getX(), e.getY());
 
-            lasso.addPoint(e.getX(), e.getY());
-        }
-        else {
-            super.mouseDragged(e);
-        }
+    		lasso.addPoint(rescaleMouseClickX(lastDragPoint),rescaleMouseClickY(lastDragPoint));
+    	}else {
+    		super.mouseDragged(e);
+    	}
     }
 
     /**
@@ -111,13 +133,13 @@ public class EvokerChartPanel extends ChartPanel {
      * @param e  information about the event.
      */
     public void mouseReleased(MouseEvent e) {
-
-        if (plotPanel.getMouseMode()) {
+    	if (weAreLassoing) {
+            lastDragPoint = new Point(e.getX(), e.getY());
+            lasso.addPoint(rescaleMouseClickX(lastDragPoint),rescaleMouseClickY(lastDragPoint));
             lastDragPoint = null;
-
-            lasso.addPoint(e.getX(), e.getY());
-
-            if (lasso != null && lasso.getNumberOfEdges() > 3) {
+            if (lasso != null) {
+            	lasso.close();
+            	weAreLassoing = false;
                 this.genotypeSelectPopup.show(this, e.getX(), e.getY());
             }
 
@@ -143,21 +165,21 @@ public class EvokerChartPanel extends ChartPanel {
     protected void createPopupMenu_() {
         ButtonGroup group = new ButtonGroup();
 
-        JRadioButtonMenuItem jrbMenIt = new JRadioButtonMenuItem("Zoom");
-        if (!plotPanel.getMouseMode()) jrbMenIt.setSelected(true);
-        jrbMenIt.setMnemonic(KeyEvent.VK_O);
-        jrbMenIt.setActionCommand(ZOOM_ENABLE_COMMAND);
-        jrbMenIt.addActionListener(this);
-        group.add(jrbMenIt);
-        popup.add(jrbMenIt, 0);
+        jrbZoom = new JRadioButtonMenuItem("Zoom");
+        if (plotPanel.theGenoplot.getMouseMode() == MouseMode.ZOOM) jrbZoom.setSelected(true);
+        jrbZoom.setMnemonic(KeyEvent.VK_O);
+        jrbZoom.setActionCommand(ZOOM_ENABLE_COMMAND);
+        jrbZoom.addActionListener(this);
+        group.add(jrbZoom);
+        popup.add(jrbZoom, 0);
 
-        jrbMenIt = new JRadioButtonMenuItem("Lasso Select");
-        if (plotPanel.getMouseMode()) jrbMenIt.setSelected(true);
-        jrbMenIt.setMnemonic(KeyEvent.VK_R);
-        jrbMenIt.setActionCommand(LASSO_SELECT_ENABLE_COMMAND);
-        jrbMenIt.addActionListener(this);
-        group.add(jrbMenIt);
-        popup.add(jrbMenIt, 1);
+        jrbLasso = new JRadioButtonMenuItem("Lasso Select");
+        if (plotPanel.theGenoplot.getMouseMode() == MouseMode.LASSO) jrbLasso.setSelected(true);
+        jrbLasso.setMnemonic(KeyEvent.VK_R);
+        jrbLasso.setActionCommand(LASSO_SELECT_ENABLE_COMMAND);
+        jrbLasso.addActionListener(this);
+        group.add(jrbLasso);
+        popup.add(jrbLasso, 1);
     }
 
     protected JPopupMenu createGenotypeSelectPopup() {
@@ -204,7 +226,7 @@ public class EvokerChartPanel extends ChartPanel {
     public void actionPerformed(ActionEvent event) {
 
         String command = event.getActionCommand();
-        if (command.equals("GENOTYPE_YY")) {
+        if (command.equals("GENOTYPE_XX")) {
             adjustDataSeries(0);
         }
         else if (command.equals("GENOTYPE_UNKNOWN")) {
@@ -213,14 +235,14 @@ public class EvokerChartPanel extends ChartPanel {
         else if (command.equals("GENOTYPE_XY")) {
             adjustDataSeries(2);
         }
-        else if (command.equals("GENOTYPE_XX")) {
+        else if (command.equals("GENOTYPE_YY")) {
             adjustDataSeries(3);
         }
         else if (command.equals(ZOOM_ENABLE_COMMAND)) {
-            plotPanel.setMouseMode(false);
+            plotPanel.theGenoplot.setMouseMode(MouseMode.ZOOM);
         }
         else if (command.equals(LASSO_SELECT_ENABLE_COMMAND)) {
-            plotPanel.setMouseMode(true);
+            plotPanel.theGenoplot.setMouseMode(MouseMode.LASSO);
         }
         else {
             super.actionPerformed(event);
