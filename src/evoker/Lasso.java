@@ -1,7 +1,7 @@
 package evoker;
 
 import java.awt.Point;
-import java.awt.Polygon;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,13 +16,14 @@ import org.jfree.chart.entity.StandardEntityCollection;
 public class Lasso {
 
     /** Representing the enclosed area*/
-    private Polygon poly;
+    private Path2D poly;
     /** To later hold all ChartEntitys within the polygon after they've been 
      * calculated once, to not have to search them again. */
     private EntityCollection ec = null;
 
-    public Lasso() {
-        poly = new Polygon();
+    public Lasso(double x, double y) {
+        poly = new Path2D.Double();
+        poly.moveTo(x,y);
     }
 
     /**
@@ -37,8 +38,8 @@ public class Lasso {
             for (int i = 0; i < entities.size(); i++) {
                 ChartEntity entity = entityCollection.getEntity(i);
                 if (entity.getToolTipText() != null && "poly".equals(entity.getShapeType())) {  // get sure (?) we only get data-points
-                    Point p = getScreenCoordinatesOfEntity(entity);
-                    if (poly.contains(p)) {
+                    EvokerPoint2D p = getCoordinatesOfEntity(entity);
+                    if (poly.contains(p.getX(),p.getY())) {
                         ec.add(entity);
                     }
                 }
@@ -97,7 +98,7 @@ public class Lasso {
      * @param entity object
      * @return Point
      */
-    public Point getScreenCoordinatesOfEntity(ChartEntity e) {
+  /**  public Point getScreenCoordinatesOfEntity(ChartEntity e) {
         String shapeCoords = e.getShapeCoords();
         String[] shapeCoords_array = shapeCoords.split(",");
 
@@ -105,7 +106,7 @@ public class Lasso {
         return new Point(
                 Integer.parseInt(shapeCoords_array[2]),
                 Integer.parseInt(shapeCoords_array[1]));
-    }
+    }*/
 
     /**
      * Returns the (Diagram-relative) coordinates of a point
@@ -117,6 +118,7 @@ public class Lasso {
         if (tooltip == null) {
             return null;
         }
+
         return new EvokerPoint2D(
                 Double.parseDouble(
                 tooltip.substring(
@@ -142,15 +144,13 @@ public class Lasso {
      * @param x coordinate
      * @param y coordinate
      */
-    public void addPoint(int x, int y) {
-        poly.addPoint(x, y);
+    public void addPoint(double x, double y) {
+        poly.lineTo(x,y);
     }
     
-    /**
-     * Returns the number of Points the Polygon is made of
-     * @return 
-     */
-    public int getNumberOfEdges(){
-        return poly.npoints;
+
+    
+    public void close(){
+    	poly.closePath();
     }
 }
