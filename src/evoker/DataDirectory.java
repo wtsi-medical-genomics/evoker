@@ -477,6 +477,10 @@ public class DataDirectory {
     public boolean isRemote(){
         return (dc != null);
     }
+    
+    public boolean isLocal(){
+        return (dc == null);
+    }
 
     public QCFilterData qcList() {
     	if (filterState == true) {
