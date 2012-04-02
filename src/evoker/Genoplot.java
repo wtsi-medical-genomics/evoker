@@ -334,9 +334,32 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
+    	String goCommand            = new String("Go");
+    	String noCommand            = new String("No");
+    	String maybeCommand         = new String("Maybe");
+    	String yesCommand           = new String("Yes");
+    	String backCommand          = new String("Back");
+    	String currentCommand       = new String("Return to current list position");
+    	String randomCommand        = new String("Random");
+    	String plotCommand          = new String("PLOTSNP");
+    	String openDirCommand       = new String("Open directory");
+    	String openRemoteCommand    = new String("Connect to remote server");
+    	String markerCommand        = new String("Load marker list");
+    	String excludeCommand       = new String("Load sample exclude list");
+    	String filterCommand        = new String("Filter samples");
+    	String savePlotsCommand     = new String("Save SNP Plots");
+    	String generatePlotsCommand = new String("Generate PDF from scores");
+    	String cartesianCommand     = new String("Cartesian coordinates");
+    	String polarCommand         = new String("Polar coordinates");
+    	String plotSettingsCommand  = new String("Plot settings");
+    	String longStatsCommand     = new String("Long Stats");
+    	String showLogCommand       = new String("Show Evoker log");
+    	String quitCommand          = new String("Quit");
+    	String saveBedsCommand      = new String("Save All BEDs");
+    	    	
         try {
             String command = actionEvent.getActionCommand();
-            if (command.equals("Go")) {
+            if (command.equals(goCommand)) {
                 if (markerListLoaded()) {
                     if (snpList.contains(snpField.getText().trim())) {
                         setHistorySNP(true);
@@ -344,16 +367,16 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
                 }
                 plotIntensitas(snpField.getText().trim());
-            } else if (command.equals("No")) {
+            } else if (command.equals(noCommand)) {
                 noButton.requestFocusInWindow();
                 recordVerdict(-1);
-            } else if (command.equals("Maybe")) {
+            } else if (command.equals(maybeCommand)) {
                 maybeButton.requestFocusInWindow();
                 recordVerdict(0);
-            } else if (command.equals("Yes")) {
+            } else if (command.equals(yesCommand)) {
                 yesButton.requestFocusInWindow();
                 recordVerdict(1);
-            } else if (command.equals("Back")) {
+            } else if (command.equals(backCommand)) {
                 setBackSNP(true);
                 displaySNPindex--;
                 if (displaySNPindex == 0) {
@@ -368,11 +391,11 @@ public class Genoplot extends JFrame implements ActionListener {
                     noButton.requestFocusInWindow();
                 }
                 plotIntensitas(snpList.get(displaySNPindex));
-            } else if (command.equals("Return to current list position")) {
+            } else if (command.equals(currentCommand)) {
                 plotIntensitas(snpList.get(currentSNPindex));
-            } else if (command.equals("Random")) {
+            } else if (command.equals(randomCommand)) {
                 plotIntensitas(db.getRandomSNP());
-            } else if (command.startsWith("PLOTSNP")) {
+            } else if (command.startsWith(plotCommand)) {
                 String[] bits = command.split("\\s");
                 if (markerListLoaded()) {
                     if (snpList.contains(bits[1])) {
@@ -381,7 +404,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
                 }
                 plotIntensitas(bits[1]);
-            } else if (command.equals("Open directory")) {
+            } else if (command.equals(openDirCommand)) {
                 jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                     try {
@@ -397,7 +420,7 @@ public class Genoplot extends JFrame implements ActionListener {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     }
                 }
-            } else if (command.equals("Connect to remote server")) {
+            } else if (command.equals(openRemoteCommand)) {
 
                 final Genoplot gp = this;
 
@@ -434,7 +457,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
                 }.execute();
 
-            } else if (command.equals("Load marker list")) {
+            } else if (command.equals(markerCommand)) {
                 currentSNPindex = 0;
                 displaySNPindex = currentSNPindex;
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -453,7 +476,7 @@ public class Genoplot extends JFrame implements ActionListener {
                         throw new IOException("No score file selected");
                     }
                 }
-            } else if (command.equals("Load sample exclude list")) {
+            } else if (command.equals(excludeCommand)) {
                 jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                     // TODO: before setting as the new list check it is a valid
@@ -468,7 +491,7 @@ public class Genoplot extends JFrame implements ActionListener {
                         plotIntensitas(currentSNP);
                     }
                 }
-            } else if (command.equals("Filter samples")) {
+            } else if (command.equals(filterCommand)) {
                 // turn filtering on/off
                 if (filterData.isSelected()) {
                     db.setFilterState(true);
@@ -478,7 +501,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (currentSNP != null) {
                     plotIntensitas(currentSNP);
                 }
-            } else if (command.equals("Save SNP Plots")) {
+            } else if (command.equals(savePlotsCommand)) {
                 File defaultFileName = new File(plottedSNP + ".png");
                 jfc.setSelectedFile(defaultFileName);
                 if (jfc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -501,28 +524,28 @@ public class Genoplot extends JFrame implements ActionListener {
                         System.out.println(ioe.getMessage());
                     }
                 }
-            } else if (command.equals("Generate PDF from scores")) {
+            } else if (command.equals(generatePlotsCommand)) {
                 pdfd.pack();
                 pdfd.setVisible(true);
                 if (pdfd.success()) {
                     generatePDFs();
                 }
-            } else if (command.equals("Cartesian coordinates")) {
+            } else if (command.equals(cartesianCommand)) {
                 setCoordSystem("CART");
                 refreshPlot();
-            } else if (command.equals("Polar coordinates")) {
+            } else if (command.equals(polarCommand)) {
                 setCoordSystem("POLAR");
                 refreshPlot();
-            } else if (command.equals("Plot settings")) {
+            } else if (command.equals(plotSettingsCommand)) {
                 sd.pack();
                 sd.setVisible(true);
-            } else if (command.equals("Long Stats")) {
+            } else if (command.equals(longStatsCommand)) {
             	refreshPlot();
-            } else if (command.equals("Show Evoker log")) {
+            } else if (command.equals(showLogCommand)) {
                 ld.setVisible(true);
-            } else if (command.equals("Quit")) {
+            } else if (command.equals(quitCommand)) {
                 System.exit(0);
-            } else if (command.equals("Save All BEDs")) {
+            } else if (command.equals(saveBedsCommand)) {
             	ArrayList<String> collections = db.getCollections();
                 for (String s : collections) {
                 	dumpChanges();
@@ -952,8 +975,13 @@ public class Genoplot extends JFrame implements ActionListener {
             viewCart.setEnabled(true);
             viewPolar.setEnabled(true);
             exportPDF.setEnabled(true);
-            saveMenu.setEnabled(true);
-            saveAllBeds.setEnabled(true);
+                        
+            // if the data source is local then enable the saving of manual calls
+            if (db.isLocal()) {
+            	saveMenu.setEnabled(true);
+            	saveAllBeds.setEnabled(true);
+            } 
+            
             while (historyMenu.getMenuComponentCount() > 2) {
                 historyMenu.remove(2);
             }
