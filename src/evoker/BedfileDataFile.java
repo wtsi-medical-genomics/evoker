@@ -8,15 +8,15 @@ public class BedfileDataFile extends BinaryDataFile{
 
     static String[] alleleMap = {"N","A","C","G","T"};
 
-    BedfileDataFile(String filename, int numInds, MarkerData md, String collection) throws IOException{
-        super(filename, numInds, md, collection);
+    BedfileDataFile(String filename, int numInds, MarkerData md, String collection, String chromosome) throws IOException{
+        super(filename, numInds, md, collection, chromosome);
 
         bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
         checkFile(bedMagic);
     }
 
     BedfileDataFile(String filename, RemoteBedfileData rbd) throws IOException{
-        super(filename, rbd.numInds, rbd.md, rbd.collection);
+        super(filename, rbd.numInds, rbd.md, rbd.collection, rbd.chromosome);
 
         bytesPerRecord = (int)Math.ceil(((double)numInds)/4);
         numSNPs = 1;

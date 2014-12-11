@@ -9,8 +9,8 @@ import java.util.zip.GZIPInputStream;
 
 public class GenfileDataFile extends BinaryDataFile{
 	
-	GenfileDataFile(String filename, int numInds, MarkerData md, String collection) throws IOException{
-        super(filename, numInds, md, collection);
+	GenfileDataFile(String filename, int numInds, MarkerData md, String collection, String chromosome) throws IOException{
+        super(filename, numInds, md, collection, chromosome);
        
         // there are 3 four byte values for each ind in the ox format files
         bytesPerRecord = 3 * 4 * numInds;
@@ -18,8 +18,8 @@ public class GenfileDataFile extends BinaryDataFile{
         checkFile(bedMagic);
     }
 	
-	GenfileDataFile(String filename, int numInds, MarkerData md, String collection, boolean zipped) throws IOException{
-        super(filename, numInds, md, collection);
+	GenfileDataFile(String filename, int numInds, MarkerData md, String collection, boolean zipped, String chromosome) throws IOException{
+        super(filename, numInds, md, collection, chromosome);
        
         // there are 3 four byte values for each ind in the ox format files
         bytesPerRecord = 3 * 4 * numInds;

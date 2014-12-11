@@ -7,8 +7,8 @@ public abstract class RemoteBinaryData extends BinaryData{
 
     DataClient dc;
 
-    RemoteBinaryData(DataClient dc, int numInds, MarkerData md, String collection){
-        super (numInds,md,collection);
+    RemoteBinaryData(DataClient dc, int numInds, MarkerData md, String collection, String chromosome){
+        super (numInds,md,collection, chromosome);
         this.dc = dc;
     }
     public void checkFile(byte[] headers) throws IOException{

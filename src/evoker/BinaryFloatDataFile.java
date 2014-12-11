@@ -13,18 +13,18 @@ public class BinaryFloatDataFile extends BinaryDataFile{
 
     private int valuesPerEntry;
 
-    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals)
+    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, String chromosome)
             throws IOException{
-        super(filename, numInds, md,collection);
+        super(filename, numInds, md,collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
         checkFile(bntMagic);
     }
     
-    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, boolean zipped)
+    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, boolean zipped, String chromosome)
     		throws IOException{
-    	super(filename, numInds, md,collection);
+    	super(filename, numInds, md,collection, chromosome);
     	this.valuesPerEntry = vals;
     	bytesPerRecord = valuesPerEntry * 4 * numInds;
     	compressed = true;
@@ -35,7 +35,7 @@ public class BinaryFloatDataFile extends BinaryDataFile{
     }
 
     BinaryFloatDataFile(String filename, RemoteBinaryFloatData rbfd) throws IOException{
-        super(filename,rbfd.numInds,rbfd.md,rbfd.collection);
+        super(filename,rbfd.numInds,rbfd.md,rbfd.collection, rbfd.chromosome);
 
         this.valuesPerEntry = rbfd.valuesPerEntry;
         bytesPerRecord = rbfd.bytesPerRecord;

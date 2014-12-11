@@ -12,15 +12,15 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
 
     protected int valuesPerEntry;
 
-    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String name) throws IOException {
-        super(dc, numInds, md, collection);
+    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String name, String chromosome) throws IOException {
+        super(dc, numInds, md, collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
         checkFile(name, bntMagic);
     }
     
-    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals) {
-        super(dc, numInds, md, collection);
+    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String chromosome) {
+        super(dc, numInds, md, collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
     }

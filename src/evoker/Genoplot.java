@@ -60,6 +60,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private boolean historySNP = false;
     private boolean markerList = false;
     private boolean endOfList;
+    private boolean saveBedBimFamFiles = false;
     private HashMap<String, Integer> listScores = new HashMap<String, Integer>();
     private Hashtable<String, String> pdfScores;
     JFileChooser jfc;
@@ -95,6 +96,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenu settingsMenu;
     private JMenuItem plotSize;
     private JMenuItem longStats;
+    private JMenuItem saveBedBimFam;
     public static LoggingDialog ld;
     private JButton randomSNPButton;
     private EvokerPDF allPDF = null;
@@ -233,7 +235,13 @@ public class Genoplot extends JFrame implements ActionListener {
         longStats.addActionListener(this);
         longStats.setSelected(true);
         longStats.setEnabled(true);
+        saveBedBimFam = new JCheckBoxMenuItem("Output .bed/.bim/.fam");
+        saveBedBimFam.addActionListener(this);
+        saveBedBimFam.setSelected(false);
+        saveBedBimFam.setEnabled(true);
+        
         settingsMenu.add(longStats);
+        settingsMenu.add(saveBedBimFam);
         
         mb.add(settingsMenu);
 
@@ -353,6 +361,7 @@ public class Genoplot extends JFrame implements ActionListener {
     	String polarCommand         = new String("Polar coordinates");
     	String plotSettingsCommand  = new String("Plot settings");
     	String longStatsCommand     = new String("Long Stats");
+    	String saveBedBimFamCommand = new String("Output .bed/.bim/.fam");
     	String showLogCommand       = new String("Show Evoker log");
     	String quitCommand          = new String("Quit");
     	String saveBedsCommand      = new String("Save All BEDs");
@@ -541,6 +550,8 @@ public class Genoplot extends JFrame implements ActionListener {
                 sd.setVisible(true);
             } else if (command.equals(longStatsCommand)) {
             	refreshPlot();
+            } else if (command.equals(saveBedBimFamCommand)) {
+            	saveBedBimFamFiles = !saveBedBimFamFiles;
             } else if (command.equals(showLogCommand)) {
                 ld.setVisible(true);
             } else if (command.equals(quitCommand)) {
@@ -1208,10 +1219,11 @@ public class Genoplot extends JFrame implements ActionListener {
         		return;
         	}
         }
+        //TP CHANGED THIS
         BEDFileChanger bfc = new BEDFileChanger(db.getMarkerData().collectionIndices.get(collection),
                     collection, db.getDisplayName(), db.samplesByCollection.get(collection).inds,
                     db.getMarkerData().snpsPerCollection.get(collection), db.getMarkerData().getMarkerTable(),
-                    db.changesByCollection.get(collection), filename);
+                    db.changesByCollection.get(collection), filename, db, saveBedBimFamFiles);
         
     }
 }

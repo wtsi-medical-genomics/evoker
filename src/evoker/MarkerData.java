@@ -112,6 +112,7 @@ public class MarkerData {
             if (markerTable.get(snpid.toString()) ==  null){
                 markerTable.put(snpid.toString(), new Marker(numCollections,a,b,chrom));
             }
+            //TP: only the first two args are used in addSampleCollection
             markerTable.get(snpid.toString()).addSampleCollection(runningCount,index++,a,b,snpid.toString());
             
 //            if(! snpDB.containsKey(collection)) snpDB.put(collection, new HashMap<String, Vector<String>>());
@@ -119,8 +120,13 @@ public class MarkerData {
 //            snpDB.get(collection).get(chromosome).add(snpid.toString());
             
         }
-
-        snpsPerCollection.put(collection,index);
+        //TP CHANGED THIS
+        int snpsSoFar = 0;	
+        if (snpsPerCollection.containsKey(collection))
+        	snpsSoFar = snpsPerCollection.get(collection);
+        
+        snpsPerCollection.put(collection,index + snpsSoFar);
+        snpsPerCollection.put(collection+chromosome,index);
         
         if (missingAlleles) {
         	Genoplot.ld.log("WARNING: SNP file does not contain allele information");

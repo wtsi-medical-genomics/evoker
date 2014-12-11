@@ -73,10 +73,10 @@ public class DataDirectory {
                     //data files for this collection and chromosome:
                     tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection,2));
+                            md,collection,2, chrom));
                     tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection));
+                            md,collection, chrom));
                 }else{
                     name = collection + "." + chrom;
                     success &= checkFile(dc.getFilesInRemoteDir(),name);
@@ -86,10 +86,10 @@ public class DataDirectory {
                     //data files for this collection and chromosome:
                     tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection,2,collection + "." + chrom + ".bnt"));
+                            md,collection,2,collection + "." + chrom + ".bnt", chrom));
                     tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection,collection + "." + chrom + ".bed"));
+                            md,collection,collection + "." + chrom + ".bed", chrom));
                 }
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
@@ -177,28 +177,28 @@ public class DataDirectory {
                         if (new File(name+".int.bin.gz").exists()) {
                         	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin.gz",
                                     samplesByCollection.get(collection).getNumInds(),
-                                    md,collection,2,zipped));
+                                    md,collection,2,zipped, chrom));
                         } else {
                         	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin",
                                     samplesByCollection.get(collection).getNumInds(),
-                                    md,collection,2));
+                                    md,collection,2, chrom));
                         }
                         if (new File(name+".gen.bin.gz").exists()) {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin.gz",
                                     samplesByCollection.get(collection).getNumInds(),
-                                    md,collection,zipped));                     
+                                    md,collection,zipped, chrom));                     
                         } else {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin",
                                     samplesByCollection.get(collection).getNumInds(),
-                                    md,collection));
+                                    md,collection, chrom));
                         }
                     }else{
                     	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
                                 samplesByCollection.get(collection).getNumInds(),
-                                md,collection,2));
+                                md,collection,2, chrom));
                         tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",
                                 samplesByCollection.get(collection).getNumInds(),
-                                md,collection));
+                                md,collection, chrom));
                     }
                 }
             }

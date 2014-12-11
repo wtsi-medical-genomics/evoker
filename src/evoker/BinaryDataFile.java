@@ -14,8 +14,8 @@ public abstract class BinaryDataFile extends BinaryData{
     File file;
     protected boolean compressed;
 
-    BinaryDataFile(String filename, int numInds, MarkerData md, String collection){
-        super(numInds,md,collection);
+    BinaryDataFile(String filename, int numInds, MarkerData md, String collection, String chromosome){
+        super(numInds,md,collection, chromosome);
         this.file = new File(filename);
     }
 
