@@ -5,7 +5,7 @@
 \usepackage{float}
 \usepackage{booktabs}
 
-\title{Evoker: a genotype visualization tool}
+\title{Evoker: a genotype visualization tool \\ Version 2.3}
 \author{Jeffrey Barrett (\texttt{barrett@sanger.ac.uk})\\
 James Morris (\texttt{jm20@sanger.ac.uk})}
 \date{\today}
@@ -19,11 +19,11 @@ Evoker is a tool designed for visualizing genotype cluster plots as part of qual
 
 \section{Getting started with Evoker}
 
-Using Evoker requires two important parts: the data, formatted and named in a specific way, can be stored either locally or on a remote server to which you have SSH access and the main Evoker program, which is run locally on your PC and is used for displaying cluster plots and assigning them a Pass/Fail verdict. You will need Java 5.0 (also known as version 1.5) or newer on your local machine to run Evoker. There are three platform specific Evoker installation bundles for Mac, Windows and Linux and an additional package which combines all three. All the different packages contain the same perl scripts and example files but simply differ in the type of file used to start the Evoker program. The Mac bundle contains an application called Evoker, the Windows bundle contains the executable file \texttt{Evoker.exe} and the Linux bundle contains a jar file called \texttt{Evoker.jar}. On all platforms to start Evoker simply requires double clicking on the relevant Evoker icon, in the case of Mac and Windows launching Evoker in this way starts the program with additional memory enabling the loading of larger studies. Launching Evoker by double clicking the \texttt{Evoker.jar} file starts the program with the default amount of memory which may be insufficient for larger data sets. If double clicking the Evoker icon does not work or extra memory is required then Evoker can be launched from the command line by issuing the following command:
+Using Evoker requires two important parts: the data, formatted and named in a specific way, can be stored either locally or on a remote server to which you have SSH access and the main Evoker program, which is run locally on your PC and is used for displaying cluster plots and assigning them a Pass/Fail verdict. You will need Java 6.0 (also known as version 1.6) or newer on your local machine to run Evoker. The tarball of this version of Evoker (2.3) contains a jar file (Java Archive) called \texttt{Evoker.jar} which is compatible with Mac, Linux and Windows. Launching Evoker by double clicking the \texttt{Evoker.jar} file starts the program with the default amount of memory which may be insufficient for larger data sets. If extra memory is required then Evoker can be launched from the command line by issuing the following command:
 \begin{verbatim}
-java -Xmx 1024m -jar Evoker.jar 
+java -Xmx1024m -jar Evoker.jar 
 \end{verbatim}
-This will launch Evoker with up to 1Gb of memory available, to increase this amount further simply change the value passed to the \texttt{-Xmx} argument, this approach also works on Mac and Windows using the \texttt{Evoker.jar} file.
+This will launch Evoker with up to 1 GB of memory available, to increase this amount further simply change the value passed to the \texttt{-Xmx} argument.
 
 \subsection{File formats and conventions}
 
@@ -215,6 +215,8 @@ This feature is only available for data that has been loaded locally.
 To then save the changes, go to the \texttt{File} menu and select \texttt{Save BED...} and select the collection you wish to save.  To the filename you specified "[chromosome].bed" will be appended.  Only chromosomes in which you changed something will be saved.
 
 If you have made changed to a number of cohorts you can save all the changes in one go, from the \texttt{File} menu select \texttt{Save All BEDs}. Every cohort with modified genotype calls will have a file generated and saved in the original data folder for each chromosome that was changed. The new files will follow the naming convention "cohort.chr.mod.bed".
+
+There is also an option to export bed, bim, and bam files at once by selecting ``Save .bed/.bim/.fam'' from the Settings menu. This option can be useful for directory management with UNIX since all the files can be moved with a ``.*'' wildcard.
 
 \section{Scoring intensity plots}
 The following section provides a few cluster plot examples to help users interpret their data. Generally, SNPs can be either hard or easy to call, depending on the properties of the clusters. Hard to call SNPs never produce accurate genotypes, but easy to call SNPs can contain errors introduced by the calling algorithm. Depending on what analysis is being performed, one might be interested in any or all of these categories.
