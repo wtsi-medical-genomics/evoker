@@ -13,11 +13,15 @@ Installing and running
 ----------------------
 To install, download the tarball of the [latest release](https://github.com/wtsi-medical-genomics/evoker/releases). Once extracted, you can either double click Evoker.jar contained within or from the command line:
 
+```
 $ java -jar Evoker.jar
+```
 
-To run with more memory than the default allocation, the -Xmx option can be used. For example to specify 1 GB of memeory,
+To run with more memory than the default allocation, the ```-Xmx``` option can be used. For example to specify 1 GB of memeory,
 
+```
 $ java -Xmx1024m -jar Evoker.jar
+```
 
 For more information see the documentation included in the release.
 
