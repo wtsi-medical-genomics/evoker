@@ -11,13 +11,13 @@ Daniel Rice (dr9@sanger.ac.uk)
 
 Authors
 -------
-James Morris
-Jeff Barrett
+* James Morris
+* Jeff Barrett
 
 Contributors
 ------------
-Tim Poterba
-Natalie Wirth
+* Tim Poterba
+* Natalie Wirth
 
 Requirements
 ------------
