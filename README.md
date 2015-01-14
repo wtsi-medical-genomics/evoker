@@ -5,6 +5,20 @@ Description
 -----------
 Evoker is a graphical tool for plotting genotype intensity data in order to assess quality of genotype calls. It implements a compact, binary format which allows rapid access to data, even with hundreds of thousands of observations.
 
+Maintainer
+----------
+Daniel Rice (dr9@sanger.ac.uk)
+
+Authors
+-------
+James Morris
+Jeff Barrett
+
+Contributors
+------------
+Tim Poterba
+Natalie Wirth
+
 Requirements
 ------------
 To run Evoker you will need Java 6.0 (also known as 1.6) or later.
