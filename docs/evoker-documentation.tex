@@ -166,7 +166,7 @@ When using Evoker with your own data, you can use \texttt{PLINK} to create your 
 All input files should be named in the style \texttt{collection.chromosome.int} and the SNPs must be in the same order as the corresponding \texttt{.bim} file, and each pair of intensities should appear in the same order as the pair of alleles in the relevant entry in the matching \texttt{.bim} file.
 
 \subsubsection{Default intensity format}
-The default input format for \texttt{int2bnt.pl} is straightforward. It is a matrix of intensities with SNPs as rows and individuals as pairs of whitespace--separated columns. The first row of the file is a header with the names of the samples (each repeated twice because there are two intensities per sample), which must be in the same order as the matching \texttt{.fam} file. An example for two individuals and three SNPs might look like this:
+The default input format for \texttt{int2bnt.pl} is straightforward. It is a matrix of intensities with SNPs as rows and individuals as pairs of whitespace--separated columns. The first row of the file is a header with the names of the samples (each repeated twice because there are two intensities per sample), which must be in the same order as the matching \texttt{.fam} file (see figure \ref{unsorted} for example of files that not in order.) An example of a default intensity format for two individuals and three SNPs might look like this:
 
 \begin{verbatim}
 SNP CASE1 CASE1 CASE2 CASE2
@@ -174,6 +174,18 @@ rs123 0.956 0.009 0.999 0.010
 rs456 0.502 0.511 0.499 0.520
 rs789 0.012 0.026 0.003 0.977
 \end{verbatim}
+
+\begin{figure}[H]
+	\centering
+	\begin{tabular}{cc}
+		\epsfig{file=sorted.png,width=0.5\linewidth,clip=} &
+		\epsfig{file=unsorted.png,width=0.5\linewidth,clip=} 
+	\end{tabular}
+    \caption{The plot on the right is an example of what happens when the matching \texttt{int} and \texttt{fam} files are not in the same order. The plot on the left is with these files in the correct order.}
+	\label{unsorted}
+\end{figure}
+
+
 
 \subsubsection{Chiamo}
 If you use the Chiamo genotype calling program, the \texttt{int2bnt.pl} script is able to generate a \texttt{.bnt} file from the standard Chiamo input file. To use this file format just supply the following option when you run the \texttt{int2bnt.pl} script \texttt{--filetype "chiamo"}.
