@@ -112,7 +112,7 @@ public class DataDirectory {
     DataDirectory(String filename) throws IOException{
         boolean success = true;
         boolean oxFiles = false;
-        
+
         File directory = new File(filename);
         dataPath = directory.getAbsolutePath()+File.separator;
         String[] filesInDir = directory.list();
@@ -121,7 +121,7 @@ public class DataDirectory {
         if (directory.listFiles(new ExtensionFilter(".snp")).length > 0) {
         	oxFiles = true;
         }
-        
+
         //markerId
         HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
         
@@ -149,7 +149,7 @@ public class DataDirectory {
         
         for(String collection : samplesByCollection.keySet()){
             HashMap<String, BinaryFloatDataFile> tmpIntensity = new HashMap<String, BinaryFloatDataFile>();
-            HashMap<String, BinaryDataFile> tmpGenotypes = new HashMap<String, BinaryDataFile>();       
+            HashMap<String, BinaryDataFile> tmpGenotypes = new HashMap<String, BinaryDataFile>();
             for (String chrom : knownChroms.keySet()){
             	String name;
             	if (oxFiles){

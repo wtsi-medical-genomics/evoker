@@ -219,14 +219,26 @@ public class PlotPanel extends JPanel {
 		return data.getMinDim() - 0.05 * range;
 	}
 
+	public void setDimensions() {
+		setDimensions(getMinDim(), getMaxDim());
+	}
+
 	public void setDimensions(double min, double max) {
 		if (jfc != null) {
-			jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
-			jfc.getXYPlot().getRangeAxis().setRange(min, max);
 			if (data.getCoordSystem().matches("POLAR")) {
+				jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+				jfc.getXYPlot().getRangeAxis().setRange(min, max);
 				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, 0, 2));
 				jfc.getXYPlot().getDomainAxis().setRange(0, 2);
+			} else if(data.getCoordSystem().matches("UKBIOBANK")) {
+				System.out.println("Here " + data.getCoordSystem());
+				jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+				jfc.getXYPlot().getRangeAxis().setRange(min, max);
+				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
+				jfc.getXYPlot().getDomainAxis().setRange(min, max);
 			} else {
+				jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+				jfc.getXYPlot().getRangeAxis().setRange(min, max);
 				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
 				jfc.getXYPlot().getDomainAxis().setRange(min, max);
 			}

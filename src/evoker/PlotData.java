@@ -36,6 +36,7 @@ public class PlotData {
         this.intensities.addAll(intensities);
     }
 
+
     XYSeriesCollection generatePoints() {
         if (intensities == null || calledGenotypes == null) {
             return null;
@@ -70,8 +71,16 @@ public class PlotData {
 
                 intens[0] = theta;
                 intens[1] = r;
-            }
+            } else if (getCoordSystem().matches("UKBIOBANK")) {
+                float a = intens[0];
+                float b = intens[1];
 
+                // Contrast (x-axis) = log2(A/B)
+                intens[0] = (float) log2(a/b);
+
+                // Strength (y-axis) = (log2(A*B))/2
+                intens[1] = (float) log2(a*b)/2;
+             }
 
             // check if there is a valid exclude file loaded
             if (exclude != null) {
@@ -242,80 +251,81 @@ public class PlotData {
         //number of heterozygotes observed.
         //
         // (c) 2003 Jan Wigginton, Goncalo Abecasis
-        int diplotypes = obsAA + obsAB + obsBB;
-        if (diplotypes == 0) {
-            return 0;
-        }
-        int rare = (obsAA * 2) + obsAB;
-        int hets = obsAB;
+        return 0.5;
+    //     int diplotypes = obsAA + obsAB + obsBB;
+    //     if (diplotypes == 0) {
+    //         return 0;
+    //     }
+    //     int rare = (obsAA * 2) + obsAB;
+    //     int hets = obsAB;
 
 
-        //make sure "rare" allele is really the rare allele
-        if (rare > diplotypes) {
-            rare = 2 * diplotypes - rare;
-        }
+    //     //make sure "rare" allele is really the rare allele
+    //     if (rare > diplotypes) {
+    //         rare = 2 * diplotypes - rare;
+    //     }
 
-        double[] tailProbs = new double[rare + 1];
-        for (int z = 0; z < tailProbs.length; z++) {
-            tailProbs[z] = 0;
-        }
+    //     double[] tailProbs = new double[rare + 1];
+    //     for (int z = 0; z < tailProbs.length; z++) {
+    //         tailProbs[z] = 0;
+    //     }
 
-        //start at midpoint
-        int mid = rare * (2 * diplotypes - rare) / (2 * diplotypes);
+    //     //start at midpoint
+    //     int mid = rare * (2 * diplotypes - rare) / (2 * diplotypes);
 
-        //check to ensure that midpoint and rare alleles have same parity
-        if (((rare & 1) ^ (mid & 1)) != 0) {
-            mid++;
-        }
-        int het = mid;
-        int hom_r = (rare - mid) / 2;
-        int hom_c = diplotypes - het - hom_r;
+    //     //check to ensure that midpoint and rare alleles have same parity
+    //     if (((rare & 1) ^ (mid & 1)) != 0) {
+    //         mid++;
+    //     }
+    //     int het = mid;
+    //     int hom_r = (rare - mid) / 2;
+    //     int hom_c = diplotypes - het - hom_r;
 
-        //Calculate probability for each possible observed heterozygote
-        //count up to a scaling constant, to avoid underflow and overflow
-        tailProbs[mid] = 1.0;
-        double sum = tailProbs[mid];
-        for (het = mid; het > 1; het -= 2) {
-            tailProbs[het - 2] = (tailProbs[het] * het * (het - 1.0)) / (4.0 * (hom_r + 1.0) * (hom_c + 1.0));
-            sum += tailProbs[het - 2];
-            //2 fewer hets for next iteration -> add one rare and one common homozygote
-            hom_r++;
-            hom_c++;
-        }
+    //     //Calculate probability for each possible observed heterozygote
+    //     //count up to a scaling constant, to avoid underflow and overflow
+    //     tailProbs[mid] = 1.0;
+    //     double sum = tailProbs[mid];
+    //     for (het = mid; het > 1; het -= 2) {
+    //         tailProbs[het - 2] = (tailProbs[het] * het * (het - 1.0)) / (4.0 * (hom_r + 1.0) * (hom_c + 1.0));
+    //         sum += tailProbs[het - 2];
+    //         //2 fewer hets for next iteration -> add one rare and one common homozygote
+    //         hom_r++;
+    //         hom_c++;
+    //     }
 
-        het = mid;
-        hom_r = (rare - mid) / 2;
-        hom_c = diplotypes - het - hom_r;
-        for (het = mid; het <= rare - 2; het += 2) {
-            tailProbs[het + 2] = (tailProbs[het] * 4.0 * hom_r * hom_c) / ((het + 2.0) * (het + 1.0));
-            sum += tailProbs[het + 2];
-            //2 more hets for next iteration -> subtract one rare and one common homozygote
-            hom_r--;
-            hom_c--;
-        }
+    //     het = mid;
+    //     hom_r = (rare - mid) / 2;
+    //     hom_c = diplotypes - het - hom_r;
+    //     for (het = mid; het <= rare - 2; het += 2) {
+    //         tailProbs[het + 2] = (tailProbs[het] * 4.0 * hom_r * hom_c) / ((het + 2.0) * (het + 1.0));
+    //         sum += tailProbs[het + 2];
+    //         //2 more hets for next iteration -> subtract one rare and one common homozygote
+    //         hom_r--;
+    //         hom_c--;
+    //     }
 
-        for (int z = 0; z < tailProbs.length; z++) {
-            tailProbs[z] /= sum;
-        }
+    //     for (int z = 0; z < tailProbs.length; z++) {
+    //         tailProbs[z] /= sum;
+    //     }
 
-        double top = tailProbs[hets];
-        for (int i = hets + 1; i <= rare; i++) {
-            top += tailProbs[i];
-        }
-        double otherSide = tailProbs[hets];
-        for (int i = hets - 1; i >= 0; i--) {
-            otherSide += tailProbs[i];
-        }
+    //     double top = tailProbs[hets];
+    //     for (int i = hets + 1; i <= rare; i++) {
+    //         top += tailProbs[i];
+    //     }
+    //     double otherSide = tailProbs[hets];
+    //     for (int i = hets - 1; i >= 0; i--) {
+    //         otherSide += tailProbs[i];
+    //     }
 
-        if (top > 0.5 && otherSide > 0.5) {
-            return 1.0;
-        } else {
-            if (top < otherSide) {
-                return top * 2;
-            } else {
-                return otherSide * 2;
-            }
-        }
+    //     if (top > 0.5 && otherSide > 0.5) {
+    //         return 1.0;
+    //     } else {
+    //         if (top < otherSide) {
+    //             return top * 2;
+    //         } else {
+    //             return otherSide * 2;
+    //         }
+    //     }
     }
 
     public HashMap<String, Byte> getGenotypeChanges() {
@@ -368,5 +378,9 @@ public class PlotData {
     
     public int getIndexInArrayList(String ind){
         return indexInArrayListByInd.get(ind);
+    }
+
+    private double log2(double x) {
+        return Math.log(x) / Math.log(2);
     }
 }

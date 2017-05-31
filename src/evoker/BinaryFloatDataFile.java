@@ -85,4 +85,3 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         return record;
     }
 }
-

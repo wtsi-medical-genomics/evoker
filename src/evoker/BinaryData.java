@@ -30,8 +30,6 @@ public abstract class BinaryData {
         this.collection = collection;
         this.chromosome = chromosome;
     }
-                                                                                                                    
-
 
     public abstract ArrayList getRecord(String markerName) throws IOException;
 
