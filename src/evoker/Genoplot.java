@@ -40,6 +40,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.jfree.ui.ExtensionFileFilter;
 
+import evoker.Types.FileFormat;
+import evoker.Types.CoordinateSystem;
+
+
 public class Genoplot extends JFrame implements ActionListener {
 
     private DataDirectory db;
@@ -109,7 +113,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private int maybePlotNum;
     private int noPlotNum;
     // default values
-    private String coordSystem = "UKBIOBANK";
+    private CoordinateSystem coordSystem = CoordinateSystem.CART;
     private int plotHeight = 300;
     private int plotWidth = 300;
 
@@ -433,12 +437,17 @@ public class Genoplot extends JFrame implements ActionListener {
                 if (odd.success()) {
                     String directory = odd.getDirectory();
                     FileFormat ff = odd.getFileFormat();
+                    if (ff == FileFormat.UKBIOBANK) {
+                        setCoordSystem(CoordinateSystem.UKBIOBANK);
+                    } else {
+                        setCoordSystem(CoordinateSystem.CART);
+                    }
                     try {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         if (!new File(directory).exists()) {
                             throw new IOException("Directory does not exist!");
                         }
-                        db = new DataDirectory(directory);
+                        db = new DataDirectory(directory, ff);
                         plottedSNP = null;
                         finishLoadingDataSource();
                         refreshSaveMenu();
@@ -557,13 +566,13 @@ public class Genoplot extends JFrame implements ActionListener {
                     generatePDFs();
                 }
             } else if (command.equals(cartesianCommand)) {
-                setCoordSystem("CART");
+                setCoordSystem(CoordinateSystem.CART);
                 refreshPlot();
             } else if (command.equals(polarCommand)) {
-                setCoordSystem("POLAR");
+                setCoordSystem(CoordinateSystem.POLAR);
                 refreshPlot();
             } else if (command.equals(ukBiobankCommand)) {
-                setCoordSystem("UKBIOBANK");
+                setCoordSystem(CoordinateSystem.UKBIOBANK);
                 refreshPlot();
             } else if (command.equals(plotSettingsCommand)) {
                 sd.pack();
@@ -822,11 +831,11 @@ public class Genoplot extends JFrame implements ActionListener {
         return historySNP;
     }
 
-    private void setCoordSystem(String s) {
-        coordSystem = s;
+    private void setCoordSystem(CoordinateSystem  cs) {
+        coordSystem = cs;
     }
 
-    private String getCoordSystem() {
+    private CoordinateSystem getCoordSystem() {
         return coordSystem;
     }
 
@@ -1177,7 +1186,7 @@ public class Genoplot extends JFrame implements ActionListener {
             }
 
             for (PlotPanel pp : plots) {
-                if(coordSystem.matches("UKBIOBANK")) {
+                if(coordSystem == CoordinateSystem.UKBIOBANK) {
                     pp.setDimensions();
                 } else {
                     pp.setDimensions(mindim, maxdim);

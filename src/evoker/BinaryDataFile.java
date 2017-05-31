@@ -23,7 +23,7 @@ public abstract class BinaryDataFile extends BinaryData{
      * Checks whether the file is of a valid format
      * 
      * @param headers
-     * @throws IOException 
+     * @throws IOException
      */
     public void checkFile(byte[] headers) throws IOException{
 

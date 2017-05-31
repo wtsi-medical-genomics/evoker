@@ -5,6 +5,8 @@ import java.util.HashMap;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 
+import evoker.Types.CoordinateSystem;
+
 public class PlotData {
 
     private ArrayList<Byte> calledGenotypes;
@@ -13,14 +15,14 @@ public class PlotData {
     private SampleData samples;
     private QCFilterData exclude;
     private int sampleNum;
-    private String coordSystem;
+    private CoordinateSystem coordSystem;
     private ArrayList<ArrayList<String>> indsInClasses;
     private HashMap<String, Integer> indexInArrayListByInd;
     private char[] alleles;
     private HashMap<String, Byte> genotypeChanges = new HashMap<String, Byte>();
     public boolean changed = false;
 
-    PlotData(ArrayList<Byte> calledGenotypes, ArrayList<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, String coordSystem) {
+    PlotData(ArrayList<Byte> calledGenotypes, ArrayList<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, CoordinateSystem coordSystem) {
         this.calledGenotypes = calledGenotypes;
         this.intensities = intensities;
         this.samples = samples;
@@ -62,7 +64,7 @@ public class PlotData {
         for (int i = 0; i < intensities.size(); i++) {
             float[] intens = intensities.get(i);
 
-            if (getCoordSystem().matches("POLAR")) {
+            if (getCoordSystem() == CoordinateSystem.POLAR) {
                 float x = intens[0];
                 float y = intens[1];
 
@@ -71,7 +73,7 @@ public class PlotData {
 
                 intens[0] = theta;
                 intens[1] = r;
-            } else if (getCoordSystem().matches("UKBIOBANK")) {
+            } else if (getCoordSystem() == CoordinateSystem.UKBIOBANK) {
                 float a = intens[0];
                 float b = intens[1];
 
@@ -364,11 +366,11 @@ public class PlotData {
         return sampleNum;
     }
 
-    private void setCoordSystem(String coordSystem) {
+    private void setCoordSystem(CoordinateSystem coordSystem) {
         this.coordSystem = coordSystem;
     }
     
-    public String getCoordSystem() {
+    public CoordinateSystem getCoordSystem() {
         return coordSystem;
     }
     

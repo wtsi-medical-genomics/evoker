@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import evoker.Types.CoordinateSystem;
+
 public class PlotPanel extends JPanel {
 
 	/**
@@ -61,12 +63,13 @@ public class PlotPanel extends JPanel {
 		this.totalMaf = totalMaf;
 		this.totalSamples = totalSamples;
 
-		if (pd.getCoordSystem().matches("POLAR")) {
-			this.xlab = String.valueOf("\u03F4");
-			this.ylab = String.valueOf("r");
-		} else {
-			this.xlab = String.valueOf("X");
-			this.ylab = String.valueOf("Y");
+		switch (pd.getCoordSystem()) {
+            case POLAR:
+                this.xlab = String.valueOf("\u03F4");
+                this.ylab = String.valueOf("r");
+            default:
+                this.xlab = String.valueOf("X");
+                this.ylab = String.valueOf("Y");
 		}
 
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -225,24 +228,23 @@ public class PlotPanel extends JPanel {
 
 	public void setDimensions(double min, double max) {
 		if (jfc != null) {
-			if (data.getCoordSystem().matches("POLAR")) {
-				jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
-				jfc.getXYPlot().getRangeAxis().setRange(min, max);
-				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, 0, 2));
-				jfc.getXYPlot().getDomainAxis().setRange(0, 2);
-			} else if(data.getCoordSystem().matches("UKBIOBANK")) {
-				System.out.println("Here " + data.getCoordSystem());
-				jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
-				jfc.getXYPlot().getRangeAxis().setRange(min, max);
-				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
-				jfc.getXYPlot().getDomainAxis().setRange(min, max);
-			} else {
-				jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
-				jfc.getXYPlot().getRangeAxis().setRange(min, max);
-				jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
-				jfc.getXYPlot().getDomainAxis().setRange(min, max);
+			switch (data.getCoordSystem()) {
+				case POLAR:
+					jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+					jfc.getXYPlot().getRangeAxis().setRange(min, max);
+					jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, 0, 2));
+					jfc.getXYPlot().getDomainAxis().setRange(0, 2);
+				case UKBIOBANK:
+					jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+					jfc.getXYPlot().getRangeAxis().setRange(min, max);
+					jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
+					jfc.getXYPlot().getDomainAxis().setRange(min, max);
+				default:
+					jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
+					jfc.getXYPlot().getRangeAxis().setRange(min, max);
+					jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
+					jfc.getXYPlot().getDomainAxis().setRange(min, max);
 			}
-
 		}
 	}
 

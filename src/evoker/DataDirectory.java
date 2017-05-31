@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import evoker.Types.FileFormat;
+import evoker.Types.CoordinateSystem;
+
 /**
  * Manages all file information
  */
@@ -109,24 +112,26 @@ public class DataDirectory {
         displayName = dc.getDisplayName();
     }
 
-    DataDirectory(String filename) throws IOException{
+    DataDirectory(String filename, FileFormat ff) throws IOException{
         boolean success = true;
-        boolean oxFiles = false;
 
         File directory = new File(filename);
-        dataPath = directory.getAbsolutePath()+File.separator;
+        dataPath = directory.getAbsolutePath() + File.separator;
         String[] filesInDir = directory.list();
         
         // check if the directory contains Oxford format files
-        if (directory.listFiles(new ExtensionFilter(".snp")).length > 0) {
-        	oxFiles = true;
-        }
+
 
         //markerId
         HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
         
-        if (oxFiles){
-            int i = 0,a = 0;
+        if (ff == FileFormat.OXFORD){
+
+            if (directory.listFiles(new ExtensionFilter(".snp")).length == 0) {
+                throw new IOException("Cannot find .snp files.");
+            }
+
+            int i = 0, a = 0;
             for (String s : filesInDir){
                 if (s.contains("illumina")){
                     oxPlatform = "illumina";
@@ -139,6 +144,7 @@ public class DataDirectory {
                     a = 1;
                 }
             }
+
             if (i+a == 0){
                 throw new IOException("Cannot find either *affy or *illumina Oxford files.");
             }
@@ -152,7 +158,7 @@ public class DataDirectory {
             HashMap<String, BinaryDataFile> tmpGenotypes = new HashMap<String, BinaryDataFile>();
             for (String chrom : knownChroms.keySet()){
             	String name;
-            	if (oxFiles){
+            	if (ff == FileFormat.OXFORD){
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
                     name = directory.getAbsolutePath() + File.separator + name;
                     md.addFile(name,collection,chrom,true);
@@ -169,7 +175,7 @@ public class DataDirectory {
                 //we can log all the missing files at once.
                 if (success){
                     //data files for this collection and chromosome:
-                    if (oxFiles){
+                    if (ff == FileFormat.OXFORD){
                     	name = collection + "_" + chrom + "_" + oxPlatform;
                         name = directory.getAbsolutePath() + File.separator + name;
                         boolean zipped = true;
@@ -192,7 +198,7 @@ public class DataDirectory {
                                     samplesByCollection.get(collection).getNumInds(),
                                     md,collection, chrom));
                         }
-                    }else{
+                    } else {
                     	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
                                 samplesByCollection.get(collection).getNumInds(),
                                 md,collection,2, chrom));
@@ -390,7 +396,7 @@ public class DataDirectory {
      * @return  representative PlotData Object
      * @throws IOException 
      */
-    public PlotData getRecord(String snp, String collection, String coordSystem) throws IOException{
+    public PlotData getRecord(String snp, String collection, CoordinateSystem coordSystem) throws IOException{
         /**if (collection.equals("ALL")){
             return getRecord(snp);
         }**/
@@ -427,7 +433,7 @@ public class DataDirectory {
             return pd;
         	
         }else{
-            return new PlotData(null,null,null,null,null,"null");
+            return new PlotData(null,null,null,null,null, null);
         }
     }
 
