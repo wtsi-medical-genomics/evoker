@@ -7,6 +7,7 @@ public abstract class BinaryData {
 
     protected static final byte[] bedMagic = {0x6c, 0x1b, 0x01};
     protected static final byte[] bntMagic = {0x1a, 0x31};
+    protected static final byte[] bntUKBioBankMagic = {};
 
     protected MarkerData md;
     protected String collection;

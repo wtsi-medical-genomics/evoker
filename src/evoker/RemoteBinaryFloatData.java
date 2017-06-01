@@ -7,16 +7,24 @@ import java.io.FileInputStream;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import evoker.Types.FileFormat;
 
 public class RemoteBinaryFloatData extends RemoteBinaryData {
 
     protected int valuesPerEntry;
 
-    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String name, String chromosome) throws IOException {
+    RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String name, String chromosome, FileFormat fileFormat) throws IOException {
         super(dc, numInds, md, collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
-        checkFile(name, bntMagic);
+        switch (fileFormat) {
+            case UKBIOBANK:
+                checkFile(name, bntMagic);
+                break;
+            case DEFAULT:
+                checkFile(name, bntUKBioBankMagic);
+                break;
+        }
     }
     
     RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String chromosome) {

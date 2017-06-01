@@ -8,18 +8,26 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import evoker.Types.FileFormat;
 
 public class BinaryFloatDataFile extends BinaryDataFile{
 
     private int valuesPerEntry;
 
-    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, String chromosome)
+    BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, String chromosome, FileFormat fileFormat)
             throws IOException{
         super(filename, numInds, md,collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
-        checkFile(bntMagic);
+        switch (fileFormat) {
+            case UKBIOBANK:
+                checkFile(bntUKBioBankMagic);
+                break;
+            default:
+                checkFile(bntMagic);
+                break;
+        }
     }
     
     BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, boolean zipped, String chromosome)

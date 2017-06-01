@@ -67,9 +67,11 @@ public class PlotPanel extends JPanel {
             case POLAR:
                 this.xlab = String.valueOf("\u03F4");
                 this.ylab = String.valueOf("r");
+                break;
             default:
                 this.xlab = String.valueOf("X");
                 this.ylab = String.valueOf("Y");
+                break;
 		}
 
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -234,16 +236,19 @@ public class PlotPanel extends JPanel {
 					jfc.getXYPlot().getRangeAxis().setRange(min, max);
 					jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, 0, 2));
 					jfc.getXYPlot().getDomainAxis().setRange(0, 2);
+					break;
 				case UKBIOBANK:
 					jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
 					jfc.getXYPlot().getRangeAxis().setRange(min, max);
 					jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
 					jfc.getXYPlot().getDomainAxis().setRange(min, max);
+					break;
 				default:
 					jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, min, max));
 					jfc.getXYPlot().getRangeAxis().setRange(min, max);
 					jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, min, max));
 					jfc.getXYPlot().getDomainAxis().setRange(min, max);
+					break;
 			}
 		}
 	}

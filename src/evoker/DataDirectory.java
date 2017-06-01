@@ -34,7 +34,7 @@ public class DataDirectory {
     String displayName;
     String dataPath;
 
-    DataDirectory(DataClient dc) throws IOException{
+    DataDirectory(DataClient dc, FileFormat fileFormat) throws IOException{
         boolean success = true;
 
         this.dc = dc;
@@ -89,7 +89,8 @@ public class DataDirectory {
                     //data files for this collection and chromosome:
                     tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection,2,collection + "." + chrom + ".bnt", chrom));
+                            md,collection,2,collection + "." + chrom + ".bnt", chrom,
+                            fileFormat));
                     tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
                             samplesByCollection.get(collection).getNumInds(),
                             md,collection,collection + "." + chrom + ".bed", chrom));
@@ -112,7 +113,7 @@ public class DataDirectory {
         displayName = dc.getDisplayName();
     }
 
-    DataDirectory(String filename, FileFormat ff) throws IOException{
+    DataDirectory(String filename, FileFormat fileFormat) throws IOException{
         boolean success = true;
 
         File directory = new File(filename);
@@ -125,7 +126,7 @@ public class DataDirectory {
         //markerId
         HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
         
-        if (ff == FileFormat.OXFORD){
+        if (fileFormat == FileFormat.OXFORD){
 
             if (directory.listFiles(new ExtensionFilter(".snp")).length == 0) {
                 throw new IOException("Cannot find .snp files.");
@@ -158,7 +159,7 @@ public class DataDirectory {
             HashMap<String, BinaryDataFile> tmpGenotypes = new HashMap<String, BinaryDataFile>();
             for (String chrom : knownChroms.keySet()){
             	String name;
-            	if (ff == FileFormat.OXFORD){
+            	if (fileFormat == FileFormat.OXFORD){
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
                     name = directory.getAbsolutePath() + File.separator + name;
                     md.addFile(name,collection,chrom,true);
@@ -175,7 +176,7 @@ public class DataDirectory {
                 //we can log all the missing files at once.
                 if (success){
                     //data files for this collection and chromosome:
-                    if (ff == FileFormat.OXFORD){
+                    if (fileFormat == FileFormat.OXFORD){
                     	name = collection + "_" + chrom + "_" + oxPlatform;
                         name = directory.getAbsolutePath() + File.separator + name;
                         boolean zipped = true;
@@ -187,7 +188,7 @@ public class DataDirectory {
                         } else {
                         	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".int.bin",
                                     samplesByCollection.get(collection).getNumInds(),
-                                    md,collection,2, chrom));
+                                    md,collection,2, chrom, fileFormat));
                         }
                         if (new File(name+".gen.bin.gz").exists()) {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin.gz",
@@ -201,7 +202,7 @@ public class DataDirectory {
                     } else {
                     	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
                                 samplesByCollection.get(collection).getNumInds(),
-                                md,collection,2, chrom));
+                                md,collection,2, chrom, fileFormat));
                         tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",
                                 samplesByCollection.get(collection).getNumInds(),
                                 md,collection, chrom));

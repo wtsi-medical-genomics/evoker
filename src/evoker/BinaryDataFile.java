@@ -31,7 +31,7 @@ public abstract class BinaryDataFile extends BinaryData{
         	
         	BigInteger fileSize       = BigInteger.valueOf(file.length());
         	BigInteger checkSize      = BigInteger.valueOf(new Long(numSNPs)).multiply(BigInteger.valueOf(new Long(bytesPerRecord)));
-        	
+
         	if (!fileSize.equals(checkSize.add(BigInteger.valueOf(new Long(headers.length))))) {
         		if (fileSize.equals(checkSize.add(new BigInteger("8")))){
         			//alternate Oxford format

@@ -436,18 +436,14 @@ public class Genoplot extends JFrame implements ActionListener {
                 odd.setVisible(true);
                 if (odd.success()) {
                     String directory = odd.getDirectory();
-                    FileFormat ff = odd.getFileFormat();
-                    if (ff == FileFormat.UKBIOBANK) {
-                        setCoordSystem(CoordinateSystem.UKBIOBANK);
-                    } else {
-                        setCoordSystem(CoordinateSystem.CART);
-                    }
+                    FileFormat fileFormat = odd.getFileFormat();
                     try {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         if (!new File(directory).exists()) {
                             throw new IOException("Directory does not exist!");
                         }
-                        db = new DataDirectory(directory, ff);
+                        setStandardCoordSystem(fileFormat);
+                        db = new DataDirectory(directory, fileFormat);
                         plottedSNP = null;
                         finishLoadingDataSource();
                         refreshSaveMenu();
@@ -475,7 +471,7 @@ public class Genoplot extends JFrame implements ActionListener {
                                 // when loading only allow the user to view the log
                                 disableAllActions();
                                 showLogItem.setEnabled(true);
-                                db = new DataDirectory(dc);
+                                db = new DataDirectory(dc, dcd.getFileFormat());
                                 finishLoadingDataSource();
                                 refreshSaveMenu();
                             }
@@ -833,6 +829,28 @@ public class Genoplot extends JFrame implements ActionListener {
 
     private void setCoordSystem(CoordinateSystem  cs) {
         coordSystem = cs;
+        switch (coordSystem) {
+            case CART:
+                viewCart.setSelected(true);
+                break;
+            case POLAR:
+                viewPolar.setSelected(true);
+                break;
+            case UKBIOBANK:
+                viewUKBiobank.setSelected(true);
+                break;
+        }
+    }
+
+    private void setStandardCoordSystem(FileFormat fileFormat) {
+        switch (fileFormat) {
+            case UKBIOBANK:
+                setCoordSystem(CoordinateSystem.UKBIOBANK);
+                break;
+            default:
+                setCoordSystem(CoordinateSystem.CART);
+                break;
+        }
     }
 
     private CoordinateSystem getCoordSystem() {

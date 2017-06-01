@@ -3,8 +3,11 @@ package evoker;
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import evoker.Types.FileFormat;
 
 public class DataConnectionDialog extends JDialog implements ActionListener {
+
+    private FileFormat fileFormat;
     private JPasswordField pf;
     private char[] password;
     private String username;
@@ -20,6 +23,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     private JCheckBox emptyIt;
     private JRadioButton defaultFormatButton;
     private JRadioButton oxfordFormatButton;
+    private JRadioButton ukBioBankFormatButton;
 
     public DataConnectionDialog(JFrame parent){
         super(parent,"Data Connection",true);
@@ -31,7 +35,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         hostPanel.add(new JLabel("Host: "));
         hostField = new JTextField(20);
         hostPanel.add(hostField);
-               
+
         hostPanel.add(new JLabel("Port: "));
         portField = new JTextField("22", 3);
         hostPanel.add(portField);
@@ -79,9 +83,14 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         formatPanel.add(defaultFormatButton);
         defaultFormatButton.setSelected(true);
         bg.add(defaultFormatButton);
+
         oxfordFormatButton = new JRadioButton("Oxford format");
         formatPanel.add(oxfordFormatButton);
         bg.add(oxfordFormatButton);
+
+        ukBioBankFormatButton = new JRadioButton("UK BioBank format");
+        formatPanel.add(ukBioBankFormatButton );
+        bg.add(ukBioBankFormatButton );
 
         bottomPanel.add(formatPanel);
         contents.add(bottomPanel);
@@ -111,6 +120,9 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
             localDir = locdirField.getText();
             host = hostField.getText();
             port = Integer.parseInt(portField.getText());
+            if (defaultFormatButton.isSelected()) { fileFormat = FileFormat.DEFAULT; }
+            else if (oxfordFormatButton.isSelected()) { fileFormat = FileFormat.OXFORD; }
+            else if (ukBioBankFormatButton.isSelected()) { fileFormat = FileFormat.UKBIOBANK; }
             this.dispose();
         }else if (e.getActionCommand().equals("Browse")){
             JFileChooser jfc = new JFileChooser("user.dir");
@@ -147,9 +159,15 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     	return port;
     }
 
-    public boolean isOxformat() {
-        return oxfordFormatButton.isSelected();
+    public FileFormat getFileFormat(){
+        return fileFormat;
     }
+
+    public boolean isOxformat() {
+//        return oxfordFormatButton.isSelected();
+        return getFileFormat() == FileFormat.OXFORD;
+    }
+
 
     public void clearPassword(){
         for (int i = 0; i < password.length; i++){

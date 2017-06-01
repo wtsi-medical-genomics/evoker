@@ -19,7 +19,7 @@ public class OpenDirectoryDialog extends JDialog implements ActionListener {
 //        DEFAULT, OXFORD, UKBIOBANK
 //    }
 
-    FileFormat ff;
+    private FileFormat fileFormat;
     private String directory;
     private JTextField directoryField;
     private JRadioButton defaultFormatButton;
@@ -84,9 +84,9 @@ public class OpenDirectoryDialog extends JDialog implements ActionListener {
 
         if (e.getActionCommand().equals("OK")){
             directory = directoryField.getText();
-            if (defaultFormatButton.isSelected()) { ff = FileFormat.DEFAULT; }
-            else if (oxfordFormatButton.isSelected()) { ff = FileFormat.OXFORD; }
-            else if (ukBioBankFormatButton.isSelected()) { ff = FileFormat.UKBIOBANK; }
+            if (defaultFormatButton.isSelected()) { fileFormat = FileFormat.DEFAULT; }
+            else if (oxfordFormatButton.isSelected()) { fileFormat = FileFormat.OXFORD; }
+            else if (ukBioBankFormatButton.isSelected()) { fileFormat = FileFormat.UKBIOBANK; }
             setSuccess(true);
             this.dispose();
         }else if (e.getActionCommand().equals("Browse")){
@@ -109,7 +109,7 @@ public class OpenDirectoryDialog extends JDialog implements ActionListener {
     }
 
     public FileFormat getFileFormat(){
-        return ff;
+        return fileFormat;
     }
 //
 //    public boolean allPlots() {
