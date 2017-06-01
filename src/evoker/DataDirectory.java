@@ -39,7 +39,7 @@ public class DataDirectory {
 
         this.dc = dc;
         File directory = dc.prepMetaFiles();
-        HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
+        HashMap<String,Boolean> knownChroms = parseMetaFiles(directory, fileFormat);
 
         if (dc.isOxFormat()){
             int i = 0,a = 0;
@@ -124,9 +124,9 @@ public class DataDirectory {
 
 
         //markerId
-        HashMap<String,Boolean> knownChroms = parseMetaFiles(directory);
+        HashMap<String,Boolean> knownChroms = parseMetaFiles(directory, fileFormat);
         
-        if (fileFormat == FileFormat.OXFORD){
+        if (fileFormat == FileFormat.OXFORD) {
 
             if (directory.listFiles(new ExtensionFilter(".snp")).length == 0) {
                 throw new IOException("Cannot find .snp files.");
@@ -243,7 +243,110 @@ public class DataDirectory {
 
         changesByCollection.get(collection).get(chromosome).get(snp).putAll(changes);
     }
-    
+
+    private void findQCFiles(File directory) throws IOException {
+		// is there a ".qc" file in the directory?
+		File[] qcfiles = directory.listFiles(new ExtensionFilter(".qc"));
+		if (qcfiles.length > 0) {
+			// for now just take the first qc file found, later load all qc files and list in the menu with the ability to select which file to use
+			File qcFile = qcfiles[0];
+			String name = qcFile.getName();
+			// parse the qc file and store all the samples to exclude in a ArrayList
+			setExcludeList(new QCFilterData(qcFile.getAbsolutePath()));
+			// turn filtering on
+			setFilterState(true);
+			Genoplot.ld.log("Loaded exclude file: " + name);
+		}
+	}
+
+	private void findFamFiles(File directory) throws IOException {
+		samplesByCollection = new HashMap<String, SampleData>();
+		File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
+		for (File famFile : fams) {
+			//stash all sample data in HashMap keyed on collection name.
+			String name = famFile.getName().substring(0, famFile.getName().length() - 4);
+			samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(), false));
+			Genoplot.ld.log("Found collection: " + name);
+		}
+	}
+
+	private void findOxfordSampleFiles(File directory) throws IOException {
+		samplesByCollection = new HashMap<String, SampleData>();
+    	File[] oxFams = directory.listFiles(new ExtensionFilter(".sample"));
+		for (File sampleFile : oxFams){
+			//see if we have oxford style sample files. yeesh.
+			String name = sampleFile.getName().split("_")[0];
+			samplesByCollection.put(name, new SampleData(sampleFile.getAbsolutePath(),true));
+			Genoplot.ld.log("Found collection: " + name);
+		}
+	}
+
+	private HashMap<String,Boolean> findBimFiles(File directory) throws IOException {
+
+		//what chromosomes do we have here?
+		File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
+		HashMap<String, Boolean> knownChroms = new HashMap<String, Boolean>();
+		byte counter = 0;
+		for (File bimFile : bims) {
+			String[] chunks = bimFile.getName().split("\\.");
+			if (knownChroms.get(chunks[1]) == null) {
+				knownChroms.put(chunks[1], true);
+				md.addChromToLookup(chunks[1], counter);
+				counter++;
+				Genoplot.ld.log("Found chromosome: " + chunks[1]);
+			}
+		}
+		return knownChroms;
+	}
+
+	private HashMap<String,Boolean> findOxfordSnpFiles(File directory) throws IOException {
+		//see if we have oxford style snp files...
+		//TODO: do this in a less heinous way? should probably feed in the boolean and separate the ox/non-ox searches
+		File[] snpFiles = directory.listFiles(new ExtensionFilter(".snp"));
+		HashMap<String, Boolean> knownChroms = new HashMap<String, Boolean>();
+		byte counter = 0;
+		for (File snpFile : snpFiles) {
+			String[] chunks = snpFile.getName().split("_");
+			if (knownChroms.get(chunks[1]) == null) {
+				knownChroms.put(chunks[1], true);
+				md.addChromToLookup(chunks[1], counter);
+				counter++;
+				Genoplot.ld.log("Found chromosome: " + chunks[1]);
+			}
+		}
+		return knownChroms;
+	}
+
+	private HashMap<String,Boolean> parseOxfordFiles(File directory) throws IOException{
+		findOxfordSampleFiles(directory);
+		int numberofCollections = samplesByCollection.size();
+		if (numberofCollections == 0){
+			throw new IOException("Zero sample collection (.fam) files found in " + directory.getName());
+		}
+		md = new MarkerData(numberofCollections);
+		findQCFiles(directory);
+		HashMap<String, Boolean> knownChroms = findOxfordSnpFiles(directory);
+		if (knownChroms.keySet().size() == 0){
+			throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
+		}
+		return knownChroms;
+	}
+
+	private HashMap<String,Boolean> parseDefaultFiles(File directory) throws IOException{
+		findFamFiles(directory);
+		int numberofCollections = samplesByCollection.size();
+		if (numberofCollections == 0){
+			throw new IOException("Zero sample collection (.fam) files found in " + directory.getName());
+		}
+		md = new MarkerData(numberofCollections);
+		findQCFiles(directory);
+		HashMap<String, Boolean> knownChroms = findBimFiles(directory);
+		if (knownChroms.keySet().size() == 0){
+			throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
+		}
+		return knownChroms;
+	}
+
     /**
      * Analyze filenames in given directory
      * 
@@ -254,7 +357,7 @@ public class DataDirectory {
      * @return  knownChromosomes   Chromosomes being contained
      * @throws IOException
      */
-    private HashMap<String,Boolean> parseMetaFiles(File directory) throws IOException{
+    private HashMap<String,Boolean> parseMetaFiles(File directory, FileFormat fileFormat) throws IOException{
 
         if (!directory.exists()){
             throw new IOException(directory.getName() + " does not exist!");
@@ -263,78 +366,12 @@ public class DataDirectory {
         intensityDataByCollectionChrom = new HashMap<String, HashMap<String, ? extends BinaryData>>();
         genotypeDataByCollectionChrom = new HashMap<String, HashMap<String, ? extends BinaryData>>();
 
-        samplesByCollection = new HashMap<String,SampleData>();
-        int numberofCollections=0;
-        File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
-        for (File famFile : fams){
-            //stash all sample data in HashMap keyed on collection name.
-            String name = famFile.getName().substring(0,famFile.getName().length()-4);
-            samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(),false));
-            numberofCollections++;
-            Genoplot.ld.log("Found collection: " + name);
-        }
-
-        File[] oxFams = directory.listFiles(new ExtensionFilter(".sample"));
-        for (File sampleFile : oxFams){
-            //see if we have oxford style sample files. yeesh.
-            String name = sampleFile.getName().split("_")[0];
-            samplesByCollection.put(name, new SampleData(sampleFile.getAbsolutePath(),true));
-            numberofCollections++;
-            Genoplot.ld.log("Found collection: " + name);
-        }
-
-        if (numberofCollections == 0){
-            throw new IOException("Zero sample collection (.fam) files found in " + directory.getName());
-        }
-
-        md = new MarkerData(numberofCollections);
-        
-        // is there a ".qc" file in the directory?
-        File[] qcfiles = directory.listFiles(new ExtensionFilter(".qc"));
-        if (qcfiles.length > 0) {
-        	// for now just take the first qc file found, later load all qc files and list in the menu with the ability to select which file to use
-        	File qcFile = qcfiles[0];
-        	String name = qcFile.getName();
-        	// parse the qc file and store all the samples to exclude in a ArrayList
-        	this.setExcludeList(new QCFilterData(qcFile.getAbsolutePath()));
-        	// turn filtering on
-        	this.setFilterState(true);
-        	Genoplot.ld.log("Loaded exclude file: " + name);
-        }
-
-        //what chromosomes do we have here?
-        File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
-        HashMap<String,Boolean> knownChroms  = new HashMap<String,Boolean>();
-        byte counter = 0;
-        for (File bimFile : bims){
-            String[] chunks = bimFile.getName().split("\\.");
-            if (knownChroms.get(chunks[1]) == null){
-                knownChroms.put(chunks[1],true);
-                md.addChromToLookup(chunks[1],counter);
-                counter++;
-                Genoplot.ld.log("Found chromosome: " + chunks[1]);
-            }
-        }
-
-        //see if we have oxford style snp files...
-        //TODO: do this in a less heinous way? should probably feed in the boolean and separate the ox/non-ox searches
-        File [] snpFiles = directory.listFiles(new ExtensionFilter(".snp"));
-        for (File snpFile : snpFiles){
-            String[] chunks = snpFile.getName().split("_");
-            if (knownChroms.get(chunks[1]) == null){
-                knownChroms.put(chunks[1],true);
-                md.addChromToLookup(chunks[1],counter);
-                counter++;
-                Genoplot.ld.log("Found chromosome: " + chunks[1]);
-            }
-        }
-
-
-        if (knownChroms.keySet().size() == 0){
-            throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
-        }
-        
-        return knownChroms;
+		switch (fileFormat) {
+			case OXFORD:
+				return parseOxfordFiles(directory);
+			default:
+				return parseDefaultFiles(directory);
+		}
     }
 
     public String getRandomSNP(){
