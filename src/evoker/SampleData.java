@@ -26,12 +26,14 @@ public class SampleData {
         }
         while ((currentLine = famReader.readLine()) != null){
             bits = currentLine.split("\\s");
-            String sample = bits[1];
+			String sample = bits[1];
             inds.add(sample);
         }
         famReader.close();
+    }
 
-
+    SampleData(Vector<String> inds) throws IOException{
+        this.inds = inds;
     }
     
     /**

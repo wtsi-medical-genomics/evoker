@@ -69,10 +69,17 @@ public class MarkerData {
      */
     public void addFile(String bimFile, String collection, String chromosome,
                         boolean isOx) throws IOException {
-        if (collectionIndices.get(collection) == null){
+
+    	// All of the chromosomes for one collection are loaded at once in DataDirectory
+		// which is why we can increase runningCount once the collection doesn't exist in
+		// collectionIndices as a key and not worry about returning to it later.
+        if (!collectionIndices.containsKey(collection)){
             runningCount++;
             collectionIndices.put(collection,runningCount);
         }
+
+        // We shouldn't get a NullPointerException here because addChromToLookup has been called
+		// in DataDirectory when the bim or snp file is parsed.
         byte chrom = chromosomeLookup.get(chromosome);
         String currentLine;
         BufferedReader bimReader =  new BufferedReader(new FileReader(bimFile));
@@ -86,7 +93,7 @@ public class MarkerData {
             bits = currentLine.split("\\s");
             StringBuffer snpid = null;
             char a = 'A',b = 'B';
-            // check the size of the bits array 
+            // check the size of the bits array
             if(bits.length >= 5) {
             	snpid = new StringBuffer(bits[1]);
             	if (isOx){
@@ -108,12 +115,12 @@ public class MarkerData {
 //            	missingAlleles = true;
 //            	snpid = new StringBuffer(bits[1]);
 //            } 
-            
-            if (markerTable.get(snpid.toString()) ==  null){
-                markerTable.put(snpid.toString(), new Marker(numCollections,a,b,chrom));
-            }
+            String stringSnpid = snpid.toString();
+            if (!markerTable.containsKey(stringSnpid))
+                markerTable.put(stringSnpid, new Marker(numCollections,a,b,chrom));
+
             //TP: only the first two args are used in addSampleCollection
-            markerTable.get(snpid.toString()).addSampleCollection(runningCount,index++,a,b,snpid.toString());
+            markerTable.get(stringSnpid).addSampleCollection(runningCount,index++,a,b,stringSnpid);
             
 //            if(! snpDB.containsKey(collection)) snpDB.put(collection, new HashMap<String, Vector<String>>());
 //            if(! snpDB.get(collection).containsKey(chromosome)) snpDB.get(collection).put(chromosome, new Vector<String>());

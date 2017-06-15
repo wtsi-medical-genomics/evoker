@@ -22,7 +22,7 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
                 checkFile(name, bntMagic);
                 break;
             case DEFAULT:
-                checkFile(name, bntUKBioBankMagic);
+                checkFile(name, bntUKBiobankMagic);
                 break;
         }
     }

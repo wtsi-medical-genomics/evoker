@@ -13,23 +13,48 @@ import evoker.Types.FileFormat;
 public class BinaryFloatDataFile extends BinaryDataFile{
 
     private int valuesPerEntry;
+    private FileFormat fileFormat;
 
+	/**
+	 * Non-zipped local intensity files.
+	 * @param filename
+	 * @param numInds
+	 * @param md
+	 * @param collection
+	 * @param vals
+	 * @param chromosome
+	 * @param fileFormat
+	 * @throws IOException
+	 */
     BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, String chromosome, FileFormat fileFormat)
             throws IOException{
         super(filename, numInds, md,collection, chromosome);
         this.valuesPerEntry = vals;
+        this.fileFormat = fileFormat;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
         switch (fileFormat) {
             case UKBIOBANK:
-                checkFile(bntUKBioBankMagic);
+                checkFile(bntUKBiobankMagic);
                 break;
             default:
                 checkFile(bntMagic);
                 break;
         }
     }
-    
+
+	/**
+	 * Zipped local intensity files.
+	 *
+	 * @param filename
+	 * @param numInds
+	 * @param md
+	 * @param collection
+	 * @param vals
+	 * @param zipped
+	 * @param chromosome
+	 * @throws IOException
+	 */
     BinaryFloatDataFile(String filename, int numInds, MarkerData md, String collection, int vals, boolean zipped, String chromosome)
     		throws IOException{
     	super(filename, numInds, md,collection, chromosome);
@@ -39,7 +64,6 @@ public class BinaryFloatDataFile extends BinaryDataFile{
     	bntHeaderOffset = 8;
     	// compressed file - do not use checkFile()
         // TODO: method for checking compressed files
-
     }
 
     BinaryFloatDataFile(String filename, RemoteBinaryFloatData rbfd) throws IOException{
