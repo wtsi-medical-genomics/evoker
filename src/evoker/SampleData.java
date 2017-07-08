@@ -1,9 +1,12 @@
 package evoker;
 
+import java.util.HashMap;
 import java.util.Vector;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+
+import evoker.Types.FileFormat;
 
 /**
  * Holds the SampleIDs of a given fam file in a Vector
@@ -11,23 +14,51 @@ import java.io.IOException;
 
 public class SampleData {
     Vector<String> inds;
-    
-    SampleData(String famFilename, boolean isOx) throws IOException{
+//    Vector<String> ukbBatchMembership;
+    HashMap<String, Vector<String>> ukbSamplesByBatch;
+
+    SampleData(String famFilename, FileFormat fileFormat) throws IOException{
 
         this.inds = new Vector<String>();
+        if (fileFormat == FileFormat.UKBIOBANK) {
+            ukbSamplesByBatch = new HashMap<String, Vector<String>>();
+        }
 
         BufferedReader famReader = new BufferedReader(new FileReader(famFilename));
         String currentLine;
-        String[] bits;
-        if (isOx){
+        String[] tokens;
+        if (fileFormat == FileFormat.OXFORD){
             //strip headers
             famReader.readLine();
             famReader.readLine();
         }
-        while ((currentLine = famReader.readLine()) != null){
-            bits = currentLine.split("\\s");
-			String sample = bits[1];
+
+
+
+        while ((currentLine = famReader.readLine()) != null) {
+            tokens = currentLine.split("\\s");
+            String sample = tokens[1];
             inds.add(sample);
+
+            if (fileFormat == FileFormat.UKBIOBANK) {
+                if (tokens.length == 5) {
+                    throw new IOException("UK Biobank fam file ill-formed: requires a sixth column indicating the batch.");
+                }
+                if (tokens.length != 6) {
+                    throw new IOException("UK Biobank fam file ill-formed: requires six columns.");
+                }
+                String batch = tokens[5];
+
+                //ukbBatchMembership.add(batch);
+
+                if (ukbSamplesByBatch.containsKey(batch)) {
+                    ukbSamplesByBatch.get(batch).add(sample);
+                } else {
+                    Vector<String> v = new Vector<String>(1);
+                    v.add(sample);
+                    ukbSamplesByBatch.put(batch, v);
+                }
+            }
         }
         famReader.close();
     }

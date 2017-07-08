@@ -35,9 +35,11 @@ public class DataDirectory {
     String displayName;
     String dataPath;
 
+	FileFormat fileFormat;
+
     DataDirectory(DataClient dc, FileFormat fileFormat) throws IOException{
         boolean success = true;
-
+		this.fileFormat = fileFormat;
         this.dc = dc;
         File directory = dc.prepMetaFiles();
         HashMap<String,Boolean> knownChroms = parseMetaFiles(directory, fileFormat);
@@ -116,7 +118,7 @@ public class DataDirectory {
 
     DataDirectory(String filename, FileFormat fileFormat) throws IOException{
         boolean success = true;
-
+		this.fileFormat = fileFormat;
         File directory = new File(filename);
         dataPath = directory.getAbsolutePath() + File.separator;
         String[] filesInDir = directory.list();
@@ -130,8 +132,8 @@ public class DataDirectory {
         if (fileFormat == FileFormat.OXFORD) {
 
             if (directory.listFiles(new ExtensionFilter(".snp")).length == 0) {
-                throw new IOException("Cannot find .snp files.");
-            }
+				throw new IOException("Cannot find .snp files.");
+			}
 
             int i = 0, a = 0;
             for (String s : filesInDir){
@@ -147,12 +149,12 @@ public class DataDirectory {
                 }
             }
 
-            if (i+a == 0){
-                throw new IOException("Cannot find either *affy or *illumina Oxford files.");
-            }
-            if (i+a > 1){
-                throw new IOException("Found both *affy and *illumina Oxford files. Please use one or the other.");
-            }
+            if (i+a == 0) {
+				throw new IOException("Cannot find either *affy or *illumina Oxford files.");
+			}
+            if (i+a > 1) {
+				throw new IOException("Found both *affy and *illumina Oxford files. Please use one or the other.");
+			}
         }
         
         for(String collection : samplesByCollection.keySet()){
@@ -164,13 +166,17 @@ public class DataDirectory {
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
                     name = directory.getAbsolutePath() + File.separator + name;
                     md.addFile(name,collection,chrom,true);
-                }else{
-                    name = collection + "." + chrom;
-                    success &= checkFile(filesInDir,name);
-
+                } else {
+					if (fileFormat == FileFormat.UKBIOBANK) {
+						success &= checkFileUKB(filesInDir,chrom);
+						name = "ukb_snp_chr" + chrom + "_v2";
+					} else {
+						name = collection + "." + chrom;
+						success &= checkFile(filesInDir,name);
+					}
                     name =  directory.getAbsolutePath() + File.separator + name;
                     //we require a bimfile for this collection and chromosome:
-                    md.addFile(name+".bim",collection,chrom,false);
+                    md.addFile(name + ".bim",collection,chrom,false);
                 }
             	
                 //even though we know that something is amiss, we want to keep cdring through the list so that
@@ -194,17 +200,26 @@ public class DataDirectory {
                         if (new File(name+".gen.bin.gz").exists()) {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin.gz",
                                     samplesByCollection.get(collection).getNumInds(),
-                                    md,collection,zipped, chrom));                     
+                                    md,collection,zipped, chrom));
                         } else {
                         	tmpGenotypes.put(chrom,new GenfileDataFile(name+".gen.bin",
                                     samplesByCollection.get(collection).getNumInds(),
                                     md,collection, chrom));
                         }
                     } else {
-                    	tmpIntensity.put(chrom,new BinaryFloatDataFile(name+".bnt",
+                    	String bedName, bntName;
+
+                    	if (fileFormat == FileFormat.UKBIOBANK) {
+							bedName = directory.getAbsolutePath() + File.separator + "ukb_cal_chr" + chrom + "_v2.bed";
+							bntName = directory.getAbsolutePath() + File.separator + "ukb_int_chr" + chrom + "_v2.bin";
+						} else {
+							bedName = name + ".bed";
+							bntName = name + ".bnt";
+						}
+                    	tmpIntensity.put(chrom,new BinaryFloatDataFile(bntName,
                                 samplesByCollection.get(collection).getNumInds(),
                                 md,collection,2, chrom, fileFormat));
-                        tmpGenotypes.put(chrom,new BedfileDataFile(name+".bed",
+                        tmpGenotypes.put(chrom,new BedfileDataFile(bedName,
                                 samplesByCollection.get(collection).getNumInds(),
                                 md,collection, chrom));
                     }
@@ -266,7 +281,7 @@ public class DataDirectory {
 		for (File sampleFile : oxFams){
 			//see if we have oxford style sample files. yeesh.
 			String name = sampleFile.getName().split("_")[0];
-			samplesByCollection.put(name, new SampleData(sampleFile.getAbsolutePath(),true));
+			samplesByCollection.put(name, new SampleData(sampleFile.getAbsolutePath(), fileFormat));
 			Genoplot.ld.log("Found collection: " + name);
 		}
 	}
@@ -307,10 +322,17 @@ public class DataDirectory {
 	private void findFamFiles(File directory) throws IOException {
 		samplesByCollection = new HashMap<String, SampleData>();
 		File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
+		String name;
 		for (File famFile : fams) {
 			//stash all sample data in HashMap keyed on collection name.
-			String name = famFile.getName().substring(0, famFile.getName().length() - 4);
-			samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(), false));
+
+			if (fileFormat == FileFormat.UKBIOBANK) {
+				name = "UKBIOBANK";
+			} else {
+				name = famFile.getName().substring(0, famFile.getName().length() - 4);
+			}
+
+			samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(), fileFormat));
 			Genoplot.ld.log("Found collection: " + name);
 		}
 	}
@@ -318,23 +340,44 @@ public class DataDirectory {
 	private HashMap<String,Boolean> findBimFiles(File directory) throws IOException {
 
 		//what chromosomes do we have here?
+
+		// The UKB files have a specific filename pattern
+		Pattern ukbPattern = Pattern.compile("ukb_snp_chr(\\d+)_v2.bim");
+
 		File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
 		HashMap<String, Boolean> knownChroms = new HashMap<String, Boolean>();
 		byte counter = 0;
+		String chrom;
 		for (File bimFile : bims) {
-			String[] chunks = bimFile.getName().split("\\.");
-			String chrom = chunks[1];
+			String filename = bimFile.getName();
+			if (fileFormat == FileFormat.UKBIOBANK) {
+				Matcher m = ukbPattern.matcher(filename);
+				m.matches();
+				try {
+					chrom = m.group(1);
+					int i = Integer.parseInt(chrom);
+					// UKB chromosome convention: X=23,Y=24,XY=25,MT=26
+					if (i < 1 || i > 26)
+						throw new Exception();
+				} catch (Exception e) {
+					throw new IOException("Expected UK Biobank filename formats. Found bim " +
+							filename + " but need ukb_snp_chrN_v2.bim where N is in the range 1-26.");
+				}
+			} else {
+				String[] chunks = filename.split("\\.");
+				chrom = chunks[1];
+			}
 			if (knownChroms.get(chrom) == null) {
 				knownChroms.put(chrom, true);
 				md.addChromToLookup(chrom, counter);
 				counter++;
-				Genoplot.ld.log("Found chromosome: " + chunks[1]);
+				Genoplot.ld.log("Found chromosome: " + chrom);
 			}
 		}
 		return knownChroms;
 	}
 
-	private HashMap<String,Boolean> parseDefaultFiles(File directory) throws IOException{
+	private HashMap<String,Boolean> parsePlinkFiles(File directory) throws IOException{
 		findFamFiles(directory);
 		int numberofCollections = samplesByCollection.size();
 		if (numberofCollections == 0){
@@ -486,10 +529,8 @@ public class DataDirectory {
 		switch (fileFormat) {
 			case OXFORD:
 				return parseOxfordFiles(directory);
-			case UKBIOBANK:
-				return parseUKBiobankFiles(directory);
 			default:
-				return parseDefaultFiles(directory);
+				return parsePlinkFiles(directory);
 		}
     }
 
@@ -498,34 +539,71 @@ public class DataDirectory {
     }
 
     private boolean checkFile(String[] filesInDir, String stem) throws IOException{
-        if (filesInDir != null){
-            boolean bed = false;
-            boolean bnt = false;
-            boolean bim = false;
-            for (String s : filesInDir){
-                if (s.equals(stem+".bed")){
-                    bed = true;
-                }else if (s.equals(stem+".bnt")){
-                    bnt = true;
-                }else if (s.equals(stem+".bim")){
-                    bim = true;
-                }
-            }
+        if (filesInDir == null) {
+			throw new IOException("Could not get list of files in data directory.");
+		}
 
-            if (!bed){
-                Genoplot.ld.log("Missing file: " + stem+".bed!");
-            }
-            if (!bnt){
-                Genoplot.ld.log("Missing file: " + stem+".bnt!");
-            }
-            if (!bim){
-                Genoplot.ld.log("Missing file: " + stem+".bim!");
-            }
-            return bed & bnt & bim;
-        }else{
-            throw new IOException("Could not get list of files in data directory.");
-        }
+		boolean bed = false;
+		boolean bnt = false;
+		boolean bim = false;
+		for (String s : filesInDir){
+			if (s.equals(stem+".bed")){
+				bed = true;
+			}else if (s.equals(stem+".bnt")){
+				bnt = true;
+			}else if (s.equals(stem+".bim")){
+				bim = true;
+			}
+		}
+
+		if (!bed){
+			Genoplot.ld.log("Missing file: " + stem+".bed!");
+		}
+		if (!bnt){
+			Genoplot.ld.log("Missing file: " + stem+".bnt!");
+		}
+		if (!bim){
+			Genoplot.ld.log("Missing file: " + stem+".bim!");
+		}
+		return bed & bnt & bim;
     }
+
+	private boolean checkFileUKB(String[] filesInDir, String chromosome) throws IOException{
+		if (filesInDir == null) {
+			throw new IOException("Could not get list of files in data directory.");
+		}
+
+
+		String bedRequired = "ukb_cal_chr" + chromosome + "_v2.bed";
+		String bntRequired = "ukb_int_chr" + chromosome + "_v2.bin";
+		String bimRequired = "ukb_snp_chr" + chromosome + "_v2.bim";
+
+		boolean bed = false;
+		boolean bnt = false;
+		boolean bim = false;
+
+		for (String s : filesInDir){
+			if (s.equals(bedRequired)){
+				bed = true;
+			}else if (s.equals(bntRequired)){
+				bnt = true;
+			}else if (s.equals(bimRequired)){
+				bim = true;
+			}
+		}
+
+		if (!bed){
+			Genoplot.ld.log("Missing file: " + bedRequired +"!");
+		}
+		if (!bnt){
+			Genoplot.ld.log("Missing file: " + bntRequired +"!");
+		}
+		if (!bim){
+			Genoplot.ld.log("Missing file: " + bimRequired +"!");
+		}
+		return bed & bnt & bim;
+	}
+
 
     public String getDisplayName() {
         return displayName;
