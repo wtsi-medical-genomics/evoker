@@ -5,6 +5,10 @@ Description
 -----------
 Evoker is a graphical tool for plotting genotype intensity data in order to assess quality of genotype calls. It implements a compact, binary format which allows rapid access to data, even with hundreds of thousands of observations.
 
+Viewing UK Biobank data
+-----------------------
+Evoker is currently being developed to allow the viewing of UK Biobank v2 data and is expected to be released Mid-July. In the meantime, it is possible to create cluster plots of the latest UK Biobank data release using the python tool [Evoker Lite](https://github.com/dlrice/evoker-lite). Note that this will create static PNGs/PDFs (as opposed to interactive plots with zooming and recalling that is possible with Evoker).
+
 Maintainer
 ----------
 Daniel Rice (dr9@sanger.ac.uk)
