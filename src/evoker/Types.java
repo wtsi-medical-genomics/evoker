@@ -9,4 +9,5 @@ public class Types {
     public enum CoordinateSystem {
         CART, POLAR, UKBIOBANK
     }
+
 }

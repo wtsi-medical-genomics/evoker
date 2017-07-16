@@ -25,7 +25,9 @@ public class DataDirectory {
     
     /** Holds the changes being made to die data at Runtime */
     HashMap<String, HashMap<String, HashMap<String, HashMap<String, Byte>>>> changesByCollection = new HashMap<String, HashMap<String, HashMap<String, HashMap<String, Byte>>>>();   // collection -> chromosome -> snp -> [ind -> internal notation of genotype change]
-    
+
+	private String UKBIOBANK = "UKBIOBANK";
+
     QCFilterData filterList;
     boolean filterState;
     String oxPlatform = "";
@@ -327,7 +329,7 @@ public class DataDirectory {
 			//stash all sample data in HashMap keyed on collection name.
 
 			if (fileFormat == FileFormat.UKBIOBANK) {
-				name = "UKBIOBANK";
+				name = UKBIOBANK;
 			} else {
 				name = famFile.getName().substring(0, famFile.getName().length() - 4);
 			}
@@ -636,46 +638,79 @@ public class DataDirectory {
             return getRecord(snp);
         }**/
         String chrom = md.getChrom(snp);
-        if (chrom != null){
+        if (chrom == null){
+			return new PlotData(null,null,null,null,null, null);
+		}
         	
-        	// time how long this takes to get a benchmark for improving compressed file response
-        	long start = System.currentTimeMillis();
-                
-                // get the previously made changes and apply them.
-                ArrayList record = genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
-                SampleData samples = samplesByCollection.get(collection);
-                
-                if(changesByCollection.containsKey(collection)){
-                    if(changesByCollection.get(collection).containsKey(chrom)){
-                        if(changesByCollection.get(collection).get(chrom).containsKey(snp)){
-                        HashMap<String, Byte> changes = changesByCollection.get(collection).get(chrom).get(snp);
-                            for(String s : changes.keySet()){
-                                record.set(samples.inds.indexOf(s), changes.get(s));
-                            }
-                        }
-                    }
-                }
-                
-        	PlotData pd = new PlotData(
-                    record,
-                    intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
-                    samples,
-                    qcList(),
-                    md.getAlleles(snp),
-                    coordSystem);
-        	double time = ((double)(System.currentTimeMillis() - start))/1000;
-            Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");
-            return pd;
-        	
-        }else{
-            return new PlotData(null,null,null,null,null, null);
-        }
+		// time how long this takes to get a benchmark for improving compressed file response
+		long start = System.currentTimeMillis();
+
+			// get the previously made changes and apply them.
+			ArrayList record = genotypeDataByCollectionChrom.get(collection).get(chrom).getRecord(snp);
+			SampleData samples = samplesByCollection.get(collection);
+
+			if(changesByCollection.containsKey(collection)){
+				if(changesByCollection.get(collection).containsKey(chrom)){
+					if(changesByCollection.get(collection).get(chrom).containsKey(snp)){
+					HashMap<String, Byte> changes = changesByCollection.get(collection).get(chrom).get(snp);
+						for(String s : changes.keySet()){
+							record.set(samples.inds.indexOf(s), changes.get(s));
+						}
+					}
+				}
+			}
+
+		PlotData pd = new PlotData(
+				record,
+				intensityDataByCollectionChrom.get(collection).get(chrom).getRecord(snp),
+				samples,
+				qcList(),
+				md.getAlleles(snp),
+				coordSystem);
+		double time = ((double)(System.currentTimeMillis() - start))/1000;
+		Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");
+		return pd;
+
     }
+
+	public ArrayList<PlotPanel> getUKBPlotPanels(Genoplot gp, String snp, CoordinateSystem coordSystem, int plotHeight, int plotWidth,
+												 boolean longStats) throws IOException{
+		String chrom = md.getChrom(snp);
+		ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
+		if (chrom == null){
+			return plots;
+		}
+		// There is a risk of transforming the data twice resulting in NaNs but this is only if we call generatePoints
+		// between instantiation and getSubPlotData so don't do that.
+		PlotData pd = getRecord(snp, UKBIOBANK, coordSystem);
+		int totalSamples = samplesByCollection.get(UKBIOBANK).getNumInds();
+		// Though called totalMaf is actually the total Minor Allele Count
+		double totalMaf = pd.getMaf() * totalSamples;
+
+		HashMap<String, Vector<Integer>> ukbBatchSampleIndices = samplesByCollection.get(UKBIOBANK).getUkbBatchSampleIndices();
+
+		for (String batch: ukbBatchSampleIndices.keySet()) {
+			Vector<Integer> sampleIndices = ukbBatchSampleIndices.get(batch);
+			PlotData spd = pd.getSubPlotData(sampleIndices);
+			PlotPanel pp = new PlotPanel(gp, batch, spd, plotHeight, plotWidth, longStats, totalMaf, totalSamples);
+			pp.refresh();
+//			pp.setDimensions(minX, maxX, minY, maxY);
+			pp.setDimensionsToData();
+			plots.add(pp);
+		}
+		return plots;
+	}
 
     public ArrayList<String> getCollections(){
         ArrayList<String> r = new ArrayList<String>(samplesByCollection.keySet());
         return r;
     }
+
+//	public ArrayList<String> getUKBBatches(){
+//		SampleData sampleData = samplesByCollection.get(UKBIOBANK);
+//		ArrayList<String> r = new ArrayList<String>(sampleData.getUKBSamplesByBatch().keySet());
+//		return r;
+//	}
     
     public int getNumCollections() {
     	return samplesByCollection.size();

@@ -5,9 +5,8 @@ import java.util.ArrayList;
 
 public abstract class BinaryData {
 
-    protected static final byte[] bedMagic = {0x6c, 0x1b, 0x01};
-    protected static final byte[] bntMagic = {0x1a, 0x31};
-    protected static final byte[] bntUKBiobankMagic = {};
+    protected static byte[] bedMagic = {0x6c, 0x1b, 0x01};
+    protected static byte[] bntMagic = {0x1a, 0x31};
 
     protected MarkerData md;
     protected String collection;
@@ -18,8 +17,6 @@ public abstract class BinaryData {
 
     /** default header offset for bnt files */
     protected int bntHeaderOffset = 2;
-    /** default header offset for UK Biobank bnt files */
-    protected int bntUKBiobankHeaderOffset = 0;
     /** default header offset for bed files */
     protected int bedHeaderOffset = 3;
      /** to hold the total number of snps when using remote data, as the total number of snps is required for checking Oxformat header information*/

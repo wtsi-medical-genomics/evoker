@@ -15,13 +15,16 @@ import evoker.Types.FileFormat;
 public class SampleData {
     Vector<String> inds;
 //    Vector<String> ukbBatchMembership;
-    HashMap<String, Vector<String>> ukbSamplesByBatch;
+    private HashMap<String, Vector<Integer>> ukbBatchSampleIndices;
+    private Vector<String> ukbBatchMembership;
+
 
     SampleData(String famFilename, FileFormat fileFormat) throws IOException{
 
         this.inds = new Vector<String>();
         if (fileFormat == FileFormat.UKBIOBANK) {
-            ukbSamplesByBatch = new HashMap<String, Vector<String>>();
+            ukbBatchSampleIndices = new HashMap<String, Vector<Integer>>();
+            ukbBatchMembership = new Vector<String>();
         }
 
         BufferedReader famReader = new BufferedReader(new FileReader(famFilename));
@@ -32,10 +35,9 @@ public class SampleData {
             famReader.readLine();
             famReader.readLine();
         }
-
-
-
+        int index = -1;
         while ((currentLine = famReader.readLine()) != null) {
+            index++;
             tokens = currentLine.split("\\s");
             String sample = tokens[1];
             inds.add(sample);
@@ -50,20 +52,20 @@ public class SampleData {
                 String batch = tokens[5];
 
                 //ukbBatchMembership.add(batch);
-
-                if (ukbSamplesByBatch.containsKey(batch)) {
-                    ukbSamplesByBatch.get(batch).add(sample);
+                ukbBatchMembership.add(batch);
+                if (ukbBatchSampleIndices.containsKey(batch)) {
+                    ukbBatchSampleIndices.get(batch).add(index);
                 } else {
-                    Vector<String> v = new Vector<String>(1);
-                    v.add(sample);
-                    ukbSamplesByBatch.put(batch, v);
+                    Vector<Integer> v = new Vector<Integer>(1);
+                    v.add(index);
+                    ukbBatchSampleIndices.put(batch, v);
                 }
             }
         }
         famReader.close();
     }
 
-    SampleData(Vector<String> inds) throws IOException{
+    SampleData(Vector<String> inds) {
         this.inds = inds;
     }
     
@@ -90,4 +92,8 @@ public class SampleData {
         return inds.size();
     }
 
+    public HashMap<String, Vector<Integer>> getUkbBatchSampleIndices() { return ukbBatchSampleIndices; }
+
+    public Vector<String> getUkbBatchMembership() { return ukbBatchMembership; }
 }
+

@@ -17,14 +17,7 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
         super(dc, numInds, md, collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
-        switch (fileFormat) {
-            case UKBIOBANK:
-                checkFile(name, bntMagic);
-                break;
-            case DEFAULT:
-                checkFile(name, bntUKBiobankMagic);
-                break;
-        }
+        checkFile(name, bntMagic);
     }
     
     RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String chromosome) {

@@ -27,15 +27,7 @@ import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
 import java.text.NumberFormat;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.Locale;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.jfree.ui.ExtensionFileFilter;
@@ -95,7 +87,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenuItem viewPolar;
     private JMenuItem viewCart;
     private JMenuItem viewUKBiobank;
-    private JMenu historyMenu;
+	private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
     private JMenuItem showLogItem;
@@ -119,7 +111,10 @@ public class Genoplot extends JFrame implements ActionListener {
 
     public enum MouseMode {LASSO,ZOOM};
     private MouseMode mouseMode;
-    
+
+    private FileFormat fileFormat;
+    private String UKBIOBANK = "UKBIOBANK";
+
     public static void main(String[] args) {
 
         new Genoplot();
@@ -436,7 +431,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 odd.setVisible(true);
                 if (odd.success()) {
                     String directory = odd.getDirectory();
-                    FileFormat fileFormat = odd.getFileFormat();
+                    this.fileFormat = odd.getFileFormat();
                     try {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         if (!new File(directory).exists()) {
@@ -688,7 +683,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 double totalMaf = 0;
                 int totalSamples = 0;
                 for (String collection : db.getCollections()) {
-                    PlotData pd = db.getRecord(snp, collection, getCoordSystem());
+                    PlotData pd = db.getRecord(snp, collection, coordSystem);
                     pd.computeSummary();
                     int sampleNum = db.samplesByCollection.get(collection).getNumInds();
                     totalMaf += pd.getMaf() * sampleNum;
@@ -696,7 +691,9 @@ public class Genoplot extends JFrame implements ActionListener {
                 }
 
                 for (String collection : db.getCollections()) {
-                    PlotPanel pp = new PlotPanel(this, collection, db.getRecord(snp, collection, getCoordSystem()), plotWidth, plotHeight, longStats.isSelected(), totalMaf, totalSamples);
+                    PlotPanel pp = new PlotPanel(this, collection,
+                            db.getRecord(snp, collection, coordSystem),
+                            plotWidth, plotHeight, longStats.isSelected(), totalMaf, totalSamples);
                     pp.refresh();
                     if (pp.hasData()) {
                         pp.setDimensions();
@@ -853,9 +850,9 @@ public class Genoplot extends JFrame implements ActionListener {
         }
     }
 
-    private CoordinateSystem getCoordSystem() {
-        return coordSystem;
-    }
+//    private CoordinateSystem getCoordSystem() {
+//        return coordSystem;
+//    }
 
     protected MouseMode getMouseMode(){
         return mouseMode;
@@ -1166,11 +1163,9 @@ public class Genoplot extends JFrame implements ActionListener {
             }
             JPanel plotHolder = new JPanel();
             plotHolder.setBackground(Color.WHITE);
-
             JScrollPane scrollPane = new JScrollPane(plotHolder);
             plotArea.add(scrollPane);
 
-            ArrayList<String> v = db.getCollections();
             ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
             double maxdim = -100000;
             double mindim = 100000;
@@ -1178,37 +1173,54 @@ public class Genoplot extends JFrame implements ActionListener {
             // loop through all the collections to get the average maf
             double totalMaf = 0;
             int totalSamples = 0;
-            for (String collection : v) {
-                PlotData pd = db.getRecord(name, collection, getCoordSystem());             
-                if (pd.generatePoints() != null) {
-                    pd.computeSummary();
-                    int sampleNum = db.samplesByCollection.get(collection).getNumInds();
-                    totalMaf += pd.getMaf() * sampleNum;
-                    totalSamples += sampleNum;
-                }
-            }
 
-            for (String c : v) {
-                PlotData pd = db.getRecord(name, c, getCoordSystem());
-                PlotPanel pp = new PlotPanel(this, c, pd, plotWidth, plotHeight, longStats.isSelected(), totalMaf, totalSamples);
-
-                pp.refresh();
-
-                if (pp.getMaxDim() > maxdim) {
-                    maxdim = pp.getMaxDim();
+            // UKB is stored as a single collection within Evoker but in fact the ~150 batches
+            // are encoded with the same fam file so these need to be pulled out one at a time.
+            if (fileFormat == FileFormat.UKBIOBANK) {
+				plots = db.getUKBPlotPanels(this, name, coordSystem, plotHeight, plotWidth, longStats.isSelected());
+				System.out.println(plots);
+            } else { // Default or Oxford format
+                ArrayList<String> v = db.getCollections();
+                for (String collection : v) {
+                    PlotData pd = db.getRecord(name, collection, coordSystem);
+                    if (pd.generatePoints() != null) {
+                    	// DR This has already been called in generatePoints
+                        // pd.computeSummary();
+                        int sampleNum = db.samplesByCollection.get(collection).getNumInds();
+                        totalMaf += pd.getMaf() * sampleNum;
+                        totalSamples += sampleNum;
+                    }
                 }
-                if (pp.getMinDim() < mindim) {
-                    mindim = pp.getMinDim();
-                }
-                plots.add(pp);
-            }
 
-            for (PlotPanel pp : plots) {
-                if(coordSystem == CoordinateSystem.UKBIOBANK) {
-                    pp.setDimensions();
-                } else {
-                    pp.setDimensions(mindim, maxdim);
+                for (String c : v) {
+                    PlotData pd = db.getRecord(name, c, coordSystem);
+                    PlotPanel pp = new PlotPanel(this, c, pd, plotHeight, plotWidth, longStats.isSelected(), totalMaf, totalSamples);
+                    pp.refresh();
+                    if (pp.getMaxDim() > maxdim) { maxdim = pp.getMaxDim(); }
+                    if (pp.getMinDim() < mindim) { mindim = pp.getMinDim(); }
+                    plots.add(pp);
                 }
+
+				for (PlotPanel pp : plots) {
+					pp.setDimensions(mindim, maxdim);
+				}
+			}
+
+
+
+			// Sort on collection/batch
+//			plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
+
+			// Sort on MAF
+//			plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));
+
+            // Sort on GPC
+//			plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getGenopc(), o2.getPlotData().getGenopc()));
+
+			// Sort on HWE p-value
+			plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getHwpval(), o2.getPlotData().getHwpval()));
+
+			for (PlotPanel pp : plots) {
                 plotHolder.add(pp);
             }
         } catch (IOException ioe) {

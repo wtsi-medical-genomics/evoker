@@ -54,8 +54,7 @@ public class PlotPanel extends JPanel {
 	}
 
 	PlotPanel(Genoplot gp, String title, PlotData pd, int plotHeight, int plotWidth,
-			boolean longStats, double totalMaf,
-			int totalSamples) {
+			boolean longStats, double totalMaf, int totalSamples) {
 		this.theGenoplot = gp;
 		this.title = title;
 		this.data = pd;
@@ -228,6 +227,32 @@ public class PlotPanel extends JPanel {
 		setDimensions(getMinDim(), getMaxDim());
 	}
 
+	public void setDimensionsToData() {
+		double minX = data.getMinX();
+		double maxX = data.getMaxX();
+		double minY = data.getMinY();
+		double maxY = data.getMaxY();
+
+		double xPadding = 0.05 * (maxX - minX);
+		minX -= xPadding;
+		maxX += xPadding;
+
+		double yPadding = 0.05 * (maxY - minY);
+		minY -= yPadding;
+		maxY += yPadding;
+
+		setDimensions(minX, maxX, minY, maxY);
+	}
+
+	public void setDimensions(double minX, double maxX, double minY, double maxY) {
+		if (jfc != null) {
+			jfc.getXYPlot().setRangeAxis(new LinkedAxis(ylab, minY, maxY));
+			jfc.getXYPlot().getRangeAxis().setRange(minY, maxY);
+			jfc.getXYPlot().setDomainAxis(new LinkedAxis(xlab, minX, maxX));
+			jfc.getXYPlot().getDomainAxis().setRange(minX, maxX);
+		}
+	}
+
 	public void setDimensions(double min, double max) {
 		if (jfc != null) {
 			switch (data.getCoordSystem()) {
@@ -300,4 +325,7 @@ public class PlotPanel extends JPanel {
 	public boolean hasData() {
 		return foundData;
 	}
+
+	public String getTitle() { return title; }
+
 }

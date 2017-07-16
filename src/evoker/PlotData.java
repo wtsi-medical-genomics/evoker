@@ -2,6 +2,8 @@ package evoker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
+
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 
@@ -11,7 +13,7 @@ public class PlotData {
 
     private ArrayList<Byte> calledGenotypes;
     private ArrayList<float[]> intensities;
-    private double maf, genopc, hwpval, maxDim, minDim;
+    private double maf, genopc, hwpval, minX, maxX, minY, maxY;
     private SampleData samples;
     private QCFilterData exclude;
     private int sampleNum;
@@ -27,8 +29,10 @@ public class PlotData {
         this.intensities = intensities;
         this.samples = samples;
         this.exclude = exclude;
-        this.maxDim = -100000;
-        this.minDim = 100000;
+        this.minX = 100000;
+        this.maxX = -100000;
+        this.minY = 100000;
+        this.maxY = -100000;
         this.alleles = alleles;
         this.setCoordSystem(coordSystem);
     }
@@ -38,6 +42,21 @@ public class PlotData {
         this.intensities.addAll(intensities);
     }
 
+    public PlotData getSubPlotData(Vector<Integer> indices) {
+        int subLength = indices.size();
+//        ArrayList<Byte> calledGenotypes, ArrayList<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, CoordinateSystem coordSystem
+        ArrayList<float[]> subIntensities = new ArrayList<float[]>(subLength);
+        ArrayList<Byte> subCalledGenotypes = new ArrayList<Byte>(subLength);
+        Vector<String> subSampleVector = new Vector<String>(subLength);
+
+        for (int index: indices) {
+            subCalledGenotypes.add(calledGenotypes.get(index));
+            subIntensities.add(intensities.get(index));
+            subSampleVector.add(samples.getInd(index));
+        }
+        SampleData subSamples = new SampleData(subSampleVector);
+        return new PlotData(subCalledGenotypes, subIntensities, subSamples, exclude, alleles, coordSystem);
+    }
 
     XYSeriesCollection generatePoints() {
         if (intensities == null || calledGenotypes == null) {
@@ -64,7 +83,7 @@ public class PlotData {
         for (int i = 0; i < intensities.size(); i++) {
             float[] intens = intensities.get(i);
 
-            if (getCoordSystem() == CoordinateSystem.POLAR) {
+            if (coordSystem == CoordinateSystem.POLAR) {
                 float x = intens[0];
                 float y = intens[1];
 
@@ -73,7 +92,7 @@ public class PlotData {
 
                 intens[0] = theta;
                 intens[1] = r;
-            } else if (getCoordSystem() == CoordinateSystem.UKBIOBANK) {
+            } else if (coordSystem == CoordinateSystem.UKBIOBANK) {
                 float a = intens[0];
                 float b = intens[1];
 
@@ -82,6 +101,10 @@ public class PlotData {
 
                 // Strength (y-axis) = (log2(A*B))/2
                 intens[1] = (float) log2(a*b)/2;
+
+                if (Float.isNaN(intens[0]) || Float.isNaN(intens[1])) {
+                    System.out.println(intens[0] + ", " + intens[1]);
+                }
              }
 
             // check if there is a valid exclude file loaded
@@ -154,18 +177,18 @@ public class PlotData {
             //if it really is intentional, there will almost certainly be other nearby, negative points
             //which will resize the bounds appropriately.
             if (!(intens[0] == -1 && intens[1] == -1)) {
-                if (intens[0] > maxDim) {
-                    maxDim = intens[0];
+                if (intens[0] > maxX) {
+                    maxX = intens[0];
                 }
-                if (intens[0] < minDim) {
-                    minDim = intens[0];
+                if (intens[0] < minX) {
+                    minX = intens[0];
                 }
 
-                if (intens[1] > maxDim) {
-                    maxDim = intens[1];
+                if (intens[1] > maxY) {
+                    maxY = intens[1];
                 }
-                if (intens[1] < minDim) {
-                    minDim = intens[1];
+                if (intens[1] < minY) {
+                    minY = intens[1];
                 }
             }
 
@@ -253,81 +276,81 @@ public class PlotData {
         //number of heterozygotes observed.
         //
         // (c) 2003 Jan Wigginton, Goncalo Abecasis
-        return 0.5;
-    //     int diplotypes = obsAA + obsAB + obsBB;
-    //     if (diplotypes == 0) {
-    //         return 0;
-    //     }
-    //     int rare = (obsAA * 2) + obsAB;
-    //     int hets = obsAB;
+
+         int diplotypes = obsAA + obsAB + obsBB;
+         if (diplotypes == 0) {
+             return 0;
+         }
+         int rare = (obsAA * 2) + obsAB;
+         int hets = obsAB;
 
 
-    //     //make sure "rare" allele is really the rare allele
-    //     if (rare > diplotypes) {
-    //         rare = 2 * diplotypes - rare;
-    //     }
+         //make sure "rare" allele is really the rare allele
+         if (rare > diplotypes) {
+             rare = 2 * diplotypes - rare;
+         }
 
-    //     double[] tailProbs = new double[rare + 1];
-    //     for (int z = 0; z < tailProbs.length; z++) {
-    //         tailProbs[z] = 0;
-    //     }
+         double[] tailProbs = new double[rare + 1];
+         for (int z = 0; z < tailProbs.length; z++) {
+             tailProbs[z] = 0;
+         }
 
-    //     //start at midpoint
-    //     int mid = rare * (2 * diplotypes - rare) / (2 * diplotypes);
+         //start at midpoint
+         int mid = rare * (2 * diplotypes - rare) / (2 * diplotypes);
 
-    //     //check to ensure that midpoint and rare alleles have same parity
-    //     if (((rare & 1) ^ (mid & 1)) != 0) {
-    //         mid++;
-    //     }
-    //     int het = mid;
-    //     int hom_r = (rare - mid) / 2;
-    //     int hom_c = diplotypes - het - hom_r;
+         //check to ensure that midpoint and rare alleles have same parity
+         if (((rare & 1) ^ (mid & 1)) != 0) {
+             mid++;
+         }
+         int het = mid;
+         int hom_r = (rare - mid) / 2;
+         int hom_c = diplotypes - het - hom_r;
 
-    //     //Calculate probability for each possible observed heterozygote
-    //     //count up to a scaling constant, to avoid underflow and overflow
-    //     tailProbs[mid] = 1.0;
-    //     double sum = tailProbs[mid];
-    //     for (het = mid; het > 1; het -= 2) {
-    //         tailProbs[het - 2] = (tailProbs[het] * het * (het - 1.0)) / (4.0 * (hom_r + 1.0) * (hom_c + 1.0));
-    //         sum += tailProbs[het - 2];
-    //         //2 fewer hets for next iteration -> add one rare and one common homozygote
-    //         hom_r++;
-    //         hom_c++;
-    //     }
+         //Calculate probability for each possible observed heterozygote
+         //count up to a scaling constant, to avoid underflow and overflow
+         tailProbs[mid] = 1.0;
+         double sum = tailProbs[mid];
+         for (het = mid; het > 1; het -= 2) {
+             tailProbs[het - 2] = (tailProbs[het] * het * (het - 1.0)) / (4.0 * (hom_r + 1.0) * (hom_c + 1.0));
+             sum += tailProbs[het - 2];
+             //2 fewer hets for next iteration -> add one rare and one common homozygote
+             hom_r++;
+             hom_c++;
+         }
 
-    //     het = mid;
-    //     hom_r = (rare - mid) / 2;
-    //     hom_c = diplotypes - het - hom_r;
-    //     for (het = mid; het <= rare - 2; het += 2) {
-    //         tailProbs[het + 2] = (tailProbs[het] * 4.0 * hom_r * hom_c) / ((het + 2.0) * (het + 1.0));
-    //         sum += tailProbs[het + 2];
-    //         //2 more hets for next iteration -> subtract one rare and one common homozygote
-    //         hom_r--;
-    //         hom_c--;
-    //     }
+         het = mid;
+         hom_r = (rare - mid) / 2;
+         hom_c = diplotypes - het - hom_r;
+         for (het = mid; het <= rare - 2; het += 2) {
+             tailProbs[het + 2] = (tailProbs[het] * 4.0 * hom_r * hom_c) / ((het + 2.0) * (het + 1.0));
+             sum += tailProbs[het + 2];
+             //2 more hets for next iteration -> subtract one rare and one common homozygote
+             hom_r--;
+             hom_c--;
+         }
 
-    //     for (int z = 0; z < tailProbs.length; z++) {
-    //         tailProbs[z] /= sum;
-    //     }
+         for (int z = 0; z < tailProbs.length; z++) {
+             tailProbs[z] /= sum;
+         }
 
-    //     double top = tailProbs[hets];
-    //     for (int i = hets + 1; i <= rare; i++) {
-    //         top += tailProbs[i];
-    //     }
-    //     double otherSide = tailProbs[hets];
-    //     for (int i = hets - 1; i >= 0; i--) {
-    //         otherSide += tailProbs[i];
-    //     }
+         double top = tailProbs[hets];
+         for (int i = hets + 1; i <= rare; i++) {
+             top += tailProbs[i];
+         }
+         double otherSide = tailProbs[hets];
+         for (int i = hets - 1; i >= 0; i--) {
+             otherSide += tailProbs[i];
+         }
 
-    //     if (top > 0.5 && otherSide > 0.5) {
-    //         return 1.0;
-    //     } else {
-    //         if (top < otherSide) {
-    //             return top * 2;
-    //         } else {
-    //             return otherSide * 2;
-    //         }
-    //     }
+         if (top > 0.5 && otherSide > 0.5) {
+             return 1.0;
+         } else {
+             if (top < otherSide) {
+                 return top * 2;
+             } else {
+                 return otherSide * 2;
+             }
+         }
     }
 
     public HashMap<String, Byte> getGenotypeChanges() {
@@ -347,11 +370,35 @@ public class PlotData {
     }
 
     public double getMaxDim() {
-        return maxDim;
+        if (maxX > maxY) {
+            return maxX;
+        } else {
+            return maxY;
+        }
     }
 
     public double getMinDim() {
-        return minDim;
+        if (minX < minY) {
+            return maxX;
+        } else {
+            return maxY;
+        }
+    }
+
+    public double getMinX() {
+        return minX;
+    }
+
+    public double getMaxX() {
+        return maxX;
+    }
+
+    public double getMinY() {
+        return minY;
+    }
+
+    public double getMaxY() {
+        return maxY;
     }
 
     public char[] getAlleles() {

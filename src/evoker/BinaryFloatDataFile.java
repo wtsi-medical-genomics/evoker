@@ -33,14 +33,11 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         this.fileFormat = fileFormat;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
 
-        switch (fileFormat) {
-            case UKBIOBANK:
-                checkFile(bntUKBiobankMagic);
-                break;
-            default:
-                checkFile(bntMagic);
-                break;
+        if (fileFormat == FileFormat.UKBIOBANK) {
+			bntMagic = new byte[]{};
+			bntHeaderOffset = 0;
         }
+        checkFile(bntMagic);
     }
 
 	/**
