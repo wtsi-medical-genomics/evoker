@@ -214,8 +214,8 @@ public class Genoplot extends JFrame implements ActionListener {
         
         viewCart = new JCheckBoxMenuItem("Cartesian coordinates");
         viewCart.addActionListener(this);
-        viewCart.setEnabled(false);
-		coordGroup.add(coordinateMenu);
+		viewCart.setEnabled(false);
+		coordGroup.add(viewCart);
 		coordinateMenu.add(viewCart);
         
         viewPolar = new JCheckBoxMenuItem("Polar coordinates");
@@ -449,7 +449,7 @@ hwePValueDescend;
 		String savePlotsCommand              = "Save SNP Plots";
 		String generatePlotsCommand          = "Generate PDF from scores";
 		String cartesianCommand              = "Cartesian coordinates";
-		String ukBiobankCommand              = "UK Biobank coordinates";
+		String ukBiobankCommand              = "Affymetrix Axiom UK Biobank";
 		String polarCommand                  = "Polar coordinates";
 		String collectionBatchAscendCommand  = "↓ Collection/Batch";
 		String collectionBatchDescendCommand = "↑ Collection/Batch";
@@ -945,8 +945,8 @@ hwePValueDescend;
         return historySNP;
     }
 
-    private void setCoordSystem(CoordinateSystem  cs) {
-        coordSystem = cs;
+    private void setCoordSystem(CoordinateSystem  coordSystem) {
+        this.coordSystem = coordSystem;
         switch (coordSystem) {
             case CART:
                 viewCart.setSelected(true);
