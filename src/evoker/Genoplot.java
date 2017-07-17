@@ -230,18 +230,6 @@ public class Genoplot extends JFrame implements ActionListener {
 		coordGroup.add(viewUKBiobank);
 		coordinateMenu.add(viewUKBiobank);
 
-		/*
-		collectionBatchAscend;
-collectionBatchDescend;
-mafAscend;
-mafDescend;
-gpcAscend;
-gpcDescend;
-hwePValueAscend;
-hwePValueDescend;
-		 */
-
-
 		sortMenu = new JMenu("Sort");
 		ButtonGroup sortGroup = new ButtonGroup();
 
@@ -336,6 +324,7 @@ hwePValueDescend;
         mb.add(settingsMenu);
 
         JPanel controlsPanel = new JPanel();
+        controlsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         snpField = new JTextField(10);
         snpField.setEnabled(false);
@@ -403,7 +392,8 @@ hwePValueDescend;
         controlsPanel.setMaximumSize(new Dimension(2000, (int) controlsPanel.getPreferredSize().getHeight()));
         controlsPanel.setMinimumSize(new Dimension(10, (int) controlsPanel.getPreferredSize().getHeight()));
 
-        plotArea = new JPanel(new GridLayout());
+//        plotArea = new JPanel(new GridLayout());
+		plotArea = new JPanel();
         plotArea.setPreferredSize(new Dimension(700, 350));
 
         plotArea.setBorder(new LineBorder(Color.BLACK));
@@ -1192,11 +1182,13 @@ hwePValueDescend;
 
         plottedSNP = name;
         plotArea.removeAll();
-        plotArea.setLayout(new BoxLayout(plotArea, BoxLayout.Y_AXIS));
+        plotArea.setLayout(new BoxLayout(plotArea, BoxLayout.PAGE_AXIS));
         if (name != null) {
             if (!name.equals("ENDLIST")) {
                 currentSNP = name;
-                plotArea.add(new JLabel(name));
+				JLabel jLabelName = new JLabel(name);
+				jLabelName.setAlignmentX(Component.CENTER_ALIGNMENT);
+				plotArea.add(jLabelName);
                 fetchRecord(name);
                 viewedSNP(name);
                 if (markerListLoaded()) {
@@ -1294,7 +1286,9 @@ hwePValueDescend;
             }
             JPanel plotHolder = new JPanel();
             plotHolder.setBackground(Color.WHITE);
+            plotHolder.setLayout(new WrapLayout());
             JScrollPane scrollPane = new JScrollPane(plotHolder);
+
             plotArea.add(scrollPane);
 
             ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
