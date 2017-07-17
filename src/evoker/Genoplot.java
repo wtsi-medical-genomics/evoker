@@ -32,9 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jfree.ui.ExtensionFileFilter;
 
-import evoker.Types.FileFormat;
-import evoker.Types.CoordinateSystem;
-
+import evoker.Types.*;
 
 public class Genoplot extends JFrame implements ActionListener {
 
@@ -84,9 +82,19 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenuItem saveAllBeds;
     private JMenuItem exportPDF;
     private JMenu viewMenu;
+    private JMenu coordinateMenu;
     private JMenuItem viewPolar;
     private JMenuItem viewCart;
     private JMenuItem viewUKBiobank;
+	private JMenu sortMenu;
+	private JMenuItem collectionBatchAscend;
+	private JMenuItem collectionBatchDescend;
+	private JMenuItem mafAscend;
+	private JMenuItem mafDescend;
+	private JMenuItem gpcAscend;
+	private JMenuItem gpcDescend;
+	private JMenuItem hwePValueAscend;
+	private JMenuItem hwePValueDescend;
 	private JMenu historyMenu;
     private ButtonGroup snpGroup;
     private JMenuItem returnToListPosition;
@@ -114,6 +122,8 @@ public class Genoplot extends JFrame implements ActionListener {
 
     private FileFormat fileFormat;
     private String UKBIOBANK = "UKBIOBANK";
+
+    private SortBy sortBy = SortBy.COLLECTIONBATCH_ASCEND;
 
     public static void main(String[] args) {
 
@@ -196,27 +206,97 @@ public class Genoplot extends JFrame implements ActionListener {
 
         mb.add(toolsMenu);
 
-        viewMenu = new JMenu("View");
-        ButtonGroup viewGroup = new ButtonGroup();
+
+
+        coordinateMenu = new JMenu("Coordinates");
+
+        ButtonGroup coordGroup = new ButtonGroup();
         
         viewCart = new JCheckBoxMenuItem("Cartesian coordinates");
         viewCart.addActionListener(this);
         viewCart.setEnabled(false);
-        viewGroup.add(viewCart);
-        viewMenu.add(viewCart);
+		coordGroup.add(coordinateMenu);
+		coordinateMenu.add(viewCart);
         
         viewPolar = new JCheckBoxMenuItem("Polar coordinates");
         viewPolar.addActionListener(this);
         viewPolar.setEnabled(false);
-        viewGroup.add(viewPolar);
-        viewMenu.add(viewPolar);
+		coordGroup.add(viewPolar);
+		coordinateMenu.add(viewPolar);
         
         viewUKBiobank = new JCheckBoxMenuItem("Affymetrix Axiom UK Biobank");
         viewUKBiobank.addActionListener(this);
         viewUKBiobank.setEnabled(false);
-        viewGroup.add(viewUKBiobank);
-        viewMenu.add(viewUKBiobank);
+		coordGroup.add(viewUKBiobank);
+		coordinateMenu.add(viewUKBiobank);
 
+		/*
+		collectionBatchAscend;
+collectionBatchDescend;
+mafAscend;
+mafDescend;
+gpcAscend;
+gpcDescend;
+hwePValueAscend;
+hwePValueDescend;
+		 */
+
+
+		sortMenu = new JMenu("Sort");
+		ButtonGroup sortGroup = new ButtonGroup();
+
+		collectionBatchAscend = new JCheckBoxMenuItem("↓ Collection/Batch");
+		collectionBatchAscend.addActionListener(this);
+		collectionBatchAscend.setEnabled(false);
+		collectionBatchAscend.setSelected(true);
+		sortGroup.add(collectionBatchAscend);
+		sortMenu.add(collectionBatchAscend);
+
+		collectionBatchDescend = new JCheckBoxMenuItem("↑ Collection/Batch");
+		collectionBatchDescend.addActionListener(this);
+		collectionBatchDescend.setEnabled(false);
+		sortGroup.add(collectionBatchDescend);
+		sortMenu.add(collectionBatchDescend);
+
+		mafAscend  = new JCheckBoxMenuItem("↓ MAF");
+		mafAscend .addActionListener(this);
+		mafAscend .setEnabled(false);
+		sortGroup.add(mafAscend );
+		sortMenu.add(mafAscend );
+
+		mafDescend = new JCheckBoxMenuItem("↑ MAF");
+		mafDescend.addActionListener(this);
+		mafDescend.setEnabled(false);
+		sortGroup.add(mafDescend);
+		sortMenu.add(mafDescend);
+
+		gpcAscend = new JCheckBoxMenuItem("↓ GPC");
+		gpcAscend.addActionListener(this);
+		gpcAscend.setEnabled(false);
+		sortGroup.add(gpcAscend);
+		sortMenu.add(gpcAscend);
+
+		gpcDescend = new JCheckBoxMenuItem("↑ GPC");
+		gpcDescend.addActionListener(this);
+		gpcDescend.setEnabled(false);
+		sortGroup.add(gpcDescend);
+		sortMenu.add(gpcDescend);
+
+		hwePValueAscend = new JCheckBoxMenuItem("↓ HWE p-value");
+		hwePValueAscend.addActionListener(this);
+		hwePValueAscend.setEnabled(false);
+		sortGroup.add(hwePValueAscend);
+		sortMenu.add(hwePValueAscend);
+
+		hwePValueDescend = new JCheckBoxMenuItem("↑ HWE p-value");
+		hwePValueDescend.addActionListener(this);
+		hwePValueDescend.setEnabled(false);
+		sortGroup.add(hwePValueDescend);
+		sortMenu.add(hwePValueDescend);
+
+		viewMenu = new JMenu("View");
+		viewMenu.add(coordinateMenu);
+		viewMenu.add(sortMenu);
         mb.add(viewMenu);
 
         historyMenu = new JMenu("History");
@@ -353,30 +433,38 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
-        String goCommand            = new String("Go");
-        String noCommand            = new String("No");
-        String maybeCommand         = new String("Maybe");
-        String yesCommand           = new String("Yes");
-        String backCommand          = new String("Back");
-        String currentCommand       = new String("Return to current list position");
-        String randomCommand        = new String("Random");
-        String plotCommand          = new String("PLOTSNP");
-        String openDirCommand       = new String("Open directory");
-        String openRemoteCommand    = new String("Connect to remote server");
-        String markerCommand        = new String("Load marker list");
-        String excludeCommand       = new String("Load sample exclude list");
-        String filterCommand        = new String("Filter samples");
-        String savePlotsCommand     = new String("Save SNP Plots");
-        String generatePlotsCommand = new String("Generate PDF from scores");
-        String cartesianCommand     = new String("Cartesian coordinates");
-        String ukBiobankCommand     = new String("UK Biobank coordinates");
-        String polarCommand         = new String("Polar coordinates");
-        String plotSettingsCommand  = new String("Plot settings");
-        String longStatsCommand     = new String("Long Stats");
-        String saveBedBimFamCommand = new String("Output .bed/.bim/.fam");
-        String showLogCommand       = new String("Show Evoker log");
-        String quitCommand          = new String("Quit");
-        String saveBedsCommand      = new String("Save All BEDs");
+		String goCommand                     = "Go";
+		String noCommand                     = "No";
+		String maybeCommand                  = "Maybe";
+		String yesCommand                    = "Yes";
+		String backCommand                   = "Back";
+		String currentCommand                = "Return to current list position";
+		String randomCommand                 = "Random";
+		String plotCommand                   = "PLOTSNP";
+		String openDirCommand                = "Open directory";
+		String openRemoteCommand             = "Connect to remote server";
+		String markerCommand                 = "Load marker list";
+		String excludeCommand                = "Load sample exclude list";
+		String filterCommand                 = "Filter samples";
+		String savePlotsCommand              = "Save SNP Plots";
+		String generatePlotsCommand          = "Generate PDF from scores";
+		String cartesianCommand              = "Cartesian coordinates";
+		String ukBiobankCommand              = "UK Biobank coordinates";
+		String polarCommand                  = "Polar coordinates";
+		String collectionBatchAscendCommand  = "↓ Collection/Batch";
+		String collectionBatchDescendCommand = "↑ Collection/Batch";
+		String mafAscendCommand              = "↓ MAF";
+		String mafDescendCommand             = "↑ MAF";
+		String gpcAscendCommand              = "↓ GPC";
+		String gpcDescendCommand             = "↑ GPC";
+		String hwePValueAscendCommand        = "↓ HWE p-value";
+		String hwePValueDescendCommand       = "↑ HWE p-value";
+		String plotSettingsCommand           = "Plot settings";
+		String longStatsCommand              = "Long Stats";
+		String saveBedBimFamCommand          = "Output .bed/.bim/.fam";
+		String showLogCommand                = "Show Evoker log";
+		String quitCommand                   = "Quit";
+		String saveBedsCommand               = "Save All BEDs";
                 
         try {
             String command = actionEvent.getActionCommand();
@@ -568,6 +656,30 @@ public class Genoplot extends JFrame implements ActionListener {
             } else if (command.equals(plotSettingsCommand)) {
                 sd.pack();
                 sd.setVisible(true);
+			} else if (command.equals(collectionBatchAscendCommand)) {
+				setSort(SortBy.COLLECTIONBATCH_ASCEND);
+				refreshPlot();
+			} else if (command.equals(collectionBatchDescendCommand)) {
+				setSort(SortBy.COLLECTIONBATCH_DESCEND);
+				refreshPlot();
+			} else if (command.equals(mafAscendCommand)) {
+				setSort(SortBy.MAF_ASCEND);
+				refreshPlot();
+			} else if (command.equals(mafDescendCommand)) {
+				setSort(SortBy.MAF_DESCEND);
+				refreshPlot();
+			} else if (command.equals(gpcAscendCommand)) {
+				setSort(SortBy.GPC_ASCEND);
+				refreshPlot();
+			} else if (command.equals(gpcDescendCommand)) {
+				setSort(SortBy.GPC_DESCEND);
+				refreshPlot();
+			} else if (command.equals(hwePValueAscendCommand)) {
+				setSort(SortBy.HWEPVAL_ASCEND);
+				refreshPlot();
+			} else if (command.equals(hwePValueDescendCommand)) {
+				setSort(SortBy.HWEPVAL_DESCEND);
+				refreshPlot();
             } else if (command.equals(longStatsCommand)) {
                 refreshPlot();
             } else if (command.equals(saveBedBimFamCommand)) {
@@ -631,6 +743,15 @@ public class Genoplot extends JFrame implements ActionListener {
         viewCart.setEnabled(false);
         viewPolar.setEnabled(false);
         viewUKBiobank.setEnabled(false);
+
+		collectionBatchAscend.setEnabled(false);
+		collectionBatchDescend.setEnabled(false);
+		mafAscend.setEnabled(false);
+		mafDescend.setEnabled(false);
+		gpcAscend.setEnabled(false);
+		gpcDescend.setEnabled(false);
+		hwePValueAscend.setEnabled(false);
+		hwePValueDescend.setEnabled(false);
 
         returnToListPosition.setEnabled(false);
         // clear history items
@@ -1031,6 +1152,16 @@ public class Genoplot extends JFrame implements ActionListener {
             viewCart.setEnabled(true);
             viewPolar.setEnabled(true);
             viewUKBiobank.setEnabled(true);
+
+			collectionBatchAscend.setEnabled(true);
+			collectionBatchDescend.setEnabled(true);
+			mafAscend.setEnabled(true);
+			mafDescend.setEnabled(true);
+			gpcAscend.setEnabled(true);
+			gpcDescend.setEnabled(true);
+			hwePValueAscend.setEnabled(true);
+			hwePValueDescend.setEnabled(true);
+
             exportPDF.setEnabled(true);
                         
             // if the data source is local then enable the saving of manual calls
@@ -1209,16 +1340,35 @@ public class Genoplot extends JFrame implements ActionListener {
 
 
 			// Sort on collection/batch
-//			plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
-
-			// Sort on MAF
-//			plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));
-
-            // Sort on GPC
-//			plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getGenopc(), o2.getPlotData().getGenopc()));
-
-			// Sort on HWE p-value
-			plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getHwpval(), o2.getPlotData().getHwpval()));
+			switch (sortBy) {
+				case COLLECTIONBATCH_ASCEND:
+					plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
+					break;
+				case COLLECTIONBATCH_DESCEND:
+					plots.sort((o1, o2) -> o2.getTitle().compareTo(o1.getTitle()));
+					break;
+				case MAF_ASCEND:
+					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));
+					break;
+				case MAF_DESCEND:
+					plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getMaf(), o1.getPlotData().getMaf()));
+					break;
+				case GPC_ASCEND:
+					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getGenopc(), o2.getPlotData().getGenopc()));
+					break;
+				case GPC_DESCEND:
+					plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getGenopc(), o1.getPlotData().getGenopc()));
+					break;
+				case HWEPVAL_ASCEND:
+					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getHwpval(), o2.getPlotData().getHwpval()));
+					break;
+				case HWEPVAL_DESCEND:
+					plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getHwpval(), o1.getPlotData().getHwpval()));
+					break;
+				default:
+					ld.log("Unknown sort method encountered: " + sortBy);
+					break;
+			}
 
 			for (PlotPanel pp : plots) {
                 plotHolder.add(pp);
@@ -1298,4 +1448,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     db.changesByCollection.get(collection), filename, db, saveBedBimFamFiles);
         
     }
+
+	private void setSort(SortBy sortBy) { this.sortBy = sortBy;	}
+
 }
