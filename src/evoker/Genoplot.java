@@ -1303,7 +1303,6 @@ public class Genoplot extends JFrame implements ActionListener {
             // are encoded with the same fam file so these need to be pulled out one at a time.
             if (fileFormat == FileFormat.UKBIOBANK) {
 				plots = db.getUKBPlotPanels(this, name, coordSystem, plotHeight, plotWidth, longStats.isSelected());
-				System.out.println(plots);
             } else { // Default or Oxford format
                 ArrayList<String> v = db.getCollections();
                 for (String collection : v) {
@@ -1336,10 +1335,11 @@ public class Genoplot extends JFrame implements ActionListener {
 			// Sort on collection/batch
 			switch (sortBy) {
 				case COLLECTIONBATCH_ASCEND:
-					plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
+					Collections.sort(plots, new NaturalOrderComparator());
 					break;
 				case COLLECTIONBATCH_DESCEND:
-					plots.sort((o1, o2) -> o2.getTitle().compareTo(o1.getTitle()));
+					Collections.sort(plots, new NaturalOrderComparator());
+					Collections.reverse(plots);
 					break;
 				case MAF_ASCEND:
 					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));

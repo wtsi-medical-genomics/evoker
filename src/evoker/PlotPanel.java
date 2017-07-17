@@ -328,4 +328,6 @@ public class PlotPanel extends JPanel {
 
 	public String getTitle() { return title; }
 
+	public String toString() { return title; }
+
 }
