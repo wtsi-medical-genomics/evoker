@@ -1342,6 +1342,7 @@ public class Genoplot extends JFrame implements ActionListener {
 					break;
 				case COLLECTIONBATCH_DESCEND:
 					Collections.sort(plots, new NaturalOrderComparator());
+					Collections.reverse(plots);
 					break;
 				case MAF_ASCEND:
 					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));
