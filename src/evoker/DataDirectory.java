@@ -12,8 +12,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import evoker.Types.FileFormat;
-import evoker.Types.CoordinateSystem;
+import evoker.Types.*;
 
 /**
  * Manages all file information
@@ -46,7 +45,7 @@ public class DataDirectory {
         File directory = dc.prepMetaFiles();
         HashMap<String,Boolean> knownChroms = parseMetaFiles(directory, fileFormat);
 
-        if (dc.isOxFormat()){
+		if (fileFormat == FileFormat.OXFORD) {
             int i = 0,a = 0;
             for (String s : dc.getFilesInRemoteDir()){
                 if (s.contains("illumina")){
@@ -74,7 +73,7 @@ public class DataDirectory {
             HashMap<String, RemoteBedfileData> tmpGenotypes = new HashMap<String, RemoteBedfileData>();
             for (String chrom : knownChroms.keySet()){
             	String name;
-            	if (dc.isOxFormat()){
+				if (fileFormat == FileFormat.OXFORD) {
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
                     name = directory.getAbsolutePath() + File.separator + name;
                     md.addFile(name,collection,chrom,true);
@@ -86,19 +85,37 @@ public class DataDirectory {
                             samplesByCollection.get(collection).getNumInds(),
                             md,collection, chrom));
                 }else{
-                    name = collection + "." + chrom;
-                    success &= checkFile(dc.getFilesInRemoteDir(),name);
-                    name =  directory.getAbsolutePath() + File.separator + name;
+					String[] filesInDir = dc.getFilesInRemoteDir();
+					if (fileFormat == FileFormat.UKBIOBANK) {
+						success &= checkFileUKB(filesInDir, chrom);
+						name = "ukb_snp_chr" + chrom + "_v2";
+					} else {
+						name = collection + "." + chrom;
+						success &= checkFile(filesInDir,name);
+					}
+                    name =  directory.getAbsolutePath() + File.separator + name + ".bim";
                     //we require a bimfile for this collection and chromosome:
-                    md.addFile(name+".bim",collection,chrom,false);
+                    md.addFile(name,collection,chrom,false);
+
+
+					String bedName, bntName;
+
+					if (fileFormat == FileFormat.UKBIOBANK) {
+						bedName = "ukb_cal_chr" + chrom + "_v2.bed";
+						bntName = "ukb_int_chr" + chrom + "_v2.bin";
+					} else {
+						bedName = collection + "." + chrom+ ".bed";
+						bntName = collection + "." + chrom + ".bnt";
+					}
+
                     //data files for this collection and chromosome:
                     tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection,2,collection + "." + chrom + ".bnt", chrom,
+                            md,collection,2, bntName, chrom,
                             fileFormat));
                     tmpGenotypes.put(chrom,new RemoteBedfileData(dc,
                             samplesByCollection.get(collection).getNumInds(),
-                            md,collection,collection + "." + chrom + ".bed", chrom));
+                            md,collection, bedName, chrom));
                 }
             }
             intensityDataByCollectionChrom.put(collection,tmpIntensity);
@@ -394,121 +411,6 @@ public class DataDirectory {
 		return knownChroms;
 	}
 
-
-
-	private HashMap<String,Boolean> findUKbiobankBimFiles(File directory) throws IOException {
-		//what chromosomes do we have here?
-		Pattern pattern = Pattern.compile("ukb_snp_chr(\\d+)_v2.bim");
-		File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
-		HashMap<String, Boolean> knownChroms = new HashMap<String, Boolean>();
-		byte counter = 0;
-		String chrom;
-		for (File bimFile : bims) {
-			String fileName = bimFile.getName();
-
-			Matcher m = pattern.matcher(fileName);
-			try {
-				chrom = m.group(1);
-				int i = Integer.parseInt(chrom);
-				// UKB chromosome convention: X=23,Y=24,XY=25,MT=26
-				if (i < 1 || i > 26)
-					throw new Exception();
-			} catch (Exception e) {
-				throw new IOException("Expected UK Biobank filename formats. Found bim " + fileName + " but need ukb_snp_chrN_v2.bim where N is in the range 1-26");
-			}
-
-			if (!knownChroms.containsKey(chrom)) {
-				knownChroms.put(chrom, true);
-				md.addChromToLookup(chrom, counter);
-				counter++;
-				Genoplot.ld.log("Found chromosome: " + chrom);
-			}
-		}
-		return knownChroms;
-	}
-//	private void findUKBiobankFamFiles(File directory) throws IOException {
-//		samplesByCollection = new HashMap<String, SampleData>();
-//		File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
-//		for (File famFile : fams) {
-//			//stash all sample data in HashMap keyed on collection name.
-//			String name = famFile.getName().substring(0, famFile.getName().length() - 4);
-//			samplesByCollection.put(name, new SampleData(famFile.getAbsolutePath(), false));
-//			Genoplot.ld.log("Found collection: " + name);
-//		}
-//	}
-
-	/**
-	 * The UK Biobank has a different structure to what Evoker was originally designed to expect.
-	 * The collections in the evoker sense are the different batches of the UKBB chip data. Batch membership
-	 * is indicated in the fam file.
-	 *
-	 * 1. Find the fam file
-	 * 2. Pull out all of the batches of the fam file
-	 * 3. samplesByCollection: batchname --> SampleData (the set of individuals in that batch)
-	 * 4.
-	 *
-	 *
-	 *
-	 * @param directory
-	 * @return
-	 * @throws IOException
-	 */
-	private HashMap<String,Boolean> parseUKBiobankFiles(File directory) throws IOException{
-		samplesByCollection = new HashMap<String, SampleData>();
-		HashMap<String, Vector<String>> samplesByBatch = new HashMap<String, Vector<String>>();
-		// Find the fam files
-		File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
-//		if (fams.length > 1)
-//			throw new IOException("More than one sample information (.fam) file found in " + directory.getName());
-//		if (fams.length == 1)
-//			throw new IOException("No sample information (.fam) files found in " + directory.getName());
-
-		File famFile = fams[0];
-		String currentLine;
-		BufferedReader famReader =  new BufferedReader(new FileReader(famFile));
-
-		//read through fam file to extract batch=collection names
-		String[] tokens;
-		while ((currentLine = famReader.readLine()) != null) {
-			tokens = currentLine.split("\\s");
-			if (tokens.length == 5)
-				throw new IOException("Fam file does not contain a sixth column indicating the batch.");
-			if (tokens.length < 5)
-				throw new IOException("Fam file ill-formed: requires six columns.");
-			String sample = tokens[1];
-			String batch = tokens[5];
-
-			if (samplesByBatch.containsKey(batch)) {
-				samplesByBatch.get(batch).add(sample);
-			} else {
-				Vector<String> v = new Vector<String>(1);
-				v.add(sample);
-				samplesByBatch.put(batch, v);
-			}
-		}
-
-		for (String batch : samplesByBatch.keySet()) {
-			Vector<String> samples = samplesByBatch.get(batch);
-			SampleData t = new SampleData(samples);
-			System.out.println(batch);
-			System.out.println(t.getNumInds());
-			samplesByCollection.put("abc", t);
-		}
-
-		int numberofCollections = samplesByCollection.size();
-		if (numberofCollections == 0)
-			throw new IOException("Zero sample collection (.fam) files found in " + directory.getName());
-
-		md = new MarkerData(numberofCollections);
-		findQCFiles(directory);
-		HashMap<String, Boolean> knownChroms = findBimFiles(directory);
-
-		if (knownChroms.keySet().size() == 0)
-			throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
-
-		return knownChroms;
-	}
-
     /**
      * Analyze filenames in given directory
      * 
@@ -653,7 +555,7 @@ public class DataDirectory {
 				if(changesByCollection.get(collection).containsKey(chrom)){
 					if(changesByCollection.get(collection).get(chrom).containsKey(snp)){
 					HashMap<String, Byte> changes = changesByCollection.get(collection).get(chrom).get(snp);
-						for(String s : changes.keySet()){
+						for(String s : changes.keySet()) {
 							record.set(samples.inds.indexOf(s), changes.get(s));
 						}
 					}
@@ -689,14 +591,25 @@ public class DataDirectory {
 
 		HashMap<String, Vector<Integer>> ukbBatchSampleIndices = samplesByCollection.get(UKBIOBANK).getUkbBatchSampleIndices();
 
+		Boolean isSex = md.isSex(chrom);
+		Sex[] sexesToPlot;
+		if (isSex) {
+			sexesToPlot= new Sex[]{Sex.MALE, Sex.FEMALE};
+		} else {
+			sexesToPlot= new Sex[]{Sex.NOT_SEX};
+		}
+
 		for (String batch: ukbBatchSampleIndices.keySet()) {
-			Vector<Integer> sampleIndices = ukbBatchSampleIndices.get(batch);
-			PlotData spd = pd.getSubPlotData(sampleIndices);
-			PlotPanel pp = new PlotPanel(gp, batch, spd, plotHeight, plotWidth, longStats, totalMaf, totalSamples);
-			pp.refresh();
-//			pp.setDimensions(minX, maxX, minY, maxY);
-			pp.setDimensionsToData();
-			plots.add(pp);
+			for (Sex sexToPlot: sexesToPlot) {
+				Vector<Integer> sampleIndices = ukbBatchSampleIndices.get(batch);
+				PlotData spd = pd.getSubPlotData(sampleIndices, sexToPlot);
+				String name = batch;
+				if (isSex) { name += " " + sexToPlot; }
+				PlotPanel pp = new PlotPanel(gp, name, spd, plotHeight, plotWidth, longStats, totalMaf, totalSamples);
+				pp.refresh();
+				pp.setDimensionsToData();
+				plots.add(pp);
+			}
 		}
 		return plots;
 	}
@@ -705,12 +618,6 @@ public class DataDirectory {
         ArrayList<String> r = new ArrayList<String>(samplesByCollection.keySet());
         return r;
     }
-
-//	public ArrayList<String> getUKBBatches(){
-//		SampleData sampleData = samplesByCollection.get(UKBIOBANK);
-//		ArrayList<String> r = new ArrayList<String>(sampleData.getUKBSamplesByBatch().keySet());
-//		return r;
-//	}
     
     public int getNumCollections() {
     	return samplesByCollection.size();

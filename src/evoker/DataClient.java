@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.List;
 import java.util.Iterator;
 
+import evoker.Types.*;
 
 public class DataClient{
 
@@ -32,6 +33,7 @@ public class DataClient{
     private boolean oxFormat;
     private String oxPlatform;
     private Genoplot gp;
+    private FileFormat fileFormat;
     ProgressMonitor pm;
 
     public String getLocalDir() {
@@ -52,6 +54,7 @@ public class DataClient{
         if (dcd.getUsername() != null){
             localDir = dcd.getLocalDirectory();
             oxFormat = dcd.isOxformat();
+			fileFormat = dcd.getFileFormat();
 
             pwd.setUsername(dcd.getUsername());
             pwd.setPassword(new String(dcd.getPassword()));
@@ -142,11 +145,19 @@ public class DataClient{
             } else {
             	oxStatus = 0;
             }
-            
+
+            int ukbiobank_v2;
+            if (fileFormat == FileFormat.UKBIOBANK) {
+				ukbiobank_v2 = 1;
+			} else {
+				ukbiobank_v2 = 0;
+			}
+
             //Fire off the script on the remote server to get the requested slice of data
             OutputStream out = session.getOutputStream();
-            String cmd = "cd "+ remoteDir + "\nperl evoker-helper.pl "+ snp + " " +
-                    chrom + " " + collection + " " + index + " " + numinds + " " + totNumSNPs + " " + oxStatus+ " " + this.getOxPlatform() + "\n";
+            String cmd = "cd "+ remoteDir + "\nperl evoker-helper.pl "+ snp + " " + chrom + " " +
+					collection + " " + index + " " + numinds + " " + totNumSNPs + " " + oxStatus + " " +
+					this.getOxPlatform() + " " + ukbiobank_v2 + "\n";
             out.write(cmd.getBytes());
 
 

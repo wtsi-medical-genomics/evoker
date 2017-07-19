@@ -7,7 +7,7 @@ import java.util.Vector;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 
-import evoker.Types.CoordinateSystem;
+import evoker.Types.*;
 
 public class PlotData {
 
@@ -42,7 +42,7 @@ public class PlotData {
         this.intensities.addAll(intensities);
     }
 
-    public PlotData getSubPlotData(Vector<Integer> indices) {
+    public PlotData getSubPlotData(Vector<Integer> indices, Sex sexToPlot) {
         int subLength = indices.size();
 //        ArrayList<Byte> calledGenotypes, ArrayList<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, CoordinateSystem coordSystem
         ArrayList<float[]> subIntensities = new ArrayList<float[]>(subLength);
@@ -50,6 +50,9 @@ public class PlotData {
         Vector<String> subSampleVector = new Vector<String>(subLength);
 
         for (int index: indices) {
+            if ((sexToPlot != Sex.NOT_SEX) && (samples.getSexByIndex(index) != sexToPlot)) {
+                continue;
+            }
             subCalledGenotypes.add(calledGenotypes.get(index));
             subIntensities.add(intensities.get(index));
             subSampleVector.add(samples.getInd(index));
@@ -369,21 +372,9 @@ public class PlotData {
         return hwpval;
     }
 
-    public double getMaxDim() {
-        if (maxX > maxY) {
-            return maxX;
-        } else {
-            return maxY;
-        }
-    }
+    public double getMaxDim() { return Math.max(maxX, maxY); }
 
-    public double getMinDim() {
-        if (minX < minY) {
-            return maxX;
-        } else {
-            return maxY;
-        }
-    }
+    public double getMinDim() { return Math.max(minX, minY); }
 
     public double getMinX() {
         return minX;

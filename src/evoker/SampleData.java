@@ -6,7 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-import evoker.Types.FileFormat;
+import evoker.Types.*;
 
 /**
  * Holds the SampleIDs of a given fam file in a Vector
@@ -17,7 +17,7 @@ public class SampleData {
 //    Vector<String> ukbBatchMembership;
     private HashMap<String, Vector<Integer>> ukbBatchSampleIndices;
     private Vector<String> ukbBatchMembership;
-
+    private Vector<Sex> sexByIndex;
 
     SampleData(String famFilename, FileFormat fileFormat) throws IOException{
 
@@ -25,6 +25,7 @@ public class SampleData {
         if (fileFormat == FileFormat.UKBIOBANK) {
             ukbBatchSampleIndices = new HashMap<String, Vector<Integer>>();
             ukbBatchMembership = new Vector<String>();
+            sexByIndex = new Vector<Sex>();
         }
 
         BufferedReader famReader = new BufferedReader(new FileReader(famFilename));
@@ -49,6 +50,22 @@ public class SampleData {
                 if (tokens.length != 6) {
                     throw new IOException("UK Biobank fam file ill-formed: requires six columns.");
                 }
+                String sexCode = tokens[4];
+                // TODO assert that sex is either ('1' = male, '2' = female, '0' = unknown)
+
+                Sex sex;
+                switch (sexCode) {
+                    case "1":
+                        sex = Sex.MALE;
+                        break;
+                    case "2":
+                        sex = Sex.FEMALE;
+                        break;
+                    default:
+                        sex = Sex.UNKNOWN;
+                        break;
+                }
+                sexByIndex.add(sex);
                 String batch = tokens[5];
 
                 //ukbBatchMembership.add(batch);
@@ -95,5 +112,7 @@ public class SampleData {
     public HashMap<String, Vector<Integer>> getUkbBatchSampleIndices() { return ukbBatchSampleIndices; }
 
     public Vector<String> getUkbBatchMembership() { return ukbBatchMembership; }
+
+    public Sex getSexByIndex(Integer index) { return sexByIndex.get(index); }
 }
 

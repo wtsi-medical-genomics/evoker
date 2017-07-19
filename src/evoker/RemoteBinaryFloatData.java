@@ -12,11 +12,19 @@ import evoker.Types.FileFormat;
 public class RemoteBinaryFloatData extends RemoteBinaryData {
 
     protected int valuesPerEntry;
+    protected FileFormat fileFormat;
 
     RemoteBinaryFloatData(DataClient dc, int numInds, MarkerData md, String collection, int vals, String name, String chromosome, FileFormat fileFormat) throws IOException {
         super(dc, numInds, md, collection, chromosome);
         this.valuesPerEntry = vals;
         bytesPerRecord = valuesPerEntry * 4 * numInds;
+        this.fileFormat = fileFormat;
+
+        if (fileFormat == FileFormat.UKBIOBANK) {
+            bntMagic = new byte[]{};
+            bntHeaderOffset = 0;
+        }
+
         checkFile(name, bntMagic);
     }
     
@@ -32,7 +40,7 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
         if (snpIndex > -1){
             BinaryFloatDataFile bnt = new BinaryFloatDataFile(
                     dc.getLocalDir()+ File.separator+collection+"."+name+".bnt",
-                    this);
+                    this, this.fileFormat);
 
             return bnt.getRecord(0);
         }else{

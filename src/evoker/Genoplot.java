@@ -302,8 +302,6 @@ public class Genoplot extends JFrame implements ActionListener {
         logMenu.add(showLogItem);
         mb.add(logMenu);
 
-        setJMenuBar(mb);
-
         settingsMenu = new JMenu("Settings");
         plotSize = new JMenuItem("Plot settings");
         plotSize.addActionListener(this);
@@ -322,6 +320,8 @@ public class Genoplot extends JFrame implements ActionListener {
         settingsMenu.add(saveBedBimFam);
         
         mb.add(settingsMenu);
+
+		setJMenuBar(mb);
 
         JPanel controlsPanel = new JPanel();
         controlsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -509,7 +509,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 odd.setVisible(true);
                 if (odd.success()) {
                     String directory = odd.getDirectory();
-                    this.fileFormat = odd.getFileFormat();
+                    fileFormat = odd.getFileFormat();
                     try {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         if (!new File(directory).exists()) {
@@ -544,7 +544,9 @@ public class Genoplot extends JFrame implements ActionListener {
                                 // when loading only allow the user to view the log
                                 disableAllActions();
                                 showLogItem.setEnabled(true);
-                                db = new DataDirectory(dc, dcd.getFileFormat());
+								fileFormat = dcd.getFileFormat();
+								setStandardCoordSystem(fileFormat);
+                                db = new DataDirectory(dc, fileFormat);
                                 finishLoadingDataSource();
                                 refreshSaveMenu();
                             }
@@ -1294,7 +1296,7 @@ public class Genoplot extends JFrame implements ActionListener {
             ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
             double maxdim = -100000;
             double mindim = 100000;
-            
+
             // loop through all the collections to get the average maf
             double totalMaf = 0;
             int totalSamples = 0;
@@ -1336,10 +1338,10 @@ public class Genoplot extends JFrame implements ActionListener {
 			switch (sortBy) {
 				case COLLECTIONBATCH_ASCEND:
 					Collections.sort(plots, new NaturalOrderComparator());
+//					plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
 					break;
 				case COLLECTIONBATCH_DESCEND:
 					Collections.sort(plots, new NaturalOrderComparator());
-					Collections.reverse(plots);
 					break;
 				case MAF_ASCEND:
 					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));

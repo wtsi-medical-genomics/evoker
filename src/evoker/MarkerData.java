@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 /**
  * Holds all the data about a set of SNPs, usually for one chromosome.
@@ -90,7 +91,7 @@ public class MarkerData {
         String[] bits;
         boolean missingAlleles = false;
         while ((currentLine = bimReader.readLine()) != null){
-            bits = currentLine.split("\\s");
+            bits = currentLine.split("\\s+");
             StringBuffer snpid = null;
             char a = 'A',b = 'B';
             // check the size of the bits array
@@ -180,5 +181,9 @@ public class MarkerData {
     public void addChromToLookup(String chrom, byte counter) {
         chromosomeLookup.put(chrom,counter);
         chromosomeBackLookup.put(counter,chrom);
+    }
+
+    public Boolean isSex(String chrom) {
+        return chrom.toLowerCase().contains("x") || chrom.toLowerCase().contains("y");
     }
 }

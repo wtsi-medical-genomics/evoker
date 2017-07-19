@@ -63,13 +63,18 @@ public class BinaryFloatDataFile extends BinaryDataFile{
         // TODO: method for checking compressed files
     }
 
-    BinaryFloatDataFile(String filename, RemoteBinaryFloatData rbfd) throws IOException{
+    BinaryFloatDataFile(String filename, RemoteBinaryFloatData rbfd, FileFormat fileFormat) throws IOException{
         super(filename,rbfd.numInds,rbfd.md,rbfd.collection, rbfd.chromosome);
 
         this.valuesPerEntry = rbfd.valuesPerEntry;
         bytesPerRecord = rbfd.bytesPerRecord;
         this.numSNPs = 1;
-        
+
+		if (fileFormat == FileFormat.UKBIOBANK) {
+			bntMagic = new byte[]{};
+			bntHeaderOffset = 0;
+		}
+
         checkFile(bntMagic);
     }
 
