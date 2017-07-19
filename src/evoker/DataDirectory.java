@@ -361,7 +361,7 @@ public class DataDirectory {
 		//what chromosomes do we have here?
 
 		// The UKB files have a specific filename pattern
-		Pattern ukbPattern = Pattern.compile("ukb_snp_chr(\\d+)_v2.bim");
+		Pattern ukbPattern = Pattern.compile("ukb_snp_chr([0-9xyXYmtMT]+)_v2.bim");
 
 		File[] bims = directory.listFiles(new ExtensionFilter(".bim"));
 		HashMap<String, Boolean> knownChroms = new HashMap<String, Boolean>();
@@ -371,17 +371,20 @@ public class DataDirectory {
 			String filename = bimFile.getName();
 			if (fileFormat == FileFormat.UKBIOBANK) {
 				Matcher m = ukbPattern.matcher(filename);
-				m.matches();
-				try {
-					chrom = m.group(1);
-					int i = Integer.parseInt(chrom);
-					// UKB chromosome convention: X=23,Y=24,XY=25,MT=26
-					if (i < 1 || i > 26)
-						throw new Exception();
-				} catch (Exception e) {
-					throw new IOException("Expected UK Biobank filename formats. Found bim " +
-							filename + " but need ukb_snp_chrN_v2.bim where N is in the range 1-26.");
+				if (!m.matches()) {
+					continue;
 				}
+				chrom = m.group(1);
+//				try {
+//					chrom = m.group(1);
+//					int i = Integer.parseInt(chrom);
+//					// UKB chromosome convention: X=23,Y=24,XY=25,MT=26
+//					if (i < 1 || i > 26)
+//						throw new Exception();
+//				} catch (Exception e) {
+//					throw new IOException("Expected UK Biobank filename formats. Found bim " +
+//							filename + " but need ukb_snp_chrN_v2.bim where N is in the range 1-26.");
+//				}
 			} else {
 				String[] chunks = filename.split("\\.");
 				chrom = chunks[1];
