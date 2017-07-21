@@ -183,7 +183,11 @@ public class MarkerData {
         chromosomeBackLookup.put(counter,chrom);
     }
 
-    public Boolean isSex(String chrom) {
+    public Boolean isSexSnp(String name) {
+        return isSexChrom(getChrom(name));
+    }
+
+    public Boolean isSexChrom(String chrom) {
         return chrom.toLowerCase().contains("x") || chrom.toLowerCase().contains("y");
     }
 }

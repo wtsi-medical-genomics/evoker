@@ -587,14 +587,14 @@ public class DataDirectory {
 		}
 		// There is a risk of transforming the data twice resulting in NaNs but this is only if we call generatePoints
 		// between instantiation and getSubPlotData so don't do that.
-		PlotData pd = getRecord(snp, UKBIOBANK, coordSystem);
+		PlotData pd = getRecord(snp, UKBIOBANK, CoordinateSystem.CART);
 		int totalSamples = samplesByCollection.get(UKBIOBANK).getNumInds();
 		// Though called totalMaf is actually the total Minor Allele Count
 		double totalMaf = pd.getMaf() * totalSamples;
 
 		HashMap<String, Vector<Integer>> ukbBatchSampleIndices = samplesByCollection.get(UKBIOBANK).getUkbBatchSampleIndices();
 
-		Boolean isSex = md.isSex(chrom);
+		Boolean isSex = md.isSexChrom(chrom);
 		Sex[] sexesToPlot;
 		if (isSex) {
 			sexesToPlot= new Sex[]{Sex.MALE, Sex.FEMALE};
@@ -605,11 +605,11 @@ public class DataDirectory {
 		for (String batch: ukbBatchSampleIndices.keySet()) {
 			for (Sex sexToPlot: sexesToPlot) {
 				Vector<Integer> sampleIndices = ukbBatchSampleIndices.get(batch);
-				PlotData spd = pd.getSubPlotData(sampleIndices, sexToPlot);
+				PlotData spd = pd.getSubPlotData(sampleIndices, sexToPlot, coordSystem);
 				String name = batch;
 				if (isSex) { name += " " + sexToPlot; }
 				PlotPanel pp = new PlotPanel(gp, name, spd, plotHeight, plotWidth, longStats, totalMaf, totalSamples);
-				pp.refresh();
+				pp.refresh(); // Calls PlotData.generatePoints and PlotPanel.generatePlot
 				pp.setDimensionsToData();
 				plots.add(pp);
 			}
@@ -623,7 +623,12 @@ public class DataDirectory {
     }
     
     public int getNumCollections() {
-    	return samplesByCollection.size();
+    	if (fileFormat == FileFormat.UKBIOBANK) {
+    		return samplesByCollection.get(UKBIOBANK).getNumUkbBatches();
+		} else {
+			return samplesByCollection.size();
+		}
+
     }
 
     public void listNotify(final LinkedList<String> list) throws IOException{

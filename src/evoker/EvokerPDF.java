@@ -11,16 +11,17 @@ public class EvokerPDF {
 	private PdfWriter pdf;
 	private Document document;
 	private boolean open = false;
-	
-	EvokerPDF(File file, int collections) throws DocumentException, IOException {
-		int width  = (600 * collections);
-        int height = 500;
+	final int PLOT_WIDTH = 500;
+	final int PLOT_HEIGHT = 500;
+
+
+
+	EvokerPDF(File file, int numCollections) throws DocumentException, IOException {
         document = new Document();
-        document.setPageSize(new Rectangle(width,height));
+        document.setPageSize(new Rectangle(PLOT_WIDTH * numCollections, PLOT_HEIGHT));
         document.setMargins(10, 10, 10, 10);
         pdf = PdfWriter.getInstance(document, new FileOutputStream(file));
         document.open();
-    
         setFileOpen(true);
 	}
 

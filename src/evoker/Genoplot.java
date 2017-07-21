@@ -634,7 +634,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 pdfd.pack();
                 pdfd.setVisible(true);
                 if (pdfd.success()) {
-                    generatePDFs();
+					generatePDFs();
                 }
             } else if (command.equals(cartesianCommand)) {
                 setCoordSystem(CoordinateSystem.CART);
@@ -755,23 +755,51 @@ public class Genoplot extends JFrame implements ActionListener {
         loadScores(pdfd.getscoresFile());
 
         pm = new ProgressMonitor(this.getContentPane(), "Exporting plots to PDF", null, 0, pdfScores.size());
-
+		pm.setMinimum(1);
         PDFWorker pdfWorker = new PDFWorker(this);
-        pdfWorker.execute();
+			pdfWorker.execute();
     }
 
     public void printPDFsInBackground() throws IOException{
-
         Enumeration<String> keys = pdfScores.keys();
+
+        // UKBiobank has females and males called seperately and so need to be plotted
+		// separately which requires the PDF document to be double in width.
+		int yesNumPlots, maybeNumPlots, noNumPlots;
+		yesNumPlots = maybeNumPlots = noNumPlots = db.getNumCollections();
+		if (fileFormat == FileFormat.UKBIOBANK) {
+			for (String snp : pdfScores.keySet()) {
+				String score = (String) pdfScores.get(snp);
+				if (!db.getMarkerData().isSexSnp(snp)) {
+					continue;
+				}
+				if (score.matches("1")) {
+					yesNumPlots = 2 * db.getNumCollections();
+				}
+				;
+				if (score.matches("0")) {
+					maybeNumPlots = 2 * db.getNumCollections();
+				}
+				;
+				if (score.matches("-1")) {
+					noNumPlots = 2 * db.getNumCollections();
+				}
+				;
+			}
+		}
+
         try {
-            openPDFs();
+            openPDFs(yesNumPlots, maybeNumPlots, noNumPlots);
         } catch (DocumentException/*|IOException ex*/ ex) {
             ex.printStackTrace();
             throw new IOException("Could not write PDF");
         } catch (IOException ex){
             ex.printStackTrace();
             throw new IOException("Could not write PDF");
-        }
+        } finally {
+        	// Show the progress monitor so users know that something is happening.
+        	pm.setProgress(1);
+		}
 
         File tempFile = null;
         try {
@@ -791,52 +819,61 @@ public class Genoplot extends JFrame implements ActionListener {
 
                 ArrayList<Image> images = new ArrayList<Image>();
                 ArrayList<String> stats = new ArrayList<String>();
+				ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
 
-                // loop through all the collections to get the average maf
-                double totalMaf = 0;
-                int totalSamples = 0;
-                for (String collection : db.getCollections()) {
-                    PlotData pd = db.getRecord(snp, collection, coordSystem);
-                    pd.computeSummary();
-                    int sampleNum = db.samplesByCollection.get(collection).getNumInds();
-                    totalMaf += pd.getMaf() * sampleNum;
-                    totalSamples += sampleNum;
-                }
-
-                for (String collection : db.getCollections()) {
-                    PlotPanel pp = new PlotPanel(this, collection,
-                            db.getRecord(snp, collection, coordSystem),
-                            plotWidth, plotHeight, longStats.isSelected(), totalMaf, totalSamples);
-                    pp.refresh();
-                    if (pp.hasData()) {
-                        pp.setDimensions();
-                        ChartUtilities.saveChartAsPNG(tempFile, pp.getChart(), 400, 400);
-                        images.add(Image.getInstance(tempFile.getAbsolutePath()));
-                        stats.add(pp.generateInfoStr());
-                    } else {
-                        // print the jpanel displaying the no data
-                        // message
-                        BufferedImage noSNP = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
-                        Graphics2D g2 = noSNP.createGraphics();
-                        pp.paint(g2);
-                        g2.dispose();
-                        ImageIO.write(noSNP, "png", tempFile);
-                        images.add(Image.getInstance(tempFile.getAbsolutePath()));
-                        stats.add("");
-                    }
-                }
+                if (fileFormat  == FileFormat.UKBIOBANK) {
+					plots = db.getUKBPlotPanels(this, snp, coordSystem, plotHeight, plotWidth, longStats.isSelected());
+				} else {
+					// loop through all the collections to get the average maf
+					double totalMaf = 0;
+					int totalSamples = 0;
+					for (String collection : db.getCollections()) {
+						PlotData pd = db.getRecord(snp, collection, coordSystem);
+						pd.computeSummary();
+						int sampleNum = db.samplesByCollection.get(collection).getNumInds();
+						totalMaf += pd.getMaf() * sampleNum;
+						totalSamples += sampleNum;
+					}
+					for (String collection : db.getCollections()) {
+						PlotPanel pp = new PlotPanel(this, collection,
+								db.getRecord(snp, collection, coordSystem),
+								plotHeight, plotWidth, longStats.isSelected(), totalMaf, totalSamples);
+						pp.refresh();
+						plots.add(pp);
+					}
+				}
+				plots = sortPlots(plots);
+				for (PlotPanel pp : plots) {
+					if (pp.hasData()) {
+						ChartUtilities.saveChartAsPNG(tempFile, pp.getChart(), 400, 400);
+						images.add(Image.getInstance(tempFile.getAbsolutePath()));
+						stats.add(pp.generateInfoStr());
+					} else {
+						// Print the jpanel displaying the no data message.
+						BufferedImage noSNP = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
+						Graphics2D g2 = noSNP.createGraphics();
+						pp.paint(g2);
+						g2.dispose();
+						ImageIO.write(noSNP, "png", tempFile);
+						images.add(Image.getInstance(tempFile.getAbsolutePath()));
+						stats.add("");
+					}
+				}
 
                 PdfPTable table = new PdfPTable(images.size());
                 PdfPCell snpCell = new PdfPCell(new Paragraph(snp));
                 snpCell.setColspan(images.size());
                 snpCell.setBorder(0);
-                snpCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                snpCell.setHorizontalAlignment(Element.ALIGN_LEFT);
                 snpCell.setVerticalAlignment(Element.ALIGN_TOP);
+				snpCell.setPaddingLeft(40);
                 table.addCell(snpCell);
 
                 Iterator<Image> ii = images.iterator();
                 while (ii.hasNext()) {
                     PdfPCell imageCell = new PdfPCell((Image) ii.next());
+                    imageCell.setPaddingLeft(0);
+					imageCell.setPaddingRight(0);
                     imageCell.setBorder(0);
                     table.addCell(imageCell);
                 }
@@ -846,13 +883,16 @@ public class Genoplot extends JFrame implements ActionListener {
                     PdfPCell statsCell = new PdfPCell(new Paragraph(
                             (String) si.next()));
                     statsCell.setBorder(0);
-                    statsCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    statsCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+					statsCell.setPaddingLeft(100);
+					statsCell.setPaddingRight(0);
                     table.addCell(statsCell);
                 }
 
                 if (pdfd.allPlots()) {
                     allPDF.getDocument().add(table);
                     allPDF.getDocument().newPage();
+
                 }
                 if (score.matches("1") && pdfd.yesPlots()) {
                     yesPDF.getDocument().add(table);
@@ -1050,25 +1090,27 @@ public class Genoplot extends JFrame implements ActionListener {
         message.setVisible(true);
     }
 
-    private void openPDFs() throws DocumentException, IOException {
+    private void openPDFs(int yesNumPlots, int maybeNumPlots, int noNumPlots) throws DocumentException, IOException {
+
 
         if (pdfd.allPlots()) {
-            allPDF = new EvokerPDF(checkOverwriteFile(new File(pdfd.getPdfDir()
-                    + "/all.pdf")), db.getNumCollections());
+			int allNumPlots = Collections.max(Arrays.asList(yesNumPlots, maybeNumPlots, noNumPlots));
+        	allPDF = new EvokerPDF(checkOverwriteFile(new File(pdfd.getPdfDir()
+                    + "/all.pdf")), allNumPlots);
         }
         if (pdfd.yesPlots()) {
             yesPDF = new EvokerPDF(checkOverwriteFile(new File(pdfd.getPdfDir()
-                    + "/yes.pdf")), db.getNumCollections());
+                    + "/yes.pdf")), yesNumPlots);
             yesPlotNum = 0;
         }
         if (pdfd.maybePlots()) {
             maybePDF = new EvokerPDF(checkOverwriteFile(new File(pdfd.getPdfDir()
-                    + "/maybe.pdf")), db.getNumCollections());
+                    + "/maybe.pdf")), maybeNumPlots);
             maybePlotNum = 0;
         }
         if (pdfd.noPlots()) {
             noPDF = new EvokerPDF(checkOverwriteFile(new File(pdfd.getPdfDir()
-                    + "/no.pdf")), db.getNumCollections());
+                    + "/no.pdf")), noNumPlots);
             noPlotNum = 0;
         }
     }
@@ -1332,40 +1374,7 @@ public class Genoplot extends JFrame implements ActionListener {
 				}
 			}
 
-
-
-			// Sort on collection/batch
-			switch (sortBy) {
-				case COLLECTIONBATCH_ASCEND:
-					Collections.sort(plots, new NaturalOrderComparator());
-//					plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
-					break;
-				case COLLECTIONBATCH_DESCEND:
-					Collections.sort(plots, new NaturalOrderComparator());
-					Collections.reverse(plots);
-					break;
-				case MAF_ASCEND:
-					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));
-					break;
-				case MAF_DESCEND:
-					plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getMaf(), o1.getPlotData().getMaf()));
-					break;
-				case GPC_ASCEND:
-					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getGenopc(), o2.getPlotData().getGenopc()));
-					break;
-				case GPC_DESCEND:
-					plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getGenopc(), o1.getPlotData().getGenopc()));
-					break;
-				case HWEPVAL_ASCEND:
-					plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getHwpval(), o2.getPlotData().getHwpval()));
-					break;
-				case HWEPVAL_DESCEND:
-					plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getHwpval(), o1.getPlotData().getHwpval()));
-					break;
-				default:
-					ld.log("Unknown sort method encountered: " + sortBy);
-					break;
-			}
+			plots = sortPlots(plots);
 
 			for (PlotPanel pp : plots) {
                 plotHolder.add(pp);
@@ -1377,6 +1386,42 @@ public class Genoplot extends JFrame implements ActionListener {
             this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));            
         }
     }
+
+    private ArrayList<PlotPanel> sortPlots(ArrayList<PlotPanel> plots) {
+		// Sort on collection/batch
+		switch (sortBy) {
+			case COLLECTIONBATCH_ASCEND:
+				Collections.sort(plots, new NaturalOrderComparator());
+//					plots.sort((o1, o2) -> o1.getTitle().compareTo(o2.getTitle()));
+				break;
+			case COLLECTIONBATCH_DESCEND:
+				Collections.sort(plots, new NaturalOrderComparator());
+				Collections.reverse(plots);
+				break;
+			case MAF_ASCEND:
+				plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getMaf(), o2.getPlotData().getMaf()));
+				break;
+			case MAF_DESCEND:
+				plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getMaf(), o1.getPlotData().getMaf()));
+				break;
+			case GPC_ASCEND:
+				plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getGenopc(), o2.getPlotData().getGenopc()));
+				break;
+			case GPC_DESCEND:
+				plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getGenopc(), o1.getPlotData().getGenopc()));
+				break;
+			case HWEPVAL_ASCEND:
+				plots.sort((o1, o2) -> Double.compare(o1.getPlotData().getHwpval(), o2.getPlotData().getHwpval()));
+				break;
+			case HWEPVAL_DESCEND:
+				plots.sort((o1, o2) -> Double.compare(o2.getPlotData().getHwpval(), o1.getPlotData().getHwpval()));
+				break;
+			default:
+				ld.log("Unknown sort method encountered: " + sortBy);
+				break;
+		}
+		return plots;
+	}
 
     private void refreshSaveMenu() {
         saveMenu.removeAll();
@@ -1447,5 +1492,12 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
 	private void setSort(SortBy sortBy) { this.sortBy = sortBy;	}
+
+	private void mouseWait() {
+		this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+	}
+	private void mouseDefault() {
+		this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+	}
 
 }

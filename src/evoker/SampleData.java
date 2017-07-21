@@ -111,6 +111,8 @@ public class SampleData {
 
     public HashMap<String, Vector<Integer>> getUkbBatchSampleIndices() { return ukbBatchSampleIndices; }
 
+    public int getNumUkbBatches() { return  ukbBatchSampleIndices.size(); }
+
     public Vector<String> getUkbBatchMembership() { return ukbBatchMembership; }
 
     public Sex getSexByIndex(Integer index) { return sexByIndex.get(index); }
