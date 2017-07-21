@@ -67,6 +67,10 @@ public class PlotPanel extends JPanel {
                 this.xlab = String.valueOf("\u03F4");
                 this.ylab = String.valueOf("r");
                 break;
+			case UKBIOBANK:
+				this.xlab = String.valueOf("Contrast: log\u2082(A/B)");
+				this.ylab = String.valueOf("Strength: log\u2082(A\u00D7B)/2");
+				break;
             default:
                 this.xlab = String.valueOf("X");
                 this.ylab = String.valueOf("Y");
