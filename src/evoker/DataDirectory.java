@@ -270,12 +270,16 @@ public class DataDirectory {
      * @param changes       in the form HashMap <ind , targetID>
      */
     protected void commitGenotypeChange(String collection, String snp, HashMap<String, Byte> changes){
-        if(! changesByCollection.containsKey(collection)) changesByCollection.put(collection, new HashMap<String, HashMap<String, HashMap<String, Byte>>>());
-        String chromosome = null;
-        chromosome = md.getChrom(snp);
-        if(! changesByCollection.get(collection).containsKey(chromosome)) changesByCollection.get(collection).put(chromosome, new HashMap<String, HashMap<String, Byte>>());
-        if(! changesByCollection.get(collection).get(chromosome).containsKey(snp)) changesByCollection.get(collection).get(chromosome).put(snp, new HashMap<String, Byte>());
-
+        if (!changesByCollection.containsKey(collection)) {
+        	changesByCollection.put(collection, new HashMap<String, HashMap<String, HashMap<String, Byte>>>());
+		}
+        String chromosome = md.getChrom(snp);
+        if (!changesByCollection.get(collection).containsKey(chromosome)) {
+        	changesByCollection.get(collection).put(chromosome, new HashMap<String, HashMap<String, Byte>>());
+		}
+        if (!changesByCollection.get(collection).get(chromosome).containsKey(snp)) {
+        	changesByCollection.get(collection).get(chromosome).put(snp, new HashMap<String, Byte>());
+		}
         changesByCollection.get(collection).get(chromosome).get(snp).putAll(changes);
     }
 
@@ -544,7 +548,7 @@ public class DataDirectory {
         }**/
         String chrom = md.getChrom(snp);
         if (chrom == null){
-			return new PlotData(null,null,null,null,null, null);
+			return new PlotData(null,null,null,null,null, coordSystem);
 		}
         	
 		// time how long this takes to get a benchmark for improving compressed file response
@@ -608,7 +612,7 @@ public class DataDirectory {
 				PlotData spd = pd.getSubPlotData(sampleIndices, sexToPlot, coordSystem);
 				String name = batch;
 				if (isSex) { name += " " + sexToPlot; }
-				PlotPanel pp = new PlotPanel(gp, name, spd, plotHeight, plotWidth, longStats, totalMaf, totalSamples);
+				PlotPanel pp = new PlotPanel(gp, name, spd, plotHeight, plotWidth, longStats, totalMaf, totalSamples, batch);
 				pp.refresh(); // Calls PlotData.generatePoints and PlotPanel.generatePlot
 				pp.setDimensionsToData();
 				plots.add(pp);

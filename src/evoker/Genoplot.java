@@ -117,7 +117,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private int plotHeight = 300;
     private int plotWidth = 300;
 
-    public enum MouseMode {LASSO,ZOOM};
+	public enum MouseMode {LASSO,ZOOM};
     private MouseMode mouseMode;
 
     private FileFormat fileFormat;
@@ -547,6 +547,7 @@ public class Genoplot extends JFrame implements ActionListener {
 								fileFormat = dcd.getFileFormat();
 								setStandardCoordSystem(fileFormat);
                                 db = new DataDirectory(dc, fileFormat);
+								plottedSNP = null;
                                 finishLoadingDataSource();
                                 refreshSaveMenu();
                             }
@@ -837,7 +838,8 @@ public class Genoplot extends JFrame implements ActionListener {
 					for (String collection : db.getCollections()) {
 						PlotPanel pp = new PlotPanel(this, collection,
 								db.getRecord(snp, collection, coordSystem),
-								plotHeight, plotWidth, longStats.isSelected(), totalMaf, totalSamples);
+								plotHeight, plotWidth, longStats.isSelected(),
+								totalMaf, totalSamples, collection);
 						pp.refresh();
 						plots.add(pp);
 					}
@@ -1199,7 +1201,7 @@ public class Genoplot extends JFrame implements ActionListener {
             exportPDF.setEnabled(true);
                         
             // if the data source is local then enable the saving of manual calls
-            if (db.isLocal()) {
+            if (db.isLocal() && fileFormat != FileFormat.UKBIOBANK) {
                 saveMenu.setEnabled(true);
                 saveAllBeds.setEnabled(true);
             } 
@@ -1301,25 +1303,42 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void dumpChanges() {
-        if (plottedSNP != null) {
-            JScrollPane jsp = (JScrollPane) plotArea.getComponent(1);
-            JPanel jp = (JPanel) jsp.getViewport().getView();
-            // Exception in thread "AWT-EventQueue-0" java.lang.ClassCastException: javax.swing.JScrollPane$ScrollBar cannot be cast to javax.swing.JPanel
-            // at evoker.Genoplot.dumpChanges(Genoplot.java:1109)
-            
-            //check if this is the end of a marker list
-            // if it is there will be no changes to commit
-            if (!endOfList) {
-                ArrayList<String> collections = db.getCollections();
-                for (int i = 0; i < collections.size(); i++) {
-                    PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
-                    PlotData plotData = plotPanel.getPlotData();
-                    if (plotData.changed) {
-                        db.commitGenotypeChange(collections.get(i), plottedSNP, plotData.getGenotypeChanges());
-                    }
-                }
-            }
-        }
+        if (plottedSNP == null || endOfList) {
+        	return;
+		}
+
+		JScrollPane jsp = (JScrollPane) plotArea.getComponent(1);
+		JPanel jp = (JPanel) jsp.getViewport().getView();
+
+		if (fileFormat == FileFormat.UKBIOBANK) {
+			// We use a single collection for UKBIOBANK in DataDirectory but getNumCollections actually returns the
+			// number of batches.
+			int numPlots = db.getNumCollections();
+			if (db.getMarkerData().isSexSnp(plottedSNP)) {
+				numPlots *= 2;
+			}
+			for (int i = 0; i < numPlots; i++) {
+				PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
+				PlotData plotData = plotPanel.getPlotData();
+				if (plotData.changed) {
+					db.commitGenotypeChange(UKBIOBANK, plottedSNP, plotData.getGenotypeChanges());
+				}
+			}
+		} else {
+			// Exception in thread "AWT-EventQueue-0" java.lang.ClassCastException: javax.swing.JScrollPane$ScrollBar cannot be cast to javax.swing.JPanel
+			// at evoker.Genoplot.dumpChanges(Genoplot.java:1109)
+
+			//check if this is the end of a marker list
+			// if it is there will be no changes to commit
+			for (int i = 0; i < db.getNumCollections(); i++) {
+				PlotPanel plotPanel = (PlotPanel) jp.getComponent(i);
+				String collection = plotPanel.getCollection();
+				PlotData plotData = plotPanel.getPlotData();
+				if (plotData.changed) {
+					db.commitGenotypeChange(collection, plottedSNP, plotData.getGenotypeChanges());
+				}
+			}
+		}
     }
 
     private void fetchRecord(String name) {
@@ -1362,7 +1381,8 @@ public class Genoplot extends JFrame implements ActionListener {
 
                 for (String c : v) {
                     PlotData pd = db.getRecord(name, c, coordSystem);
-                    PlotPanel pp = new PlotPanel(this, c, pd, plotHeight, plotWidth, longStats.isSelected(), totalMaf, totalSamples);
+                    PlotPanel pp = new PlotPanel(this, c, pd, plotHeight, plotWidth, longStats.isSelected(),
+							totalMaf, totalSamples, c);
                     pp.refresh();
                     if (pp.getMaxDim() > maxdim) { maxdim = pp.getMaxDim(); }
                     if (pp.getMinDim() < mindim) { mindim = pp.getMinDim(); }

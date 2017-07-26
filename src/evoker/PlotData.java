@@ -42,7 +42,7 @@ public class PlotData {
         this.intensities.addAll(intensities);
     }
 
-    public PlotData getSubPlotData(Vector<Integer> indices, Sex sexToPlot, CoordinateSystem newCoordSystem) {
+    public PlotData getSubPlotData(Vector<Integer> indices, Sex sexToPlot, CoordinateSystem newCoordinateSystem) {
         int subLength = indices.size();
         ArrayList<float[]> subIntensities = new ArrayList<float[]>(subLength);
         ArrayList<Byte> subCalledGenotypes = new ArrayList<Byte>(subLength);
@@ -57,7 +57,7 @@ public class PlotData {
             subSampleVector.add(samples.getInd(index));
         }
         SampleData subSamples = new SampleData(subSampleVector);
-        return new PlotData(subCalledGenotypes, subIntensities, subSamples, exclude, alleles, newCoordSystem);
+        return new PlotData(subCalledGenotypes, subIntensities, subSamples, exclude, alleles, newCoordinateSystem);
     }
 
     XYSeriesCollection generatePoints() {
@@ -373,7 +373,7 @@ public class PlotData {
 
     public double getMaxDim() { return Math.max(maxX, maxY); }
 
-    public double getMinDim() { return Math.max(minX, minY); }
+    public double getMinDim() { return Math.min(minX, minY); }
 
     public double getMinX() {
         return minX;

@@ -39,7 +39,7 @@ public abstract class BinaryDataFile extends BinaryData{
                     ByteBuffer buf = ByteBuffer.allocate(8);
                     buf.order(ByteOrder.LITTLE_ENDIAN);
                     // in the case of remote data we need to compare the total snps as this is the value in the header
-                    buf.putInt(this.totNumSNPs); 
+                    buf.putInt(this.totNumSNPs);
                     if (file.getName().endsWith("bed") || file.getName().endsWith("gen.bin") ){
                     	// the inds value in the header is the number of columns--three values per ind
                         buf.putInt(this.numInds*3);

@@ -61,7 +61,7 @@ public class OpenDirectoryDialog extends JDialog implements ActionListener {
         formatPanel.add(oxfordFormatButton);
         bg.add(oxfordFormatButton);
 
-        ukBioBankFormatButton = new JRadioButton("UK BioBank format");
+        ukBioBankFormatButton = new JRadioButton("UK Biobank v2 format");
         formatPanel.add(ukBioBankFormatButton);
         bg.add(ukBioBankFormatButton);
 
@@ -108,9 +108,7 @@ public class OpenDirectoryDialog extends JDialog implements ActionListener {
         return directory;
     }
 
-    public FileFormat getFileFormat(){
-        return fileFormat;
-    }
+    public FileFormat getFileFormat(){ return fileFormat; }
 //
 //    public boolean allPlots() {
 //        return allPlotsButton.isSelected();

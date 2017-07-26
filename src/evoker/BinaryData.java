@@ -5,8 +5,8 @@ import java.util.ArrayList;
 
 public abstract class BinaryData {
 
-    protected static byte[] bedMagic = {0x6c, 0x1b, 0x01};
-    protected static byte[] bntMagic = {0x1a, 0x31};
+    protected byte[] bedMagic;
+    protected byte[] bntMagic;
 
     protected MarkerData md;
     protected String collection;
@@ -16,9 +16,9 @@ public abstract class BinaryData {
     protected int bytesPerRecord;
 
     /** default header offset for bnt files */
-    protected int bntHeaderOffset = 2;
+    protected int bntHeaderOffset;
     /** default header offset for bed files */
-    protected int bedHeaderOffset = 3;
+    protected int bedHeaderOffset;
      /** to hold the total number of snps when using remote data, as the total number of snps is required for checking Oxformat header information*/
     protected int totNumSNPs;
 
@@ -29,6 +29,11 @@ public abstract class BinaryData {
         this.md = md;
         this.collection = collection;
         this.chromosome = chromosome;
+
+        bedMagic = new byte[]{0x6c, 0x1b, 0x01};
+        bntMagic = new byte[]{0x1a, 0x31};
+        bntHeaderOffset = 2;
+        bedHeaderOffset = 3;
     }
 
     public abstract ArrayList getRecord(String markerName) throws IOException;

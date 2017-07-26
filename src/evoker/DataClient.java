@@ -1,7 +1,5 @@
 package evoker;
 
-
-
 import com.sshtools.j2ssh.SshClient;
 import com.sshtools.j2ssh.SftpClient;
 import com.sshtools.j2ssh.sftp.SftpFile;
@@ -23,17 +21,17 @@ import evoker.Types.*;
 
 public class DataClient{
 
-
     static PasswordAuthenticationClient pwd = new PasswordAuthenticationClient();
     private SshClient ssh;
     private SftpClient ftp;
     private String remoteDir;
     private String displayName;
     private List files;
-    private boolean oxFormat;
     private String oxPlatform;
     private Genoplot gp;
     private FileFormat fileFormat;
+    private String famPath;
+    private String remoteTempDir;
     ProgressMonitor pm;
 
     public String getLocalDir() {
@@ -53,8 +51,12 @@ public class DataClient{
         // Create a password authentication instance
         if (dcd.getUsername() != null){
             localDir = dcd.getLocalDirectory();
-            oxFormat = dcd.isOxformat();
 			fileFormat = dcd.getFileFormat();
+
+			if (fileFormat == FileFormat.UKBIOBANK) {
+				famPath = dcd.getFam();
+				remoteTempDir = dcd.getRemoteTempDir();
+			}
 
             pwd.setUsername(dcd.getUsername());
             pwd.setPassword(new String(dcd.getPassword()));
@@ -74,15 +76,31 @@ public class DataClient{
                 ftp = ssh.openSftpClient();
                 ftp.cd(remoteDir);
                 ftp.lcd(localDir);
-                try{
-                    String perms = ftp.stat("evoker-helper.pl").getPermissionsString();
-                    if (!perms.endsWith("x")){
-                        throw new IOException("must be fully executable");
-                    }
-                }catch (IOException ioe){
-                    ssh.disconnect();
-                    throw new IOException("Problem with evoker-helper.pl on remote server:\n"+ioe.getMessage());
-                }
+				// TODO Verify that evoker-helper.pl is there and working.
+
+//				SessionChannelClient session = ssh.openSessionChannel();
+//				session.startShell();
+//				InputStream in = session.getInputStream();
+//				OutputStream out = session.getOutputStream();
+//				out.write("evoker-helper.pl --version".getBytes());
+//				int c;
+//				while ((c=in.read()) != -1)
+//				{
+//					System.out.print((char) c);
+//				}
+//				session.close();
+//
+//
+//
+//                try{
+//                    String perms = ftp.stat("evoker-helper.pl").getPermissionsString();
+//                    if (!perms.endsWith("x")){
+//                        throw new IOException("must be fully executable");
+//                    }
+//                }catch (IOException ioe){
+//                    ssh.disconnect();
+//                    throw new IOException("Problem with evoker-helper.pl on remote server:\n"+ioe.getMessage());
+//                }
                 
                 // check if the localdir contains files already
                 File[] localFiles = new File(localDir).listFiles();
@@ -140,24 +158,31 @@ public class DataClient{
             
             // variable to pass to the evoker-helper.pl script
             int oxStatus;
-            if (oxFormat){
+            if (fileFormat == FileFormat.OXFORD){
                 oxStatus = 1;
             } else {
             	oxStatus = 0;
             }
 
             int ukbiobank_v2;
+            String outpath;
             if (fileFormat == FileFormat.UKBIOBANK) {
 				ukbiobank_v2 = 1;
+				outpath = remoteTempDir;
+				filestem = remoteTempDir + File.separator + filestem;
 			} else {
 				ukbiobank_v2 = 0;
+				outpath = "0";
 			}
+
 
             //Fire off the script on the remote server to get the requested slice of data
             OutputStream out = session.getOutputStream();
-            String cmd = "cd "+ remoteDir + "\nperl evoker-helper.pl "+ snp + " " + chrom + " " +
+			//String cmd = "cd "+ remoteDir + "\nperl evoker-helper.pl "+ snp + " " + chrom + " " +
+            String cmd = "cd "+ remoteDir + "\nevoker-helper.pl "+ snp + " " + chrom + " " +
 					collection + " " + index + " " + numinds + " " + totNumSNPs + " " + oxStatus + " " +
-					this.getOxPlatform() + " " + ukbiobank_v2 + "\n";
+					this.getOxPlatform() + " " + ukbiobank_v2 + " " + outpath + "\n";
+            System.out.println(cmd);
             out.write(cmd.getBytes());
 
 
@@ -183,9 +208,9 @@ public class DataClient{
                 }
                 
             }
-            
+
             if ((System.currentTimeMillis() - start)/1000 >= 120) {
-            	// if nothing is output from evoker-helper.pl in 2 minutes then die 
+            	// if nothing is output from evoker-helper.pl in 2 minutes then die
             	throw new IOException("evoker-helper.pl is not responsive check the script will run");
             }
             
@@ -207,7 +232,7 @@ public class DataClient{
 
 
     public boolean isOxFormat() {
-        return oxFormat;
+        return fileFormat == FileFormat.OXFORD;
     }
 
 	public File prepMetaFiles() throws IOException {
@@ -215,25 +240,42 @@ public class DataClient{
 
 		String famending = ".fam";
 		String bimending = ".bim";
-		if (oxFormat) {
+		if (fileFormat == FileFormat.OXFORD) {
 			famending = ".sample";
 			bimending = ".snp";
 		}
 
 		Iterator i = files.iterator();
-		while (i.hasNext()) {
-			String filename = ((SftpFile) i.next()).getFilename();
-			if (filename.endsWith(famending)) {
-				if (!new File(localDir + File.separator + filename).exists()) {
-					try {
-						ftp.get(filename);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+
+		if (fileFormat == FileFormat.UKBIOBANK) {
+			// UKB provides a separate fam files
+			File f = new File(famPath);
+			String famFile = f.getName();
+
+			if (!new File(localDir + File.separator + famFile).exists()) {
+				try {
+					ftp.get(famPath);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 
+		} else {
+			while (i.hasNext()) {
+				String filename = ((SftpFile) i.next()).getFilename();
+				if (filename.endsWith(famending)) {
+					if (!new File(localDir + File.separator + filename).exists()) {
+						try {
+							ftp.get(filename);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+
+			}
 		}
 
 		i = files.iterator();

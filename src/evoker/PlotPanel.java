@@ -45,7 +45,7 @@ public class PlotPanel extends JPanel {
 	boolean longStats;
 	double totalMaf;
 	int totalSamples;
-
+	String collection;
 	JPanel statistics = null;
 
 	static {
@@ -54,13 +54,14 @@ public class PlotPanel extends JPanel {
 	}
 
 	PlotPanel(Genoplot gp, String title, PlotData pd, int plotHeight, int plotWidth,
-			boolean longStats, double totalMaf, int totalSamples) {
+			boolean longStats, double totalMaf, int totalSamples, String collection) {
 		this.theGenoplot = gp;
 		this.title = title;
 		this.data = pd;
 		this.longStats = longStats;
 		this.totalMaf = totalMaf;
 		this.totalSamples = totalSamples;
+		this.collection = collection;
 
 		switch (pd.getCoordSystem()) {
             case POLAR:
@@ -333,5 +334,7 @@ public class PlotPanel extends JPanel {
 	public String getTitle() { return title; }
 
 	public String toString() { return title; }
+
+	public String getCollection() { return collection; }
 
 }

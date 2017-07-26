@@ -13,21 +13,27 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     private String username;
     private String remoteDir;
     private String localDir;
+    private String remoteTempDir;
     private String host;
     private int port;
-    private JTextField userField;
+	private String fam;
+	private JTextField userField;
     private JTextField remdirField;
+	private JTextField remoteTempDirField;
+	private JTextField famField;
     private JTextField locdirField;
     private JTextField hostField;
     private JTextField portField;
-    private JCheckBox emptyIt;
+	private JPanel famPanel;
+	private JPanel remoteTempDirPanel;
+	private JCheckBox emptyIt;
     private JRadioButton defaultFormatButton;
     private JRadioButton oxfordFormatButton;
     private JRadioButton ukBioBankFormatButton;
 
     public DataConnectionDialog(JFrame parent){
         super(parent,"Data Connection",true);
-
+		fam = "";
         JPanel contents = new JPanel();
         contents.setLayout(new BoxLayout(contents,BoxLayout.Y_AXIS));
 
@@ -43,7 +49,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
 
         JPanel remdirPanel = new JPanel();
         remdirPanel.add(new JLabel("Remote directory: "));
-        remdirField = new JTextField(30);
+		remdirField = new JTextField(30);
         remdirPanel.add(remdirField);
         contents.add(remdirPanel);
 
@@ -80,20 +86,37 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         formatPanel.setLayout(new BoxLayout(formatPanel,BoxLayout.Y_AXIS));
 
         defaultFormatButton = new JRadioButton("Default format");
+		defaultFormatButton .addActionListener(this);
         formatPanel.add(defaultFormatButton);
         defaultFormatButton.setSelected(true);
         bg.add(defaultFormatButton);
 
         oxfordFormatButton = new JRadioButton("Oxford format");
+		oxfordFormatButton.addActionListener(this);
         formatPanel.add(oxfordFormatButton);
         bg.add(oxfordFormatButton);
 
-        ukBioBankFormatButton = new JRadioButton("UK BioBank format");
-        formatPanel.add(ukBioBankFormatButton );
-        bg.add(ukBioBankFormatButton );
-
+        ukBioBankFormatButton = new JRadioButton("UK BioBank v2 format");
+		ukBioBankFormatButton.addActionListener(this);
+        formatPanel.add(ukBioBankFormatButton);
+        bg.add(ukBioBankFormatButton);
         bottomPanel.add(formatPanel);
         contents.add(bottomPanel);
+
+		famPanel = new JPanel();
+		famPanel.add(new JLabel("Remote FAM file: "));
+		famField = new JTextField(30);
+		famPanel.add(famField);
+
+		remoteTempDirPanel = new JPanel();
+		remoteTempDirPanel.add(new JLabel("Remote temp directory: "));
+		remoteTempDirField = new JTextField(30);
+		remoteTempDirPanel.add(remoteTempDirField);
+
+		famPanel.setVisible(true);
+		remoteTempDirPanel.setVisible(true);
+		contents.add(famPanel);
+		contents.add(remoteTempDirPanel);
 
         //TODO: should this be reactivated?
         emptyIt = new JCheckBox("Clear local cache?");
@@ -113,24 +136,38 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        if (e.getActionCommand().equals("OK")){
+		String command = e.getActionCommand();
+        if (command.equals("UK BioBank v2 format")) {
+			famPanel.setVisible(true);
+			remoteTempDirPanel.setVisible(true);
+		} else if (command.equals("Default format") || command.equals("Oxford format")) {
+			famPanel.setVisible(false);
+			remoteTempDirPanel.setVisible(false);
+		} else if (command.equals("OK")){
             password = pf.getPassword();
             username = userField.getText();
             remoteDir = remdirField.getText();
             localDir = locdirField.getText();
             host = hostField.getText();
             port = Integer.parseInt(portField.getText());
-            if (defaultFormatButton.isSelected()) { fileFormat = FileFormat.DEFAULT; }
-            else if (oxfordFormatButton.isSelected()) { fileFormat = FileFormat.OXFORD; }
-            else if (ukBioBankFormatButton.isSelected()) { fileFormat = FileFormat.UKBIOBANK; }
+            if (defaultFormatButton.isSelected()) {
+            	fileFormat = FileFormat.DEFAULT;
+            } else if (oxfordFormatButton.isSelected()) {
+            	fileFormat = FileFormat.OXFORD;
+            } else if (ukBioBankFormatButton.isSelected()) {
+            	fileFormat = FileFormat.UKBIOBANK;
+				fam = famField.getText();
+				remoteTempDir = remoteTempDirField.getText();
+
+            }
             this.dispose();
-        }else if (e.getActionCommand().equals("Browse")){
+        }else if (command.equals("Browse")){
             JFileChooser jfc = new JFileChooser("user.dir");
-            jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);            
+            jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
                 locdirField.setText(jfc.getSelectedFile().getAbsolutePath());
             }
-        }else if (e.getActionCommand().equals("Cancel")){
+        }else if (command.equals("Cancel")){
             this.dispose();
         }
     }
@@ -163,11 +200,13 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         return fileFormat;
     }
 
+    public String getFam() { return fam; }
+
+    public String getRemoteTempDir(){ return remoteTempDir; }
+
     public boolean isOxformat() {
-//        return oxfordFormatButton.isSelected();
         return getFileFormat() == FileFormat.OXFORD;
     }
-
 
     public void clearPassword(){
         for (int i = 0; i < password.length; i++){
