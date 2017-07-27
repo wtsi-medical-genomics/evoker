@@ -125,12 +125,12 @@ To build a jar file from source:
 
 Todo
 ----
-[ ] Exclude individuals with a negative number as their sample ID.
-[ ] Deal with hidden files (eg `.samples.fam`).
-[ ] Gracefully fail if evoker-helper.pl is not reachable at the remote server.
-[ ] Export BED changes when viewing over a remote connection.
-[ ] Plot SNP Posterior ellipses.
-[ ] Save the plot array to remove the need to re-load all data on sorting.
+- [ ] Exclude individuals with a negative number as their sample ID.
+- [ ] Deal with hidden files (eg `.samples.fam`).
+- [ ] Gracefully fail if evoker-helper.pl is not reachable at the remote server.
+- [ ] Export BED changes when viewing over a remote connection.
+- [ ] Plot SNP Posterior ellipses.
+- [ ] Save the plot array to remove the need to re-load all data on sorting.
 
 Citation
 --------

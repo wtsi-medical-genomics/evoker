@@ -31,13 +31,14 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     private JRadioButton defaultFormatButton;
     private JRadioButton oxfordFormatButton;
     private JRadioButton ukBioBankFormatButton;
+    private Boolean cancelled;
 
     public DataConnectionDialog(JFrame parent){
         super(parent,"Data Connection",true);
 		fam = "";
         JPanel contents = new JPanel();
         contents.setLayout(new BoxLayout(contents,BoxLayout.Y_AXIS));
-
+		cancelled = true;
         JPanel hostPanel = new JPanel();
         hostPanel.add(new JLabel("Host: "));
         hostField = new JTextField(20);
@@ -97,7 +98,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         formatPanel.add(oxfordFormatButton);
         bg.add(oxfordFormatButton);
 
-        ukBioBankFormatButton = new JRadioButton("UK Biobank v2 format");
+        ukBioBankFormatButton = new JRadioButton("UK BioBank v2 format");
 		ukBioBankFormatButton.addActionListener(this);
         formatPanel.add(ukBioBankFormatButton);
         bg.add(ukBioBankFormatButton);
@@ -139,6 +140,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
 
 		this.setPreferredSize(new Dimension(550,350));
 		this.setMinimumSize(new Dimension(550,350));
+
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -156,6 +158,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
             localDir = locdirField.getText();
             host = hostField.getText();
             port = Integer.parseInt(portField.getText());
+            cancelled = false;
             if (defaultFormatButton.isSelected()) {
             	fileFormat = FileFormat.DEFAULT;
             } else if (oxfordFormatButton.isSelected()) {
@@ -174,6 +177,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
                 locdirField.setText(jfc.getSelectedFile().getAbsolutePath());
             }
         }else if (command.equals("Cancel")){
+        	cancelled = true;
             this.dispose();
         }
     }
@@ -213,6 +217,8 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
     public boolean isOxformat() {
         return getFileFormat() == FileFormat.OXFORD;
     }
+
+    public boolean isCancelled() { return cancelled; }
 
     public void clearPassword(){
         for (int i = 0; i < password.length; i++){

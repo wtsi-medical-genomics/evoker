@@ -560,7 +560,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
 
                     protected void done() {
-						if (!pm.isCanceled()) {
+						if (!pm.isCanceled() && !dcd.isCancelled()) {
 							finishLoadingDataSource();
 							refreshSaveMenu();
 							pm.close();
@@ -1398,7 +1398,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void dumpChanges() {
-        if (plottedSNP == null || endOfList) {
+        if (plottedSNP == null || endOfList || plotArea.getComponentCount() == 1) {
         	return;
 		}
 
