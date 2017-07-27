@@ -1,3 +1,4 @@
+*.iml
 *.DS_Store
 Evoker.jar
 /build.xml

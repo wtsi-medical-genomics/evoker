@@ -44,6 +44,7 @@ In addition, you must point Evoker to the original fam file (the batch informati
 6. Enter the SNP of interest (rsid from the bim file) to view.
 7. Scroll up and down to view all of the batches. If desired sort on Batch name, MAF, HWE p-value, or GPC from the `View` > `Sort` menu.
 
+**Note**: at present it is not possible to re-call (with the lasso select) UK Biobank v2 data at the moment. This feature will be available in the next release.
 
 
 
@@ -122,6 +123,14 @@ To build a jar file from source:
 3. Use the command ```ant evoker``` to build the jar file.
 4. Use the command ```ant clean``` to remove temporary build files.
 
+Todo
+----
+[ ] Exclude individuals with a negative number as their sample ID.
+[ ] Deal with hidden files (eg `.samples.fam`).
+[ ] Gracefully fail if evoker-helper.pl is not reachable at the remote server.
+[ ] Export BED changes when viewing over a remote connection.
+[ ] Plot SNP Posterior ellipses.
+[ ] Save the plot array to remove the need to re-load all data on sorting.
 
 Citation
 --------
