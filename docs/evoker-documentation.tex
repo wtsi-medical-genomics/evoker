@@ -5,7 +5,7 @@
 \usepackage{float}
 \usepackage{booktabs}
 
-\title{Evoker: a genotype visualization tool \\ Version 2.3}
+\title{Evoker: a genotype visualization tool \\ Version 2.4}
 \author{Jeffrey Barrett (\texttt{barrett@sanger.ac.uk})\\
 James Morris (\texttt{jm20@sanger.ac.uk})}
 \date{\today}
@@ -90,6 +90,33 @@ control_22_illumina.gen.bin control_22_illumina.snp control_22_illumina.int.bin
 \end{verbatim}
 
 It is worth noting that the use the compressed files (\texttt{gen.bin.gz, int.bin.gz}) in combination with large data sets greatly increase the time taken to retrieve data for a given SNP, resulting in a significant performance lag in the Evoker program. Therefore where at all possible it is recommended that you decompress all \texttt{gen.bin.gz, int.bin.gz} files, this will enable the Evoker program to be far more responsive.
+
+\subsubsection{UK Biobank v2 format}
+
+Evoker has been adapted to view UK Biobank v2 data (released July 2017). This data set is based on the default \texttt{PLINK} format but has a few modifications:
+
+\begin{itemize}
+\item{The binary intensity files does not have a magic header.}
+\item{The binary intensity files have the extention \texttt{int}}
+\item{The batch information is encoded as the final column in the \texttt{fam} rather than having separate \texttt{PLINK}/intensity file sets for each collection.}
+\end{itemize}
+
+Evoker expects the UK Biobank files to have the same naming conventions from the original data release. For each chromosome of interest, the following files must all sit in the same directory:
+
+\begin{verbatim}
+ukb_cal_chr{chromosome}_v2.bed
+ukb_snp_chr{chromosome}_v2.bim
+ukb_int_chr{chromosome}_v2.bin
+\end{verbatim}
+
+To view data that sits on a remote machine click \texttt{Connect to remote server}, select \texttt{UK Biobank v2}, and provide the following additional fields not used in the default format:
+
+\begin{itemize}
+\item{\texttt{Remote FAM file} The location on the remote machine of the \texttt{fam} file provided to you by UK Biobank (which includes the batch column).}
+\item{\texttt{Remote temp directory} It is assumed you will not have write access to the release directory (institutions will most likely share a single release) so please specify a directory you have read/write access to where temporary subsets of the intensity/\texttt{PLINK} data can be stored on the remote machine.}
+\end{itemize}
+
+To view data that is on your local machine your original \texttt{fam} file must sit within the directory containing the \texttt{bed/bim/bin} files.
 
 \subsection{Trying Evoker with the sample dataset}
 

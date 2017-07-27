@@ -97,7 +97,7 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         formatPanel.add(oxfordFormatButton);
         bg.add(oxfordFormatButton);
 
-        ukBioBankFormatButton = new JRadioButton("UK BioBank v2 format");
+        ukBioBankFormatButton = new JRadioButton("UK Biobank v2 format");
 		ukBioBankFormatButton.addActionListener(this);
         formatPanel.add(ukBioBankFormatButton);
         bg.add(ukBioBankFormatButton);
