@@ -1,10 +1,18 @@
-#!/usr/bin/perl
-
+#!/usr/bin/env perl
+#
 ## generate the .bnt and .bed files for just one SNP.
 
 use strict;
 use POSIX qw(ceil floor);
 use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
+
+my $VERSION = "2.4";
+
+if ($ARGV[0] eq "--version") {
+    print "version: $VERSION\n";
+    exit 1;
+}
+
 
 my $snp        = $ARGV[0];
 my $chr        = $ARGV[1];
@@ -15,13 +23,23 @@ my $tot_snps   = $ARGV[5];
 my $oxford     = $ARGV[6];
 my $platform   = $ARGV[7];
 my $ukbiobank_v2 = $ARGV[8];
+my $outpath    = $ARGV[9];
 my $cutoff     = 0.9;
 my $magic_num;
 my $bytesPerRecord;
 my $buf;
 
-open (BNTOUT, ">$collection.$snp.bnt");
-open (BEDOUT, ">$collection.$snp.bed");
+my $bntpath = "$collection.$snp.bnt";
+my $bedpath = "$collection.$snp.bed";
+if ($outpath) { 
+    $bntpath = $outpath . $bntpath;
+    $bedpath = $outpath . $bedpath;
+}
+$bntpath = ">$bntpath";
+$bedpath = ">$bedpath";
+
+open (BNTOUT, $bntpath);
+open (BEDOUT, $bedpath);
 
 if ($oxford) {
     

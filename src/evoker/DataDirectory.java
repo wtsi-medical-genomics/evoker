@@ -35,10 +35,11 @@ public class DataDirectory {
     DataClient dc;
     String displayName;
     String dataPath;
-
+	Genoplot genoplot;
 	FileFormat fileFormat;
 
-    DataDirectory(DataClient dc, FileFormat fileFormat) throws IOException{
+    DataDirectory(DataClient dc, FileFormat fileFormat, Genoplot gp) throws IOException{
+    	this.genoplot = gp;
         boolean success = true;
 		this.fileFormat = fileFormat;
         this.dc = dc;
@@ -67,11 +68,17 @@ public class DataDirectory {
             }
             dc.setOxPlatform(oxPlatform);
         }
-        
+
+		genoplot.pm.setMaximum(samplesByCollection.size() * knownChroms.size());
+		int loopCount = 0;
         for(String collection : samplesByCollection.keySet()){
             HashMap<String, RemoteBinaryFloatData> tmpIntensity = new HashMap<String, RemoteBinaryFloatData>();
             HashMap<String, RemoteBedfileData> tmpGenotypes = new HashMap<String, RemoteBedfileData>();
             for (String chrom : knownChroms.keySet()){
+            	if (genoplot.pm.isCanceled()) {
+            		return;
+				}
+				genoplot.pm.setProgress(++loopCount);
             	String name;
 				if (fileFormat == FileFormat.OXFORD) {
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
@@ -135,8 +142,9 @@ public class DataDirectory {
         displayName = dc.getDisplayName();
     }
 
-    DataDirectory(String filename, FileFormat fileFormat) throws IOException{
-        boolean success = true;
+    DataDirectory(String filename, FileFormat fileFormat, Genoplot gp) throws IOException{
+        this.genoplot = gp;
+    	boolean success = true;
 		this.fileFormat = fileFormat;
         File directory = new File(filename);
         dataPath = directory.getAbsolutePath() + File.separator;
@@ -175,11 +183,16 @@ public class DataDirectory {
 				throw new IOException("Found both *affy and *illumina Oxford files. Please use one or the other.");
 			}
         }
-        
+		genoplot.pm.setMaximum(samplesByCollection.size() * knownChroms.size());
+        int loopCount = 0;
         for(String collection : samplesByCollection.keySet()){
             HashMap<String, BinaryFloatDataFile> tmpIntensity = new HashMap<String, BinaryFloatDataFile>();
             HashMap<String, BinaryDataFile> tmpGenotypes = new HashMap<String, BinaryDataFile>();
             for (String chrom : knownChroms.keySet()){
+				genoplot.pm.setProgress(++loopCount);
+				if (genoplot.pm.isCanceled()) {
+					return;
+				}
             	String name;
             	if (fileFormat == FileFormat.OXFORD){
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
@@ -347,6 +360,9 @@ public class DataDirectory {
 		File[] fams = directory.listFiles(new ExtensionFilter(".fam"));
 		String name;
 		for (File famFile : fams) {
+			if (famFile.getName().substring(0).equals(".")) {
+				continue;
+			}
 			//stash all sample data in HashMap keyed on collection name.
 
 			if (fileFormat == FileFormat.UKBIOBANK) {
@@ -371,7 +387,11 @@ public class DataDirectory {
 		HashMap<String, Boolean> knownChroms = new HashMap<String, Boolean>();
 		byte counter = 0;
 		String chrom;
+
 		for (File bimFile : bims) {
+			if (genoplot.pm.isCanceled()) {
+				return null;
+			}
 			String filename = bimFile.getName();
 			if (fileFormat == FileFormat.UKBIOBANK) {
 				Matcher m = ukbPattern.matcher(filename);
@@ -391,7 +411,7 @@ public class DataDirectory {
 //				}
 			} else {
 				String[] chunks = filename.split("\\.");
-				chrom = chunks[1];
+				chrom = chunks[chunks.length - 2];
 			}
 			if (knownChroms.get(chrom) == null) {
 				knownChroms.put(chrom, true);
@@ -410,8 +430,12 @@ public class DataDirectory {
 			throw new IOException("Zero sample collection (.fam) files found in " + directory.getName());
 		}
 		md = new MarkerData(numberofCollections);
+
 		findQCFiles(directory);
 		HashMap<String, Boolean> knownChroms = findBimFiles(directory);
+		if (knownChroms == null) {
+			return null;
+		}
 		if (knownChroms.keySet().size() == 0){
 			throw new IOException("Zero SNP information (.bim) files found in " + directory.getName());
 		}
@@ -606,8 +630,14 @@ public class DataDirectory {
 			sexesToPlot= new Sex[]{Sex.NOT_SEX};
 		}
 
+		genoplot.pm.setMaximum(ukbBatchSampleIndices.size() * sexesToPlot.length);
+		int loopCount = 0;
 		for (String batch: ukbBatchSampleIndices.keySet()) {
 			for (Sex sexToPlot: sexesToPlot) {
+				genoplot.pm.setProgress(++loopCount);
+				if (genoplot.pm.isCanceled()) {
+					return null;
+				}
 				Vector<Integer> sampleIndices = ukbBatchSampleIndices.get(batch);
 				PlotData spd = pd.getSubPlotData(sampleIndices, sexToPlot, coordSystem);
 				String name = batch;

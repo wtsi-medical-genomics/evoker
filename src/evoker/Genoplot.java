@@ -62,6 +62,8 @@ public class Genoplot extends JFrame implements ActionListener {
     DataConnectionDialog dcd;
     PDFDialog pdfd;
     ProgressMonitor pm;
+	ProgressMonitor pdfProgressMonitor;
+
     SettingsDialog sd;
     private JPanel scorePanel;
     private JPanel messagePanel;
@@ -103,7 +105,7 @@ public class Genoplot extends JFrame implements ActionListener {
     private JMenuItem plotSize;
     private JMenuItem longStats;
     private JMenuItem saveBedBimFam;
-    public static LoggingDialog ld;
+	public static LoggingDialog ld;
     private JButton randomSNPButton;
     private EvokerPDF allPDF = null;
     private EvokerPDF yesPDF = null;
@@ -161,7 +163,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 menumask));
         saveAllBeds.addActionListener(this);
         fileMenu.add(saveAllBeds);
-        
+
         saveMenu = new JMenu("Save BED...");
         saveMenu.setEnabled(false);
         fileMenu.add(saveMenu);
@@ -211,19 +213,19 @@ public class Genoplot extends JFrame implements ActionListener {
         coordinateMenu = new JMenu("Coordinates");
 
         ButtonGroup coordGroup = new ButtonGroup();
-        
+
         viewCart = new JCheckBoxMenuItem("Cartesian coordinates");
         viewCart.addActionListener(this);
 		viewCart.setEnabled(false);
 		coordGroup.add(viewCart);
 		coordinateMenu.add(viewCart);
-        
+
         viewPolar = new JCheckBoxMenuItem("Polar coordinates");
         viewPolar.addActionListener(this);
         viewPolar.setEnabled(false);
 		coordGroup.add(viewPolar);
 		coordinateMenu.add(viewPolar);
-        
+
         viewUKBiobank = new JCheckBoxMenuItem("Affymetrix Axiom UK Biobank");
         viewUKBiobank.addActionListener(this);
         viewUKBiobank.setEnabled(false);
@@ -315,10 +317,10 @@ public class Genoplot extends JFrame implements ActionListener {
         saveBedBimFam.addActionListener(this);
         saveBedBimFam.setSelected(false);
         saveBedBimFam.setEnabled(true);
-        
+
         settingsMenu.add(longStats);
         settingsMenu.add(saveBedBimFam);
-        
+
         mb.add(settingsMenu);
 
 		setJMenuBar(mb);
@@ -340,7 +342,6 @@ public class Genoplot extends JFrame implements ActionListener {
         randomSNPButton.setEnabled(false);
         snpPanel.add(randomSNPButton);
         controlsPanel.add(snpPanel);
-
         controlsPanel.add(Box.createRigidArea(new Dimension(50, 1)));
 
         scorePanel = new JPanel();
@@ -392,7 +393,6 @@ public class Genoplot extends JFrame implements ActionListener {
         controlsPanel.setMaximumSize(new Dimension(2000, (int) controlsPanel.getPreferredSize().getHeight()));
         controlsPanel.setMinimumSize(new Dimension(10, (int) controlsPanel.getPreferredSize().getHeight()));
 
-//        plotArea = new JPanel(new GridLayout());
 		plotArea = new JPanel();
         plotArea.setPreferredSize(new Dimension(700, 350));
 
@@ -405,6 +405,7 @@ public class Genoplot extends JFrame implements ActionListener {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.add(plotArea);
         contentPanel.add(controlsPanel);
+
 
         addWindowListener(new WindowAdapter() {
 
@@ -455,7 +456,7 @@ public class Genoplot extends JFrame implements ActionListener {
 		String showLogCommand                = "Show Evoker log";
 		String quitCommand                   = "Quit";
 		String saveBedsCommand               = "Save All BEDs";
-                
+
         try {
             String command = actionEvent.getActionCommand();
             if (command.equals(goCommand)) {
@@ -508,6 +509,7 @@ public class Genoplot extends JFrame implements ActionListener {
                 odd.pack();
                 odd.setVisible(true);
                 if (odd.success()) {
+					pm = new ProgressMonitor(this.getContentPane(), null, null, 0, 100);
                     String directory = odd.getDirectory();
                     fileFormat = odd.getFileFormat();
                     try {
@@ -516,16 +518,17 @@ public class Genoplot extends JFrame implements ActionListener {
                             throw new IOException("Directory does not exist!");
                         }
                         setStandardCoordSystem(fileFormat);
-                        db = new DataDirectory(directory, fileFormat);
+                        db = new DataDirectory(directory, fileFormat, this);
                         plottedSNP = null;
                         finishLoadingDataSource();
                         refreshSaveMenu();
+						pm.close();
                     } finally {
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     }
                 }
             } else if (command.equals(openRemoteCommand)) {
-
+				pm = new ProgressMonitor(this.getContentPane(), null, null, 0, 100);
                 final Genoplot gp = this;
 
                 // put loading data into a swing worker so that evoker does not hang when loading lots of data
@@ -546,10 +549,9 @@ public class Genoplot extends JFrame implements ActionListener {
                                 showLogItem.setEnabled(true);
 								fileFormat = dcd.getFileFormat();
 								setStandardCoordSystem(fileFormat);
-                                db = new DataDirectory(dc, fileFormat);
+								pm.setProgress(1);
+                                db = new DataDirectory(dc, fileFormat, gp);
 								plottedSNP = null;
-                                finishLoadingDataSource();
-                                refreshSaveMenu();
                             }
                         } catch (Exception e) {
                             pendingException = e;
@@ -558,9 +560,16 @@ public class Genoplot extends JFrame implements ActionListener {
                     }
 
                     protected void done() {
-                        if (pendingException != null) {
-                            JOptionPane.showMessageDialog(gp, pendingException.getMessage());
-                        }
+						if (!pm.isCanceled()) {
+							finishLoadingDataSource();
+							refreshSaveMenu();
+							pm.close();
+						} else {
+							allowInitialActions();
+						}
+//                        if (pendingException != null) {
+//                            JOptionPane.showMessageDialog(gp, pendingException.getMessage());
+//                        }
                     }
                 }.execute();
 
@@ -710,6 +719,47 @@ public class Genoplot extends JFrame implements ActionListener {
         }
     }
 
+	private void allowInitialActions() {
+
+		// disable all actions while loading data
+		goButton.setEnabled(false);
+		randomSNPButton.setEnabled(false);
+		snpField.setEnabled(false);
+
+		yesButton.setEnabled(false);
+		noButton.setEnabled(false);
+		maybeButton.setEnabled(false);
+		backButton.setEnabled(false);
+		scorePanel.setEnabled(false);
+
+		openDirectory.setEnabled(true);
+		openRemote.setEnabled(true);
+		loadList.setEnabled(false);
+		loadExclude.setEnabled(false);
+
+		filterData.setEnabled(false);
+		saveAllPlots.setEnabled(false);
+		saveAllBeds.setEnabled(false);
+		exportPDF.setEnabled(false);
+
+		viewCart.setEnabled(false);
+		viewPolar.setEnabled(false);
+		viewUKBiobank.setEnabled(false);
+
+		collectionBatchAscend.setEnabled(false);
+		collectionBatchDescend.setEnabled(false);
+		mafAscend.setEnabled(false);
+		mafDescend.setEnabled(false);
+		gpcAscend.setEnabled(false);
+		gpcDescend.setEnabled(false);
+		hwePValueAscend.setEnabled(false);
+		hwePValueDescend.setEnabled(false);
+
+		returnToListPosition.setEnabled(false);
+		// clear history items
+//		snpGroup.clearSelection();
+	}
+
     private void disableAllActions() {
 
         // disable all actions while loading data
@@ -755,10 +805,9 @@ public class Genoplot extends JFrame implements ActionListener {
 
         loadScores(pdfd.getscoresFile());
 
-        pm = new ProgressMonitor(this.getContentPane(), "Exporting plots to PDF", null, 0, pdfScores.size());
-		pm.setMinimum(1);
+		pdfProgressMonitor = new ProgressMonitor(this.getContentPane(), "Exporting plots to PDF", null, 0, pdfScores.size());
         PDFWorker pdfWorker = new PDFWorker(this);
-			pdfWorker.execute();
+		pdfWorker.execute();
     }
 
     public void printPDFsInBackground() throws IOException{
@@ -799,7 +848,7 @@ public class Genoplot extends JFrame implements ActionListener {
             throw new IOException("Could not write PDF");
         } finally {
         	// Show the progress monitor so users know that something is happening.
-        	pm.setProgress(1);
+			pdfProgressMonitor.setProgress(1);
 		}
 
         File tempFile = null;
@@ -813,7 +862,7 @@ public class Genoplot extends JFrame implements ActionListener {
 
         int progressCounter = 0;
         try {
-            while (keys.hasMoreElements() && !pm.isCanceled()) {
+            while (keys.hasMoreElements() && !pdfProgressMonitor.isCanceled()) {
 
                 String snp = (String) keys.nextElement();
                 String score = (String) pdfScores.get(snp);
@@ -823,7 +872,11 @@ public class Genoplot extends JFrame implements ActionListener {
 				ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
 
                 if (fileFormat  == FileFormat.UKBIOBANK) {
-					plots = db.getUKBPlotPanels(this, snp, coordSystem, plotHeight, plotWidth, longStats.isSelected());
+					plots = db.getUKBPlotPanels(this, snp, coordSystem, plotHeight, plotWidth,
+							longStats.isSelected());
+					if (plots == null) {
+						return;
+					}
 				} else {
 					// loop through all the collections to get the average maf
 					double totalMaf = 0;
@@ -912,7 +965,7 @@ public class Genoplot extends JFrame implements ActionListener {
                     noPlotNum++;
                 }
                 progressCounter++;
-                pm.setProgress(progressCounter);
+				pdfProgressMonitor.setProgress(progressCounter);
             }
             closePDFs();
         } catch (Exception e) {
@@ -1171,51 +1224,65 @@ public class Genoplot extends JFrame implements ActionListener {
         }
     }
 
+
+    private void enableAllButtons() {
+		goButton.setEnabled(true);
+		randomSNPButton.setEnabled(true);
+		snpField.setEnabled(true);
+		openDirectory.setEnabled(true);
+		openRemote.setEnabled(true);
+		loadList.setEnabled(true);
+		loadExclude.setEnabled(true);
+		saveAllPlots.setEnabled(true);
+		viewCart.setEnabled(true);
+		viewPolar.setEnabled(true);
+		viewUKBiobank.setEnabled(true);
+
+		collectionBatchAscend.setEnabled(true);
+		collectionBatchDescend.setEnabled(true);
+		mafAscend.setEnabled(true);
+		mafDescend.setEnabled(true);
+		gpcAscend.setEnabled(true);
+		gpcDescend.setEnabled(true);
+		hwePValueAscend.setEnabled(true);
+		hwePValueDescend.setEnabled(true);
+
+		exportPDF.setEnabled(true);
+
+		// if the data source is local then enable the saving of manual calls
+		if (db.isLocal() && fileFormat != FileFormat.UKBIOBANK) {
+			saveMenu.setEnabled(true);
+			saveAllBeds.setEnabled(true);
+		}
+
+		while (historyMenu.getMenuComponentCount() > 2) {
+			historyMenu.remove(2);
+		}
+
+		if (markerListLoaded()) {
+			yesButton.setEnabled(true);
+			noButton.setEnabled(true);
+			maybeButton.setEnabled(true);
+			backButton.setEnabled(true);
+			scorePanel.setEnabled(true);
+		}
+
+		if (db.qcList() != null) {
+			// if a exclude file is loaded from the directory enable
+			// filtering
+			filterData.setEnabled(true);
+			filterData.setSelected(true);
+		}
+
+	}
+
     /**
      * Sets all menu entries enabled
      */
     private void finishLoadingDataSource() {
         if (db != null) {
             setPlotAreaSize();
-            goButton.setEnabled(true);
-            randomSNPButton.setEnabled(true);
-            snpField.setEnabled(true);
-            openDirectory.setEnabled(true);
-            openRemote.setEnabled(true);
-            loadList.setEnabled(true);
-            loadExclude.setEnabled(true);
-            saveAllPlots.setEnabled(true);
-            viewCart.setEnabled(true);
-            viewPolar.setEnabled(true);
-            viewUKBiobank.setEnabled(true);
-
-			collectionBatchAscend.setEnabled(true);
-			collectionBatchDescend.setEnabled(true);
-			mafAscend.setEnabled(true);
-			mafDescend.setEnabled(true);
-			gpcAscend.setEnabled(true);
-			gpcDescend.setEnabled(true);
-			hwePValueAscend.setEnabled(true);
-			hwePValueDescend.setEnabled(true);
-
-            exportPDF.setEnabled(true);
-                        
-            // if the data source is local then enable the saving of manual calls
-            if (db.isLocal() && fileFormat != FileFormat.UKBIOBANK) {
-                saveMenu.setEnabled(true);
-                saveAllBeds.setEnabled(true);
-            } 
-            
-            while (historyMenu.getMenuComponentCount() > 2) {
-                historyMenu.remove(2);
-            }
-            if (db.qcList() != null) {
-                // if a exclude file is loaded from the directory enable
-                // filtering
-                filterData.setEnabled(true);
-                filterData.setSelected(true);
-            }
-
+			enableAllButtons();
             this.setTitle("Evoke...[" + db.getDisplayName() + "]");
 
             plotArea.removeAll();
@@ -1227,15 +1294,41 @@ public class Genoplot extends JFrame implements ActionListener {
         dumpChanges();
 
         plottedSNP = name;
-        plotArea.removeAll();
-        plotArea.setLayout(new BoxLayout(plotArea, BoxLayout.PAGE_AXIS));
         if (name != null) {
             if (!name.equals("ENDLIST")) {
                 currentSNP = name;
-				JLabel jLabelName = new JLabel(name);
-				jLabelName.setAlignmentX(Component.CENTER_ALIGNMENT);
-				plotArea.add(jLabelName);
-                fetchRecord(name);
+				pm = new ProgressMonitor(this.getContentPane(), null, null, 0, 100);
+
+				final Genoplot gp = this;
+				new SwingWorker() {
+
+					Exception pendingException = null;
+
+					public Object doInBackground() throws Exception {
+						try {
+							setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+							disableAllActions();
+//							showWorkingBar();
+							fetchRecord(name);
+						} catch (Exception e) {
+							pendingException = e;
+						}
+						return null;
+					}
+
+					protected void done() {
+						enableAllButtons();
+						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						if (!pm.isCanceled()) {
+							repaint();
+							revalidate();
+							pm.close();
+							if (pendingException != null) {
+								JOptionPane.showMessageDialog(gp, pendingException.getMessage());
+							}
+						}
+					}
+				}.execute();
                 viewedSNP(name);
                 if (markerListLoaded()) {
                     if (snpList.contains((String) name)) {
@@ -1250,7 +1343,9 @@ public class Genoplot extends JFrame implements ActionListener {
             } else {
                 // I tried very hard to get the label right in the middle and
                 // failed because java layouts blow
-                plotArea.add(Box.createVerticalGlue());
+				plotArea.removeAll();
+				plotArea.setLayout(new BoxLayout(plotArea, BoxLayout.PAGE_AXIS));
+				plotArea.add(Box.createVerticalGlue());
                 JPanel p = new JPanel();
                 p.add(new JLabel("End of list."));
                 p.setBackground(Color.WHITE);
@@ -1344,15 +1439,11 @@ public class Genoplot extends JFrame implements ActionListener {
     private void fetchRecord(String name) {
 
         try {
-            if (db.isRemote()) {
-                this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            }
+			plotArea.removeAll();
             JPanel plotHolder = new JPanel();
             plotHolder.setBackground(Color.WHITE);
             plotHolder.setLayout(new WrapLayout());
             JScrollPane scrollPane = new JScrollPane(plotHolder);
-
-            plotArea.add(scrollPane);
 
             ArrayList<PlotPanel> plots = new ArrayList<PlotPanel>();
             double maxdim = -100000;
@@ -1366,9 +1457,20 @@ public class Genoplot extends JFrame implements ActionListener {
             // are encoded with the same fam file so these need to be pulled out one at a time.
             if (fileFormat == FileFormat.UKBIOBANK) {
 				plots = db.getUKBPlotPanels(this, name, coordSystem, plotHeight, plotWidth, longStats.isSelected());
+				if (plots == null) {
+					plottedSNP = null;
+					return;
+				}
             } else { // Default or Oxford format
                 ArrayList<String> v = db.getCollections();
+                int nLoops = v.size() * 2; // x2 because we loop twice
+                int loopCount = 0;
+
                 for (String collection : v) {
+					pm.setProgress(++loopCount);
+					if (pm.isCanceled()) {
+						return;
+					}
                     PlotData pd = db.getRecord(name, collection, coordSystem);
                     if (pd.generatePoints() != null) {
                     	// DR This has already been called in generatePoints
@@ -1376,10 +1478,15 @@ public class Genoplot extends JFrame implements ActionListener {
                         int sampleNum = db.samplesByCollection.get(collection).getNumInds();
                         totalMaf += pd.getMaf() * sampleNum;
                         totalSamples += sampleNum;
+
                     }
                 }
 
                 for (String c : v) {
+					pm.setProgress(++loopCount);
+					if (pm.isCanceled()) {
+						return;
+					}
                     PlotData pd = db.getRecord(name, c, coordSystem);
                     PlotPanel pp = new PlotPanel(this, c, pd, plotHeight, plotWidth, longStats.isSelected(),
 							totalMaf, totalSamples, c);
@@ -1393,17 +1500,20 @@ public class Genoplot extends JFrame implements ActionListener {
 					pp.setDimensions(mindim, maxdim);
 				}
 			}
-
 			plots = sortPlots(plots);
 
 			for (PlotPanel pp : plots) {
                 plotHolder.add(pp);
             }
+
+			plotArea.setLayout(new BoxLayout(plotArea, BoxLayout.PAGE_AXIS));
+			JLabel jLabelName = new JLabel(name);
+			jLabelName.setAlignmentX(Component.CENTER_ALIGNMENT);
+			plotArea.add(jLabelName);
+			plotArea.add(scrollPane);
         } catch (IOException ioe) {
             JOptionPane.showMessageDialog(this, ioe.getMessage(), "File error",
                     JOptionPane.ERROR_MESSAGE);
-        } finally {
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));            
         }
     }
 

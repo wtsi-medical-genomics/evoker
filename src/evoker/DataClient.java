@@ -182,7 +182,6 @@ public class DataClient{
             String cmd = "cd "+ remoteDir + "\nevoker-helper.pl "+ snp + " " + chrom + " " +
 					collection + " " + index + " " + numinds + " " + totNumSNPs + " " + oxStatus + " " +
 					this.getOxPlatform() + " " + ukbiobank_v2 + " " + outpath + "\n";
-            System.out.println(cmd);
             out.write(cmd.getBytes());
 
 
@@ -278,8 +277,14 @@ public class DataClient{
 			}
 		}
 
+		gp.pm.setMaximum(files.size() * 2);
+		int loopCount = 0;
 		i = files.iterator();
 		while (i.hasNext()) {
+			gp.pm.setProgress(++loopCount);
+			if (gp.pm.isCanceled()) {
+				return null;
+			}
 			String filename = ((SftpFile) i.next()).getFilename();
 			if (filename.endsWith(bimending)) {
 				if (!new File(localDir + File.separator + filename).exists()) {
@@ -296,6 +301,10 @@ public class DataClient{
 
 		i = files.iterator();
 		while (i.hasNext()) {
+			gp.pm.setProgress(++loopCount);
+			if (gp.pm.isCanceled()) {
+				return null;
+			}
 			String filename = ((SftpFile) i.next()).getFilename();
 			if (filename.endsWith(".qc")) {
 				if (!new File(localDir + File.separator + filename).exists()) {

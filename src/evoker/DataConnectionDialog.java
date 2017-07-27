@@ -1,6 +1,7 @@
 package evoker;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import evoker.Types.FileFormat;
@@ -107,14 +108,15 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
 		famPanel.add(new JLabel("Remote FAM file: "));
 		famField = new JTextField(30);
 		famPanel.add(famField);
+		famPanel.setVisible(false);
 
 		remoteTempDirPanel = new JPanel();
 		remoteTempDirPanel.add(new JLabel("Remote temp directory: "));
 		remoteTempDirField = new JTextField(30);
 		remoteTempDirPanel.add(remoteTempDirField);
+		remoteTempDirPanel.setVisible(false);
 
-		famPanel.setVisible(true);
-		remoteTempDirPanel.setVisible(true);
+
 		contents.add(famPanel);
 		contents.add(remoteTempDirPanel);
 
@@ -133,6 +135,10 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         contents.add(butPan);
 
         this.setContentPane(contents);
+
+
+		this.setPreferredSize(new Dimension(550,350));
+		this.setMinimumSize(new Dimension(550,350));
     }
 
     public void actionPerformed(ActionEvent e) {
