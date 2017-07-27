@@ -5,6 +5,7 @@
 use strict;
 use POSIX qw(ceil floor);
 use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
+use File::Spec::Functions;
 
 my $VERSION = "2.4";
 
@@ -31,9 +32,9 @@ my $buf;
 
 my $bntpath = "$collection.$snp.bnt";
 my $bedpath = "$collection.$snp.bed";
-if ($outpath) { 
-    $bntpath = $outpath . $bntpath;
-    $bedpath = $outpath . $bedpath;
+if ($outpath) {
+    $bntpath = File::Spec->catdir($outpath, $bntpath);
+    $bedpath = File::Spec->catdir($outpath, $bedpath);
 }
 $bntpath = ">$bntpath";
 $bedpath = ">$bedpath";
