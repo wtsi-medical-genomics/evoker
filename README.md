@@ -45,6 +45,7 @@ In addition, you must point Evoker to the original fam file (the batch informati
 7. Scroll up and down to view all of the batches. If desired sort on Batch name, MAF, HWE p-value, or GPC from the `View` > `Sort` menu.
 
 **Note**: at present it is not possible to re-call (with the lasso select) UK Biobank v2 data at the moment. This feature will be available in the next release.
+
 **Note**: a patch is being prepared so that Evoker supports Windows.
 
 
