@@ -214,7 +214,6 @@ public class DataClient{
             }
             
             session.close();
-
             
             ftp.get(filestem+".bed");
             ftp.get(filestem+".bnt");

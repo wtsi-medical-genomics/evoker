@@ -219,13 +219,11 @@ public class PlotPanel extends JPanel {
 	}
 
 	public double getMaxDim() {
-		double range = data.getMaxDim() - data.getMinDim();
-		return data.getMaxDim() + 0.05 * range;
+		return data.getMaxDim() + 0.05 * data.getRange();
 	}
 
 	public double getMinDim() {
-		double range = data.getMaxDim() - data.getMinDim();
-		return data.getMinDim() - 0.05 * range;
+		return data.getMinDim() - 0.05 * data.getRange();
 	}
 
 	public void setDimensions() {

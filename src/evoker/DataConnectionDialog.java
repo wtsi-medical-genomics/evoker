@@ -136,11 +136,8 @@ public class DataConnectionDialog extends JDialog implements ActionListener {
         contents.add(butPan);
 
         this.setContentPane(contents);
-
-
 		this.setPreferredSize(new Dimension(550,350));
 		this.setMinimumSize(new Dimension(550,350));
-
     }
 
     public void actionPerformed(ActionEvent e) {

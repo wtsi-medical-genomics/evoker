@@ -193,7 +193,14 @@ public class PlotData {
                     minY = intens[1];
                 }
             }
+        }
 
+        int heteroCount = intensityDataSeriesHetero.getItemCount();
+        int homo1Count = intensityDataSeriesHomo1.getItemCount();
+        int homo2Count = intensityDataSeriesHomo2.getItemCount();
+
+        if (heteroCount + homo1Count + homo2Count == 0) {
+            return null;
         }
 
         XYSeriesCollection xysc = new XYSeriesCollection(intensityDataSeriesHomo1);
@@ -389,6 +396,10 @@ public class PlotData {
 
     public double getMaxY() {
         return maxY;
+    }
+
+    public double getRange() {
+        return getMaxDim() - getMinDim();
     }
 
     public char[] getAlleles() {

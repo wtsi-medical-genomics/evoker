@@ -1398,7 +1398,7 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void dumpChanges() {
-        if (plottedSNP == null || endOfList || plotArea.getComponentCount() == 1) {
+        if (plottedSNP == null || endOfList || plotArea.getComponentCount() == 0) {
         	return;
 		}
 
