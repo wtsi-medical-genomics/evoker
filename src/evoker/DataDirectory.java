@@ -82,7 +82,7 @@ public class DataDirectory {
             	String name;
 				if (fileFormat == FileFormat.OXFORD) {
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
-                    name = directory.getAbsolutePath() + File.separator + name;
+                    name = Utils.join(directory.getAbsolutePath(), name);
                     md.addFile(name,collection,chrom,true);
                     //data files for this collection and chromosome:
                     tmpIntensity.put(chrom,new RemoteBinaryFloatData(dc,
@@ -100,7 +100,7 @@ public class DataDirectory {
 						name = collection + "." + chrom;
 						success &= checkFile(filesInDir,name);
 					}
-                    name =  directory.getAbsolutePath() + File.separator + name + ".bim";
+                    name =  Utils.join(directory.getAbsolutePath(), name + ".bim");
                     //we require a bimfile for this collection and chromosome:
                     md.addFile(name,collection,chrom,false);
 
@@ -196,7 +196,7 @@ public class DataDirectory {
             	String name;
             	if (fileFormat == FileFormat.OXFORD){
                     name = collection + "_" + chrom + "_" + oxPlatform + ".snp";
-                    name = directory.getAbsolutePath() + File.separator + name;
+                    name = Utils.join(directory.getAbsolutePath(), name);
                     md.addFile(name,collection,chrom,true);
                 } else {
 					if (fileFormat == FileFormat.UKBIOBANK) {
@@ -206,7 +206,7 @@ public class DataDirectory {
 						name = collection + "." + chrom;
 						success &= checkFile(filesInDir,name);
 					}
-                    name =  directory.getAbsolutePath() + File.separator + name;
+                    name =  Utils.join(directory.getAbsolutePath(), name);
                     //we require a bimfile for this collection and chromosome:
                     md.addFile(name + ".bim",collection,chrom,false);
                 }
@@ -217,7 +217,7 @@ public class DataDirectory {
                     //data files for this collection and chromosome:
                     if (fileFormat == FileFormat.OXFORD){
                     	name = collection + "_" + chrom + "_" + oxPlatform;
-                        name = directory.getAbsolutePath() + File.separator + name;
+                        name = Utils.join(directory.getAbsolutePath(), name);
                         boolean zipped = true;
                         // check if the oxford int and gen files are in a compressed format
                         if (new File(name+".int.bin.gz").exists()) {
@@ -242,8 +242,8 @@ public class DataDirectory {
                     	String bedName, bntName;
 
                     	if (fileFormat == FileFormat.UKBIOBANK) {
-							bedName = directory.getAbsolutePath() + File.separator + "ukb_cal_chr" + chrom + "_v2.bed";
-							bntName = directory.getAbsolutePath() + File.separator + "ukb_int_chr" + chrom + "_v2.bin";
+							bedName = Utils.join(directory.getAbsolutePath(), "ukb_cal_chr" + chrom + "_v2.bed");
+							bntName = Utils.join(directory.getAbsolutePath(), "ukb_int_chr" + chrom + "_v2.bin");
 						} else {
 							bedName = name + ".bed";
 							bntName = name + ".bnt";
@@ -738,6 +738,5 @@ public class DataDirectory {
     public String getDataPath(){
     	return dataPath;
     }
-
 
 }

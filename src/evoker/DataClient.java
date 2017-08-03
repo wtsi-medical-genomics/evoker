@@ -59,7 +59,7 @@ public class DataClient{
 			}
 
             pwd.setUsername(dcd.getUsername());
-            pwd.setPassword(new String(dcd.getPassword()));
+            pwd.setPassword(String.valueOf(dcd.getPassword()));
             ssh = new SshClient();
             try{
                 ssh.connect(dcd.getHost(), dcd.getPort(), new IgnoreHostKeyVerification());
@@ -149,8 +149,8 @@ public class DataClient{
 
     public void getSNPFiles(String snp, String chrom, String collection, int index, int numinds, int totNumSNPs) throws IOException{
         String filestem = collection+"."+snp;
-        if (!(new File(localDir+File.separator+filestem+".bed").exists() &&
-                new File(localDir+File.separator+filestem+".bnt").exists())){
+        if (!(new File(Utils.join(localDir, filestem+".bed")).exists() &&
+                new File(Utils.join(localDir, filestem+".bnt")).exists())){
             long prev = System.currentTimeMillis();
 
             SessionChannelClient session = ssh.openSessionChannel();
@@ -169,7 +169,7 @@ public class DataClient{
             if (fileFormat == FileFormat.UKBIOBANK) {
 				ukbiobank_v2 = 1;
 				outpath = remoteTempDir;
-				filestem = remoteTempDir + File.separator + filestem;
+				filestem = Utils.join(remoteTempDir, filestem);
 			} else {
 				ukbiobank_v2 = 0;
 				outpath = "0";
@@ -250,7 +250,9 @@ public class DataClient{
 			File f = new File(famPath);
 			String famFile = f.getName();
 
-			if (!new File(localDir + File.separator + famFile).exists()) {
+
+
+			if (!new File(Utils.join(localDir, famFile)).exists()) {
 				try {
 					ftp.get(famPath);
 				} catch (IOException e) {
@@ -263,7 +265,8 @@ public class DataClient{
 			while (i.hasNext()) {
 				String filename = ((SftpFile) i.next()).getFilename();
 				if (filename.endsWith(famending)) {
-					if (!new File(localDir + File.separator + filename).exists()) {
+
+					if (!new File(Utils.join(localDir, filename)).exists()) {
 						try {
 							ftp.get(filename);
 						} catch (IOException e) {
@@ -286,7 +289,8 @@ public class DataClient{
 			}
 			String filename = ((SftpFile) i.next()).getFilename();
 			if (filename.endsWith(bimending)) {
-				if (!new File(localDir + File.separator + filename).exists()) {
+
+				if (!new File(Utils.join(localDir, filename)).exists()) {
 					try {
 						ftp.get(filename);
 					} catch (IOException e) {
@@ -306,7 +310,7 @@ public class DataClient{
 			}
 			String filename = ((SftpFile) i.next()).getFilename();
 			if (filename.endsWith(".qc")) {
-				if (!new File(localDir + File.separator + filename).exists()) {
+				if (!new File(Utils.join(localDir, filename)).exists()) {
 					try {
 						ftp.get(filename);
 					} catch (IOException e) {

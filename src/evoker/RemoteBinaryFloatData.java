@@ -39,7 +39,7 @@ public class RemoteBinaryFloatData extends RemoteBinaryData {
 
         if (snpIndex > -1){
             BinaryFloatDataFile bnt = new BinaryFloatDataFile(
-                    dc.getLocalDir()+ File.separator+collection+"."+name+".bnt",
+                    Utils.join(dc.getLocalDir(),collection+"."+name+".bnt"),
                     this, this.fileFormat);
 
             return bnt.getRecord(0);

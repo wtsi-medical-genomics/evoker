@@ -27,13 +27,12 @@ public class RemoteBedfileData extends RemoteBinaryData {
             //ask data client to get this SNP
             dc.getSNPFiles(name,md.getChrom(name),collection,snpIndex,numInds,totNumSNPs);
 
-            BedfileDataFile bed = new BedfileDataFile(dc.getLocalDir()+ File.separator+collection+"."+name+".bed",
+            BedfileDataFile bed = new BedfileDataFile(Utils.join(dc.getLocalDir(), collection+"."+name+".bed"),
                     this);
 
             return bed.getRecord(0);
         }else{
             return null;
         }
-
     }
 }
