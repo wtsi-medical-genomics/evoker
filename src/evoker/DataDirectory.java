@@ -572,7 +572,7 @@ public class DataDirectory {
         }**/
         String chrom = md.getChrom(snp);
         if (chrom == null){
-			return new PlotData(null,null,null,null,null, coordSystem);
+			return new PlotData(null,null,null,null,null, coordSystem, fileFormat);
 		}
         	
 		// time how long this takes to get a benchmark for improving compressed file response
@@ -599,7 +599,8 @@ public class DataDirectory {
 				samples,
 				qcList(),
 				md.getAlleles(snp),
-				coordSystem);
+				coordSystem,
+				fileFormat);
 		double time = ((double)(System.currentTimeMillis() - start))/1000;
 		Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");
 		return pd;
@@ -708,6 +709,7 @@ public class DataDirectory {
     }
 
     public QCFilterData qcList() {
+
     	if (filterState == true) {
     		return this.getExcludeList();
     	} else {
@@ -724,7 +726,7 @@ public class DataDirectory {
     }
 	
     private QCFilterData getExcludeList() {
-		return filterList;
+    	return filterList;
 	}
     
     public MarkerData getMarkerData(){

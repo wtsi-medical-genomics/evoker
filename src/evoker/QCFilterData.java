@@ -26,6 +26,14 @@ public class QCFilterData {
         }
         qcReader.close();
     }
+
+    QCFilterData() {
+        toExclude = new Vector<String>();
+    }
+
+    public void add(String sample) {
+        toExclude.add(sample);
+    }
     
     public boolean isExcluded (String sample) {
     	return toExclude.contains(sample);

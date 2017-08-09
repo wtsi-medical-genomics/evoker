@@ -1,5 +1,6 @@
 package evoker;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
@@ -23,8 +24,9 @@ public class PlotData {
     private char[] alleles;
     private HashMap<String, Byte> genotypeChanges = new HashMap<String, Byte>();
     public boolean changed = false;
+    private FileFormat fileFormat;
 
-    PlotData(ArrayList<Byte> calledGenotypes, ArrayList<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, CoordinateSystem coordSystem) {
+    PlotData(ArrayList<Byte> calledGenotypes, ArrayList<float[]> intensities, SampleData samples, QCFilterData exclude, char[] alleles, CoordinateSystem coordSystem, FileFormat fileFormat) {
         this.calledGenotypes = calledGenotypes;
         this.intensities = intensities;
         this.samples = samples;
@@ -34,6 +36,7 @@ public class PlotData {
         this.minY = 100000;
         this.maxY = -100000;
         this.alleles = alleles;
+        this.fileFormat = fileFormat;
         this.setCoordSystem(coordSystem);
     }
 
@@ -47,6 +50,7 @@ public class PlotData {
         ArrayList<float[]> subIntensities = new ArrayList<float[]>(subLength);
         ArrayList<Byte> subCalledGenotypes = new ArrayList<Byte>(subLength);
         Vector<String> subSampleVector = new Vector<String>(subLength);
+        QCFilterData ukbExclude = samples.getUkbExclude();
 
         for (int index: indices) {
             if ((sexToPlot != Sex.NOT_SEX) && (samples.getSexByIndex(index) != sexToPlot)) {
@@ -57,7 +61,9 @@ public class PlotData {
             subSampleVector.add(samples.getInd(index));
         }
         SampleData subSamples = new SampleData(subSampleVector);
-        return new PlotData(subCalledGenotypes, subIntensities, subSamples, exclude, alleles, newCoordinateSystem);
+        subSamples.setUkbExclude(ukbExclude);
+        return new PlotData(subCalledGenotypes, subIntensities, subSamples, exclude,
+                alleles, newCoordinateSystem, fileFormat);
     }
 
     XYSeriesCollection generatePoints() {
@@ -81,7 +87,6 @@ public class PlotData {
         indexInArrayListByInd = new HashMap<String, Integer>();
 
         sampleNum = 0;
-
         for (int i = 0; i < intensities.size(); i++) {
             float[] intens = intensities.get(i);
 
@@ -109,69 +114,49 @@ public class PlotData {
                 }
              }
 
-            // check if there is a valid exclude file loaded
-            if (exclude != null) {
-                // check if the sample should be excluded before adding points
-                if (!exclude.isExcluded(samples.getInd(i))) {
-                    if (calledGenotypes.get(i) != null) {
-                        sampleNum++;
-                        switch (calledGenotypes.get(i)) {
-                            case 0:
-                                intensityDataSeriesHomo1.add(intens[0], intens[1]);
-                                indsInClasses.get(0).add(samples.getInd(i));
-                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(0).size() -1);
-                                break;
-                            case 1:
-                                intensityDataSeriesMissing.add(intens[0], intens[1]);
-                                indsInClasses.get(1).add(samples.getInd(i));
-                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(1).size() -1);
-                                break;
-                            case 2:
-                                intensityDataSeriesHetero.add(intens[0], intens[1]);
-                                indsInClasses.get(2).add(samples.getInd(i));
-                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(2).size() -1);
-                                break;
-                            case 3:
-                                intensityDataSeriesHomo2.add(intens[0], intens[1]);
-                                indsInClasses.get(3).add(samples.getInd(i));
-                                indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(3).size() -1);
-                                break;
-                            default:
-                                //TODO: this is very bad
-                                break;
-                        }
-                    }
-                }
-            } else {
-                if (calledGenotypes.get(i) != null) {
-                    sampleNum++;
-                    switch (calledGenotypes.get(i)) {
-                        case 0:
-                            intensityDataSeriesHomo1.add(intens[0], intens[1]);
-                            indsInClasses.get(0).add(samples.getInd(i));
-                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(0).size() -1);
-                            break;
-                        case 1:
-                            intensityDataSeriesMissing.add(intens[0], intens[1]);
-                            indsInClasses.get(1).add(samples.getInd(i));
-                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(1).size() -1);
-                            break;
-                        case 2:
-                            intensityDataSeriesHetero.add(intens[0], intens[1]);
-                            indsInClasses.get(2).add(samples.getInd(i));
-                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(2).size() -1);
-                            break;
-                        case 3:
-                            intensityDataSeriesHomo2.add(intens[0], intens[1]);
-                            indsInClasses.get(3).add(samples.getInd(i));
-                            indexInArrayListByInd.put(samples.getInd(i), indsInClasses.get(3).size() -1);
-                            break;
-                        default:
-                            //TODO: this is very bad
-                            break;
-                    }
-                }
+            String sampleName = samples.getInd(i);
+
+            // If there is nothing to plot, skip
+            if (calledGenotypes.get(i) == null) {
+                continue;
             }
+
+            // If the exclude exists and the individual is excluded, skip
+            if ((exclude != null) && exclude.isExcluded(sampleName)) {
+                continue;
+            }
+
+            if ((fileFormat == FileFormat.UKBIOBANK) && samples.getUkbExclude().isExcluded(sampleName)) {
+                continue;
+            }
+
+            sampleNum++;
+            switch (calledGenotypes.get(i)) {
+                case 0:
+                    intensityDataSeriesHomo1.add(intens[0], intens[1]);
+                    indsInClasses.get(0).add(sampleName);
+                    indexInArrayListByInd.put(sampleName, indsInClasses.get(0).size() -1);
+                    break;
+                case 1:
+                    intensityDataSeriesMissing.add(intens[0], intens[1]);
+                    indsInClasses.get(1).add(sampleName);
+                    indexInArrayListByInd.put(sampleName, indsInClasses.get(1).size() -1);
+                    break;
+                case 2:
+                    intensityDataSeriesHetero.add(intens[0], intens[1]);
+                    indsInClasses.get(2).add(sampleName);
+                    indexInArrayListByInd.put(sampleName, indsInClasses.get(2).size() -1);
+                    break;
+                case 3:
+                    intensityDataSeriesHomo2.add(intens[0], intens[1]);
+                    indsInClasses.get(3).add(sampleName);
+                    indexInArrayListByInd.put(sampleName, indsInClasses.get(3).size() -1);
+                    break;
+                default:
+                    //TODO: this is very bad
+                    break;
+            }
+
 
 
             //illuminus uses [-1,-1] as a flag for missing data. technically we don't want to make it impossible
@@ -233,51 +218,41 @@ public class PlotData {
 
     protected void computeSummary() {
         double hom1 = 0, het = 0, hom2 = 0, missing = 0;
+
         for (int i = 0; i < calledGenotypes.size(); i++) {
-            byte geno = calledGenotypes.get(i);
-            // check if there is a valid exclude file loaded
-            if (exclude != null) {
-                // check if the sample should be excluded before adding points
-                if (!exclude.isExcluded(samples.getInd(i))) {
-                    if (geno == 0) {
-                        hom1++;
-                    } else if (geno == 2) {
-                        het++;
-                    } else if (geno == 3) {
-                        hom2++;
-                    } else {
-                        missing++;
-                    }
-                    genopc = 1 - (missing / (missing + hom1 + het + hom2));
-                    double tmpmaf = ((2 * hom1) + het) / ((2 * het) + (2 * hom1) + (2 * hom2));
-                    if (tmpmaf < 0.5) {
-                        maf = tmpmaf;
-                    } else {
-                        maf = 1 - tmpmaf;
-                    }
-                    hwpval = hwCalculate((int) hom1, (int) het, (int) hom2);
-                }
-            } else {
-                if (geno == 0) {
-                    hom1++;
-                } else if (geno == 2) {
-                    het++;
-                } else if (geno == 3) {
-                    hom2++;
-                } else {
-                    missing++;
-                }
-                genopc = 1 - (missing / (missing + hom1 + het + hom2));
-                double tmpmaf = ((2 * hom1) + het) / ((2 * het) + (2 * hom1) + (2 * hom2));
-                if (tmpmaf < 0.5) {
-                    maf = tmpmaf;
-                } else {
-                    maf = 1 - tmpmaf;
-                }
-                hwpval = hwCalculate((int) hom1, (int) het, (int) hom2);
+
+            String sampleName = samples.getInd(i);
+
+            // If the exclude exists and the individual is excluded, skip
+            if ((exclude != null) && exclude.isExcluded(sampleName)) {
+                continue;
             }
+
+            if ((fileFormat == FileFormat.UKBIOBANK) && samples.getUkbExclude().isExcluded(sampleName)) {
+                continue;
+            }
+
+            byte geno = calledGenotypes.get(i);
+            if (geno == 0) {
+                hom1++;
+            } else if (geno == 2) {
+                het++;
+            } else if (geno == 3) {
+                hom2++;
+            } else {
+                missing++;
+            }
+            genopc = 1 - (missing / (missing + hom1 + het + hom2));
+            double tmpmaf = ((2 * hom1) + het) / ((2 * het) + (2 * hom1) + (2 * hom2));
+            if (tmpmaf < 0.5) {
+                maf = tmpmaf;
+            } else {
+                maf = 1 - tmpmaf;
+            }
+            hwpval = hwCalculate((int) hom1, (int) het, (int) hom2);
         }
     }
+
 
     private double hwCalculate(int obsAA, int obsAB, int obsBB) {
         //Calculates exact two-sided hardy-weinberg p-value. Parameters

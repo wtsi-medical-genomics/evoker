@@ -1291,6 +1291,13 @@ public class Genoplot extends JFrame implements ActionListener {
     }
 
     private void plotIntensitas(String name) {
+
+    	if (!db.getMarkerData().exists(name)) {
+			JOptionPane.showMessageDialog(this, name + " not found!",
+					"SNP not found", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
         dumpChanges();
 
         plottedSNP = name;

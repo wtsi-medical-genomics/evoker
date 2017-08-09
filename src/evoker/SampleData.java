@@ -1,5 +1,6 @@
 package evoker;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Vector;
 import java.io.BufferedReader;
@@ -14,18 +15,25 @@ import evoker.Types.*;
 
 public class SampleData {
     Vector<String> inds;
-//    Vector<String> ukbBatchMembership;
     private HashMap<String, Vector<Integer>> ukbBatchSampleIndices;
     private Vector<String> ukbBatchMembership;
     private Vector<Sex> sexByIndex;
 
+    // If UK Biobank, we need to keep track of any sample IDs with a negative sign as these
+    // must not be reported
+    private QCFilterData ukbExclude;
+    private FileFormat fileFormat;
+
+
     SampleData(String famFilename, FileFormat fileFormat) throws IOException{
 
         this.inds = new Vector<String>();
+        this.fileFormat = fileFormat;
         if (fileFormat == FileFormat.UKBIOBANK) {
             ukbBatchSampleIndices = new HashMap<String, Vector<Integer>>();
             ukbBatchMembership = new Vector<String>();
             sexByIndex = new Vector<Sex>();
+            ukbExclude = new QCFilterData();
         }
 
         BufferedReader famReader = new BufferedReader(new FileReader(famFilename));
@@ -44,6 +52,10 @@ public class SampleData {
             inds.add(sample);
 
             if (fileFormat == FileFormat.UKBIOBANK) {
+                if (sample.charAt(0) == '-') {
+                    ukbExclude.add(sample);
+                }
+
                 if (tokens.length == 5) {
                     throw new IOException("UK Biobank fam file ill-formed: requires a sixth column indicating the batch.");
                 }
@@ -65,6 +77,7 @@ public class SampleData {
                         sex = Sex.UNKNOWN;
                         break;
                 }
+
                 sexByIndex.add(sex);
                 String batch = tokens[5];
 
@@ -116,5 +129,17 @@ public class SampleData {
     public Vector<String> getUkbBatchMembership() { return ukbBatchMembership; }
 
     public Sex getSexByIndex(Integer index) { return sexByIndex.get(index); }
+
+    public FileFormat getFileFormat() {
+        return fileFormat;
+    }
+
+    public void setUkbExclude(QCFilterData ukbExclude) {
+        this.ukbExclude = ukbExclude;
+    }
+
+    public QCFilterData getUkbExclude() {
+        return ukbExclude;
+    }
 }
 
