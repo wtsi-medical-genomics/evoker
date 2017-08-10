@@ -214,11 +214,17 @@ public class DataClient{
             }
             
             session.close();
-            
-            ftp.get(filestem+".bed");
-            ftp.get(filestem+".bnt");
-            ftp.rm(filestem+".bed");
-            ftp.rm(filestem+".bnt");
+
+			String[] filetypes = {".bed", ".bnt"};
+			for (String filetype : filetypes) {
+				File remoteFile = new File(filestem + filetype);
+				String filename = remoteFile.getName();
+				String localFilePath = Utils.join(localDir, filename);
+				// Need UNIX-style paths on the remote machine
+				String remoteFilePath = remoteFile.getPath().replace("\\", "/");
+				ftp.get(remoteFilePath, localFilePath);
+				ftp.rm(remoteFilePath);
+			}
 
             double time = ((double)(System.currentTimeMillis() - prev))/1000;
             Genoplot.ld.log(snp +" for "+ collection +" was fetched in "+ time + "s.");

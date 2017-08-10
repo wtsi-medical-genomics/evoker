@@ -709,8 +709,7 @@ public class DataDirectory {
     }
 
     public QCFilterData qcList() {
-
-    	if (filterState == true) {
+    	if (filterState) {
     		return this.getExcludeList();
     	} else {
     		return null;
