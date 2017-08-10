@@ -46,8 +46,10 @@ In addition, you must point Evoker to the original fam file (the batch informati
 
 **Note**: at present it is not possible to re-call (with the lasso select) UK Biobank v2 data at the moment. This feature will be available in the next release.
 
-**Note**: a patch is being prepared so that Evoker supports Windows.
 
+Evoker Lite
+-----------
+For a python/CLI tool to generate cluster plot PNGs (including UK Biobank v2 data) see [Evoker Lite](https://github.com/dlrice/evoker-lite).
 
 Maintainer
 ----------
@@ -126,9 +128,9 @@ To build a jar file from source:
 
 Todo
 ----
-- [ ] Support Windows
-- [ ] Handle special characters in password
-- [ ] Exclude individuals with a negative number as their sample ID.
+- [x] Support Windows
+- [x] Handle special characters in password
+- [x] Exclude individuals with a negative number as their sample ID.
 - [ ] Deal with hidden files (eg `.samples.fam`).
 - [ ] Gracefully fail if evoker-helper.pl is not reachable at the remote server.
 - [ ] Export BED changes when viewing over a remote connection.
@@ -143,10 +145,6 @@ Website
 -------
 [http://www.sanger.ac.uk/science/tools/evoker](http://www.sanger.ac.uk/science/tools/evoker)
 
-
-Evoker Lite
------------
-For a python/CLI tool to generate cluster plot PNGs (including UK Biobank v2 data) see [Evoker Lite](https://github.com/dlrice/evoker-lite).
 
 License
 -------
