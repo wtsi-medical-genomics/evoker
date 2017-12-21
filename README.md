@@ -136,6 +136,7 @@ Todo
 - [ ] Export BED changes when viewing over a remote connection.
 - [ ] Plot SNP Posterior ellipses.
 - [ ] Save the plot array to remove the need to re-load all data on sorting.
+- [ ] View all batches at once (with ability to filter eg on MAF).
 
 Citation
 --------
